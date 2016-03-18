@@ -14,6 +14,7 @@ but not composed for building live distribution disks.
 A customized Korora Xfce Desktop which is the bases for the other variants.
 
 ### To Do
+* Add lint test with ksvalidator
 * Create git hosted kickstart cfg
 * Remove Thunar
 * Change Xfce Terminal settings (remove transparency)
