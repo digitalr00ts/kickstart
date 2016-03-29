@@ -23,6 +23,8 @@ A customized Korora Xfce Desktop which is the bases for the other variants.
 * Add branding
 * Change PCManFM settings
 * Add uBlock Origin for Chrome
+* Install, configure, enable dnf-automatic
+* Install, configure dns-trigger
 
 #### Related Projects
 * Docker repositories RPM
