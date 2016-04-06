@@ -10,6 +10,9 @@
 -thunar-volman
 -xfdesktop
 
+pinta
+google-chrome-stable
+
 ###
 # fedora-live-xfce.ks
 ###
