@@ -10,6 +10,7 @@ gpicview
 shutter
 AcetoneISO
 pcmanfm
+dnf-automatic
 
 #
 # THIRD PARTY
