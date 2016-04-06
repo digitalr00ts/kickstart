@@ -4,6 +4,11 @@
 
 %packages
 -Thunar
+-korora-backgrounds-xfce
+-thunar-archive-plugin
+-thunar-media-tags-plugin
+-thunar-volman
+-xfdesktop
 
 ###
 # fedora-live-xfce.ks
