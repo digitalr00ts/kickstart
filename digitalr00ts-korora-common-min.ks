@@ -11,6 +11,9 @@ shutter
 AcetoneISO
 pcmanfm
 dnf-automatic
+ldns
+dnssec-trigger
+dnssec-trigger-panel
 
 #
 # THIRD PARTY
