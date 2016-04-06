@@ -11,3 +11,4 @@ install:
   - (cd pykickstart && pip install --user .)
 script:
   - ksvalidator --followincludes --version $KS_VER ./xfce-nfs.cfg
+  - ksvalidator --followincludes --version $KS_VER ./xfce-git.cfg
