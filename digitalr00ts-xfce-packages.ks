@@ -9,6 +9,7 @@
 -thunar-media-tags-plugin
 -thunar-volman
 -xfdesktop
+-xfce4-about
 
 pinta
 google-chrome-stable
