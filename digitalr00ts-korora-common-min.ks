@@ -8,7 +8,7 @@ smplayer
 qpdfview
 gpicview
 shutter
-AcetoneISO
+# AcetoneISO # package has a lot of KDE dependencies
 pcmanfm
 dnf-automatic
 ldns
