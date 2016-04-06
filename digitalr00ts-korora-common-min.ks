@@ -15,6 +15,15 @@ ldns
 dnssec-trigger
 dnssec-trigger-panel
 
+-plymouth
+-plymouth-core-libs
+-plymouth-graphics-libs
+-plymouth-plugin-label
+-plymouth-plugin-two-step
+-plymouth-scripts
+-plymouth-system-theme
+-plymouth-theme-charge
+
 #
 # THIRD PARTY
 # adobe-release
