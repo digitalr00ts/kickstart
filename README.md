@@ -17,14 +17,10 @@ A customized Korora Xfce Desktop which is the bases for the other variants.
 
 ### To Do
 * Create git hosted kickstart cfg
-* Remove Thunar
-* Change Xfce Terminal settings (remove transparency)
 * Change default theme
 * Add branding
 * Change PCManFM settings
 * Add uBlock Origin for Chrome
-* Install, configure, enable dnf-automatic
-* Install, configure dns-trigger
 
 #### Related Projects
 * Docker repositories RPM
