@@ -13,7 +13,7 @@
 
 pinta
 google-chrome-stable
-elementary-icon-theme
+elementary-xfce-icon-theme
 
 ###
 # fedora-live-xfce.ks
