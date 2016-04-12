@@ -11,6 +11,8 @@
 -xfdesktop
 -xfce4-about
 
+-xfdashboard
+
 pinta
 google-chrome-stable
 elementary-xfce-icon-theme
