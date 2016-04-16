@@ -16,6 +16,7 @@
 pinta
 google-chrome-stable
 elementary-xfce-icon-theme
+gimagereader-gtk
 
 ###
 # fedora-live-xfce.ks
