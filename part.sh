@@ -12,9 +12,6 @@ else
   return 1
 fi
 
-# zerombr
-# clearpart --drives=vda --all
-# reqpart --add-boot
 # autopart --type=lvm --fstype=ext4
 
 echo "# Generated partition scheme for $disk" > $file
