@@ -9,7 +9,7 @@ install:
   - pip install --user six requests
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
   - (cd pykickstart && pip install --user .)
-  - chown +x ./part.sh && ./part.sh
+  - chmod +x ./part.sh && ./part.sh
 script:
   - ksvalidator --followincludes --version $KS_VER ./xfce-nfs.cfg
   - ksvalidator --followincludes --version $KS_VER ./xfce-git.cfg
