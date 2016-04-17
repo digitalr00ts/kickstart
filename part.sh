@@ -15,7 +15,7 @@ fi
 echo "# Generated partition scheme for $disk" > $file
 [ $disk == vda ] && echo "zerombr" >> $file
 echo "clearpart --drives=$disk --all" >> $file
-echo "part /boot --fstype=ext4 --mkfsoptions=\"-O none,extent,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 128 -N 1000\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async,stripe=4\"--recommended --label=boot --asprimary --ondrive=$drive" >> $file
+echo "part /boot --fstype=ext4 --mkfsoptions=\"-O none,extent,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 128 -N 1000\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async,stripe=4\" --recommended --label=boot --asprimary --ondrive=$drive" >> $file
 echo "part pv.01 --grow --ondrive=$drive" >> $file 
 echo "volgroup vg_$disk pv.01" >> $file
 echo "logvol swap --hibernation --fstype=swap --size=1000 --vgname=vg_$disk --label=swap --name=lv_swap" >> $file
