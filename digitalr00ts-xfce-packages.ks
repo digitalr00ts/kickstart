@@ -15,7 +15,6 @@
 
 pinta
 google-chrome-stable
-elementary-xfce-icon-theme
 gimagereader-gtk
 
 ###
@@ -39,7 +38,6 @@ gimagereader-gtk
 -egtk-gtk2-theme
 -egtk-gtk3-theme
 -ekiga
--elementary-xfce-icon-theme
 -evince
 -f21-backgrounds-extras-xfce
 -gtk-recordmydesktop
