@@ -1,8 +1,4 @@
-# # # # # # # #
-# %include fedora-live-xfce.ks
-%include fedora-live-minimization.ks
-%include fedora-xfce-packages.ks
-# # # # # # # #
+%include fedora-live-xfce.ks
 %include korora-base.ks
 %include korora-common-packages.ks
 
@@ -42,7 +38,7 @@ yumex-dnf
 -parole
 -pragha
 -realmd                     # only seems to be used in GNOME
--ristretto
+#-ristretto
 -smartmontools
 -thunderbird
 -totem*
@@ -131,6 +127,7 @@ wget
 x264
 xfce4-volumed
 xfce4-whiskermenu-plugin
+xfpanel-switch
 xfsprogs
 xscreensaver-base
 xscreensaver-extras-base
@@ -161,7 +158,7 @@ cat > /etc/lightdm/lightdm-gtk-greeter.conf << EOF
 # position = main window position: x y
 # default-user-image = Image used as default user icon, path or #icon-name
 # screensaver-timeout = Timeout (in seconds) until the screen blanks when the greeter is called as lockscreen
-#
+# 
 [greeter]
 background=/usr/share/backgrounds/korora/default/standard/korora.png
 default-user-image=/usr/share/icons/hicolor/64x64/apps/korora-icon-generic.png
@@ -182,7 +179,7 @@ EOF
 
 cat >> /etc/rc.d/init.d/livesys << EOF
 
-# KP - re'sync the /etc/skel settings for xfce and
+# KP - re'sync the /etc/skel settings for xfce and 
 rsync -Pa /etc/skel/.config/xfce4 /home/liveuser/.config
 
 # make sure to set the right permissions and selinux contexts
