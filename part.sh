@@ -22,8 +22,8 @@ echo "reqpart --add-boot" >> $file
 # echo "part /boot --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 256 -N 1000\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async,stripe=4\" --recommended --label=boot --asprimary --ondrive=$drive" >> $file
 echo "part pv.01 --grow --ondrive=$drive" >> $file 
 echo "volgroup vg_$disk pv.01" >> $file
-# echo "logvol swap --hibernation --fstype=swap --size=1000 --vgname=vg_$disk --label=swap --name=lv_swap" >> $file
-echo "logvol swap --$([ $disk == sda ] && echo hiberation || echo recommended) --fstype=swap --size=512 --vgname=vg_$disk --label=swap --name=lv_swap" >> $file
+# echo "logvol swap --$([ $disk == sda ] && echo hiberation || echo recommended) --fstype=swap --size=512 --vgname=vg_$disk --label=swap --name=lv_swap" >> $file
+echo "logvol swap --fstype=swap --size=512 --vgname=vg_$disk --label=swap --name=lv_swap" >> $file
 echo "logvol none --vgname=vg_$disk --thinpool --profile=thin-performance --size=1000 --grow --name=lv_$disk" >> $file
 echo "logvol / --vgname=vg_$disk --size=8000 --thin --poolname=lv_$disk --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async\" --label=root --name=lv_root" >> $file
 # echo "logvol / --vgname=vg_$disk --size=8000 --thin --poolname=lv_$disk --fstype=ext4 --label=root --name=lv_root" >> $file
