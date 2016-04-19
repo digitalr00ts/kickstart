@@ -14,7 +14,7 @@ auth --useshadow --passalgo=sha512
 selinux --enforcing
 firewall --enabled --service=mdns
 xconfig --startxonboot
-part / --size 4096 --fstype ext4
+# part / --size 4096 --fstype ext4
 services --enabled=NetworkManager,ModemManager --disabled=network,sshd
 
 %include fedora-repo.ks
