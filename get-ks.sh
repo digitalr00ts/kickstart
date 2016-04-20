@@ -15,8 +15,8 @@ elif [ $1 = '--all' ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-xfce.ks
 fi
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/part.sh
-chmod +x ./part.sh
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/disk.sh
+chmod +x ./disk.sh
 ./part.sh
 
 curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-repo.ks
