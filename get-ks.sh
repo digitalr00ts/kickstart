@@ -1,5 +1,5 @@
 #!/bin/sh
-[ -z $1 ] && declare x=' ' || x=$1
+[ -z $1 ] && declare x='none' || x=$1
 runpath='/run/install'
 
 cd $runpath
