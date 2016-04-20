@@ -17,7 +17,7 @@ fi
 
 curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/disk.sh
 chmod +x ./disk.sh
-./part.sh
+./disk.sh
 
 curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-repo.ks
 curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-base.ks
