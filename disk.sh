@@ -30,7 +30,7 @@ echo "autopart --type=lvm --fstype=ext4" >> $file
 echo "bootloader --boot-drive=$disk --timeout=2" >> $file
 
 echo >> $file
-echo "# packages based on block device"
+echo "# packages based on block device" >> $file
 echo "%packages" >> $file
 echo "$([ $disk != 'vda' ] && echo '-')qemu-guest-agent" >> $file
 echo "%end" >> $file
