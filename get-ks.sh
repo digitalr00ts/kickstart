@@ -1,17 +1,10 @@
 #!/bin/sh
-cd /run/install
+[ -z $1 ] && declare x=' ' || x=$1
+runpath='/run/install'
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/part.sh
-chmod +x ./part.sh
-./part.sh
+cd $runpath
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-repo.ks
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-base.ks
-
-mkdir /run/install/snippets && cd - && cd /run/install/snippets
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/snippets/packagekit-cached-metadata.ks
-
-if [ $1 != '--mini' ] ; then
+if [ $1 != '--min' ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/min.cfg
 elif [ $1 = '--all' ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-korora-common-min.ks
@@ -22,4 +15,13 @@ elif [ $1 = '--all' ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-xfce.ks
 fi
 
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/part.sh
+chmod +x ./part.sh
+./part.sh
+
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-repo.ks
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-base.ks
+
+mkdir --parent $runpath/snippets && cd - && cd $runpath/snippets
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/snippets/packagekit-cached-metadata.ks
 cd -
