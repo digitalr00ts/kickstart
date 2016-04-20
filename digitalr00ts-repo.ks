@@ -40,7 +40,7 @@ tee /etc/yum.repos.d/docker.repo <<-'EOF'
 [dockerrepo]
 name=Docker Repository
 baseurl=https://yum.dockerproject.org/repo/main/fedora/$releasever/
-enabled=0
+enabled=1
 gpgcheck=1
 gpgkey=https://yum.dockerproject.org/gpg
 EOF
@@ -309,7 +309,7 @@ dnf config-manager --add-repo https://raw.githubusercontent.com/kororaproject/kp
 repolist='/tmp/repolist.tmp'
 dnf --cacheonly --noplugins --quiet repolist enabled | cut -f1 -d " " | sed 's/^\*//g' | sed -E -e '/Using|repo|fedora|updates/d' > $repolist
 while read -r line || [[ -n "$line" ]]; do
-  dnf --set-disabled $line
+  dnf config-manager --set-disabled $line
 done < $repolist
 rm $repolist
 unset repolist
