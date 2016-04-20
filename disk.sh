@@ -1,7 +1,7 @@
 #!/bin/bash
 
 disk=''
-file='/run/install/part.ks'
+file='/run/install/disk.ks'
 
 if [ -d /sys/block/vda ] ; then
   disk=vda
