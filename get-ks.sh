@@ -4,24 +4,25 @@ runpath='/run/install'
 
 cd $runpath
 
-if [ $x != '--min' ] ; then
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/min.cfg
-elif [ $x = '--all' ] ; then
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-korora-common-min.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-xfce-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/fedora-live-minimization.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/fedora-xfce-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-common-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-xfce.ks
+[ $x != '--min' ] && \
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/min.cfg
+
+if [ $x = '--all' ] ; then
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/digitalr00ts-korora-common-min.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/digitalr00ts-xfce-packages.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/fedora-live-minimization.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/fedora-xfce-packages.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/korora-common-packages.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/korora-xfce.ks
 fi
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/disk.sh
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/disk.sh
 chmod +x ./disk.sh
 ./disk.sh
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-repo.ks
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/korora-base.ks
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/digitalr00ts-repo.ks
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/korora-base.ks
 
 mkdir --parent $runpath/snippets && cd - && cd $runpath/snippets
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/snippets/packagekit-cached-metadata.ks
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/snippets/packagekit-cached-metadata.ks
 cd -
