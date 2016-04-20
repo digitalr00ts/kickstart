@@ -4,9 +4,9 @@ runpath='/run/install'
 
 cd $runpath
 
-if [ $1 != '--min' ] ; then
+if [ $x != '--min' ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/min.cfg
-elif [ $1 = '--all' ] ; then
+elif [ $x = '--all' ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-korora-common-min.ks
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/digitalr00ts-xfce-packages.ks
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/mini/fedora-live-minimization.ks
