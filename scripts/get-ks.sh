@@ -1,30 +1,48 @@
 #!/bin/sh
-[ -z $1 ] && declare x='none' || x=$1
 startpath=$(pwd)
 runpath='/run/install'
+branch=master
+skip_min=false
+desktop=false
+
+getopt --options b:dm --long branch:,desktop,min --name get-ks.sh -- "$@"
+
+while true; do
+  case "$1" in
+    -b|--branch)
+      if [ -n $2 ] ; then
+        branch=$2 ; shift 2 ;
+      else
+	echo "Option requires argument" ; exit 1 ;
+      fi ;;
+    -d|--desktop) desktop=true ; shift ;;
+    -m|--min) skip_min=true ; shift ;;
+    --) shift; break ;;
+    *) echo "Invaild option: $1"
+done
 
 cd $runpath
 
-[ $x != '--min' ] && \
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/min.cfg
+[ ! $skip_min ] && \
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/min.cfg
 
-if [ $x = '--all' ] ; then
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/digitalr00ts-korora-common-min.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/digitalr00ts-xfce-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/fedora-live-minimization.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/fedora-xfce-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/korora-common-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/korora-xfce.ks
+if [ $desktop ] ; then
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/digitalr00ts-korora-common-min.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/digitalr00ts-xfce-packages.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/fedora-live-minimization.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/fedora-xfce-packages.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/korora-common-packages.ks
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/korora-xfce.ks
 fi
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/digitalr00ts-repo.ks
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/korora-base.ks
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/digitalr00ts-repo.ks
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/korora-base.ks
 
 mkdir --parent ${runpath}/snippets && cd $_
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/snippets/packagekit-cached-metadata.ks
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/snippets/packagekit-cached-metadata.ks
 
 mkdir --parent ${runpath}/scripts && cd $_
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/master/scripts/disk.sh
+curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/scripts/disk.sh
 chmod +x ./disk.sh
 ./disk.sh
 
