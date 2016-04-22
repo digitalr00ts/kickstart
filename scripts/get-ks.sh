@@ -2,10 +2,11 @@
 startpath=$(pwd)
 runpath='/run/install'
 branch=master
-skip_min=false
-desktop=false
+skip_min=0
+desktop=0
 
-getopt --options b:dm --long branch:,desktop,min --name get-ks.sh -- "$@"
+opts=$(getopt --options b:dm --long branch:,desktop,min --name 'get-ks.sh' -- "$@")
+eval set -- "$opts"
 
 while true; do
   case "$1" in
@@ -15,18 +16,19 @@ while true; do
       else
 	echo "Option requires argument" ; exit 1 ;
       fi ;;
-    -d|--desktop) desktop=true ; shift ;;
-    -m|--min) skip_min=true ; shift ;;
+    -d|--desktop) desktop=1 ; shift ;;
+    -m|--min) skip_min=1 ; shift ;;
     --) shift; break ;;
-    *) echo "Invaild option: $1"
+    *) echo "Invaild option: $1"; exit 1;
+  esac
 done
 
 cd $runpath
 
-[ ! $skip_min ] && \
+[ $skip_min -eq 0 ] && \
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/min.cfg
 
-if [ $desktop ] ; then
+if [ $desktop  -eq 1 ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/digitalr00ts-korora-common-min.ks
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/digitalr00ts-xfce-packages.ks
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/scripts/fedora-live-minimization.ks
