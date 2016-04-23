@@ -306,7 +306,7 @@ END
 # ### ### ###
 
 repolist='/tmp/repolist.tmp'
-dnf --cacheonly --noplugins --quiet repolist all | cut --field=1 --delimiter=' ' | sed 's/^\*//g' | sed --regexp-extended '/^(Using|repo|fedora|updates)$/d' > $repolist
+dnf --cacheonly --noplugins --quiet repolist all | cut --field=1 --delimiter=' ' | sed 's/^\*//g' | sed --regexp-extended '/^(Using|repo|fedora|updates|korora)$/d' > $repolist
 while read -r line || [[ -n "$line" ]]; do
   echo "Disabling $line"
   dnf config-manager --set-disabled $line
