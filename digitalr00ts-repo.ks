@@ -1,14 +1,14 @@
 # REPOS
 
 # Fedora
-# repo --name=fedora-mirrors --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
-# repo --name="fedora-updates" --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
-# repo --name="Fedora-Everything" --baseurl=http://dl.fedoraproject.org/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/ --cost=1000
-# repo --name="Fedora-Update" --baseurl=http://dl.fedoraproject.org/pub/fedora/linux/updates/$releasever/$basearch/ --cost=1000
+# repo --name=fedora-mirrors --mirrorlist=https://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
+# repo --name="fedora-updates" --mirrorlist=https://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
+# repo --name="Fedora-Everything" --baseurl=https://dl.fedoraproject.org/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/ --cost=1000
+# repo --name="Fedora-Update" --baseurl=https://dl.fedoraproject.org/pub/fedora/linux/updates/$releasever/$basearch/ --cost=1000
 
 # Korora
-# repo --name="Korora" --mirrorlist=http://dl.kororaproject.org/pub/korora/korora-mirror.lst --cost=10
-# repo --name="Korora" --baseurl=http://dl.kororaproject.org/pub/korora/releases/$releasever/$basearch/ --cost=10
+# repo --name="Korora" --mirrorlist=https://dl.kororaproject.org/pub/korora/korora-mirror.lst --noverifyssl --cost=10
+# repo --name="Korora" --baseurl=https://dl.kororaproject.org/pub/korora/releases/$releasever/$basearch/ --noverifyssl --cost=10
 
 # RPM Fusion
 repo --name="RPMFusion-Free" --mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-fedora-$releasever&arch=$basearch --cost=1000
