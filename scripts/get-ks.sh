@@ -1,7 +1,7 @@
 #!/bin/sh
 startpath=$(pwd)
 runpath='/run/install'
-branch=disk
+branch=master
 skip_min=0
 desktop=0
 
