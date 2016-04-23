@@ -4,8 +4,9 @@ runpath='/run/install'
 branch=master
 skip_min=0
 desktop=0
+micro=0
 
-opts=$(getopt --options b:dm --long branch:,desktop,min --name 'get-ks.sh' -- "$@")
+opts=$(getopt --options b:dm --long branch:,desktop,min,micro --name 'get-ks.sh' -- "$@")
 eval set -- "$opts"
 
 while true; do
@@ -18,6 +19,7 @@ while true; do
       fi ;;
     -d|--desktop) desktop=1 ; shift ;;
     -m|--min) skip_min=1 ; shift ;;
+    --micro) micro=1 ; shift ;;
     --) shift; break ;;
     *) echo "Invaild option: $1"; exit 1;
   esac
@@ -25,8 +27,6 @@ done
 
 cd $runpath
 
-[ $skip_min -eq 0 ] && \
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
 
 if [ $desktop  -eq 1 ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-korora-common-min.ks
@@ -37,7 +37,12 @@ if [ $desktop  -eq 1 ] ; then
   curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-xfce.ks
 fi
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-repo.ks
+if [ ! micro -eq 1 ] ; then
+  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-repo.ks
+  [ $skip_min -eq 0 ] && \
+    curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
+fi
+
 curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
 
 mkdir --parent ${runpath}/snippets && cd $_
