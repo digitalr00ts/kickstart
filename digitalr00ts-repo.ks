@@ -7,7 +7,7 @@ repo --name="Fedora-Everything" --baseurl=http://dl.fedoraproject.org/pub/fedora
 repo --name="Fedora-Update" --baseurl=http://dl.fedoraproject.org/pub/fedora/linux/updates/$releasever/$basearch/ --cost=1000
 
 # Korora
-# repo --name="Korora" --mirrorlist=http://dl.kororaproject.org/pub/korora/korora-mirror.lst --cost=10
+repo --name="Korora" --mirrorlist=http://dl.kororaproject.org/pub/korora/korora-mirror.lst --cost=10
 # repo --name="Korora" --baseurl=http://dl.kororaproject.org/pub/korora/releases/$releasever/$basearch/ --cost=10
 
 # RPM Fusion
@@ -30,6 +30,7 @@ repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm
 google-chrome-release
 # google-earth-release
 # google-talkplugin-release
+korora-repos
 rpmfusion-free-release
 rpmfusion-nonfree-release
 virtualbox-release
@@ -303,8 +304,6 @@ EOF
 # ### ### ###
 END
 # ### ### ###
-
-dnf config-manager --add-repo https://raw.githubusercontent.com/kororaproject/kp-korora-repos/master/upstream/korora.repo
 
 repolist='/tmp/repolist.tmp'
 dnf --cacheonly --noplugins --quiet repolist all | cut --field=1 --delimiter=' ' | sed 's/^\*//g' | sed --regexp-extended '/^(Using|repo|fedora|updates)$/d' > $repolist
