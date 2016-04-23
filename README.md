@@ -12,6 +12,12 @@ Currently these kickstart files are intended for use with down
 The builds are intended for use with online or local repositories,
 but not composed for building live distribution disks.
 
+## MIN.CFG
+Minimal setup
+
+## BASE.CFG
+Basic tools and cli
+
 ## Xfce Desktop
 A customized Korora Xfce Desktop which is the bases for the other variants.
 
