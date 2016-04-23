@@ -307,7 +307,7 @@ END
 dnf config-manager --add-repo https://raw.githubusercontent.com/kororaproject/kp-korora-repos/master/upstream/korora.repo
 
 repolist='/tmp/repolist.tmp'
-dnf --cacheonly --noplugins --quiet repolist enabled | cut -f1 -d " " | sed 's/^\*//g' | sed -E -e '/Using|repo|fedora|updates/d' > $repolist
+dnf --cacheonly --noplugins --quiet repolist enabled | cut --field=1 --delimiter=' ' | sed 's/^\*//g' | sed --regexp-extended '/^(Using|repo|fedora|updates)$/d' | tee $repolist
 while read -r line || [[ -n "$line" ]]; do
   dnf config-manager --set-disabled $line
 done < $repolist
