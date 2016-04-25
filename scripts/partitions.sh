@@ -1,4 +1,5 @@
 #!/bin/bash
+file=${runpath}/partitions.ks
 
 if [ -n $1 ] ; then
   disk=$blockdevice
