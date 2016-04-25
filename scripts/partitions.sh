@@ -1,4 +1,5 @@
 #!/bin/bash
+[ -z ${runpath+x} ] && declare -x runpath='/run/install'
 file=${runpath}/partitions.ks
 
 if [ -n $1 ] ; then
@@ -19,7 +20,6 @@ echo "bootloader --boot-drive=$disk --timeout=1" >> $file
 # --add-boot may cause Anaconda to crash when explicitly creating /boot
 echo "reqpart" >> $file
 
-#  --asprimary
 echo "part /boot --recommended --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 256 -N 1000\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async,stripe=4\" --label=boot --ondrive=$drive" >> $file
 echo "part pv.01 --grow --ondrive=$drive" >> $file
 echo "volgroup vg_$disk pv.01" >> $file
