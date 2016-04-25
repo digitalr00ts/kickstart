@@ -1,15 +1,12 @@
 #!/bin/bash
 
-disk=''
-file='/run/install/disk.ks'
-
-if [ -d /sys/block/vda ] ; then
-  disk=vda
-elif [ -d /sys/block/sda ] ; then
-  disk=sda
+if [ -n $1 ] ; then
+  disk=$blockdevice
+elif [ -n '$blockdevice' ] ; then
+  disk=$1
 else
-  echo "No block device that I am expecting"
-  return 1
+  echo "no block device" >&2
+  exit 1
 fi
 
 echo "# Generated partition scheme for $disk" > $file
