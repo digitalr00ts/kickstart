@@ -65,7 +65,7 @@ if [ $desktop  -eq 1 ] ; then
   curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-xfce.ks
 fi
 
-if [ ! micro -eq 1 ] ; then
+if [ ! $micro -eq 1 ] ; then
   echo -n 'digitalr00ts-repo.ks: '
   curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-repo.ks
   [ $skip_min -eq 0 ] && \
