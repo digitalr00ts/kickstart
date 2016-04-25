@@ -16,22 +16,18 @@ echo "clearpart --drives=$disk" >> $file
 echo "bootloader --boot-drive=$disk --timeout=1" >> $file
 
 # echo "autopart --type=lvm --fstype=ext4" >> $file
+# --add-boot may cause Anaconda to crash when explicitly creating /boot
 echo "reqpart" >> $file
-# --add-boot may cause Anaconda to crash
-# echo "part /boot --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 256 -N 1000\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async,stripe=4\" --recommended --label=boot --asprimary --ondrive=$drive" >> $file
-echo "part /boot --recommended --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 256 -N 1000\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async,stripe=4\" --ondrive=$drive" >> $file
+
+#  --asprimary
+echo "part /boot --recommended --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 256 -N 1000\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async,stripe=4\" --label=boot --ondrive=$drive" >> $file
 echo "part pv.01 --grow --ondrive=$drive" >> $file
 echo "volgroup vg_$disk pv.01" >> $file
-echo "logvol swap --$([ $disk == 'vda' ] && echo 'hibernation' || echo 'recommended') --vgname=vg_$disk --name=lv_swap --fstype=swap --size=512" >> $file
-#  --label=swap
-# echo "logvol swap --vgname=vg_$disk --name=lvswap --fstype=swap --size=512" >> $file
+echo "logvol swap --$([ $disk == 'vda' ] && echo 'hibernation' || echo 'recommended') --vgname=vg_$disk --name=lv_swap --fstype=swap --label=swap --size=512" >> $file
 echo "logvol none --vgname=vg_$disk --name=lv_$disk --thinpool --size=1000 --grow" >> $file
-echo "logvol / --vgname=vg_$disk --name=lv_root --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async\" --size=8000 --thin --poolname=lv_$disk" >> $file
-echo "logvol /home --vgname=vg_$disk --name=lv_home --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --size=2000 --thin --poolname=lv_$disk" >> $file
-echo "logvol /var --vgname=vg_$disk --name=lv_var --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --size=10000 --thin --poolname=lv_$disk" >> $file
-# echo "logvol / --vgname=vg_$disk --size=8000 --thin --poolname=lv_$disk --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async\" --label=root --name=lv_root" >> $file
-# echo "logvol /var --vgname=vg_$disk --size=2000 --thin --poolname=lv_$disk --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --label=var --name=lv_var" >> $file
-# echo "logvol /home --vgname=vg_$disk --size=8000 --thin --poolname=lv_$disk --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --label=home --name=lv_home" >> $file
+echo "logvol / --vgname=vg_$disk --name=lv_root --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async\" --label=root --size=8000 --thin --poolname=lv_$disk" >> $file
+echo "logvol /home --vgname=vg_$disk --name=lv_home --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --label=var --size=2000 --thin --poolname=lv_$disk" >> $file
+echo "logvol /var --vgname=vg_$disk --name=lv_var --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --label=home --size=10000 --thin --poolname=lv_$disk" >> $file
 
 echo >> $file
 echo "# packages based on block device" >> $file
