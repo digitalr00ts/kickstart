@@ -21,6 +21,8 @@ declare -x blockdevice=$(block_check) ; [ ! $blockdevice ] && exit 1
 declare -x skip_min=0
 declare -x micro=0
 
+curl_options='--progress-bar --location --remote-name'
+
 # ### ### ###
 # Parse arguments
 # ### ### ###
@@ -49,34 +51,45 @@ done
 cd $runpath
 
 if [ $desktop  -eq 1 ] ; then
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-korora-common-min.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-xfce-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-live-minimization.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-xfce-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-common-packages.ks
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-xfce.ks
+  echo -n 'digitalr00ts-korora-common-min.ks: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-korora-common-min.ks
+  echo -n 'digitalr00ts-xfce-packages.ks: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-xfce-packages.ks
+  echo -n 'fedora-live-minimization.ks: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-live-minimization.ks
+  echo -n 'fedora-xfce-packages.ks: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-xfce-packages.ks
+  echo -n 'korora-common-packages.ks: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-common-packages.ks
+  echo -n 'korora-xfce.ks: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-xfce.ks
 fi
 
 if [ ! micro -eq 1 ] ; then
-  curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-repo.ks
+  echo -n 'digitalr00ts-repo.ks: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-repo.ks
   [ $skip_min -eq 0 ] && \
-    curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
+    echo -n 'min.cfg: '
+    curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
 fi
 
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
+echo -n 'korora-base.ks: '
+curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
 
 mkdir --parent ${runpath}/snippets && cd $_
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/snippets/packagekit-cached-metadata.ks
+echo -n 'packagekit-cached-metadata.ks: '
+curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/snippets/packagekit-cached-metadata.ks
 
 mkdir --parent ${runpath}/scripts && cd $_
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/scripts/partitions.sh
+echo -n 'partitions.sh: '
+curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/scripts/partitions.sh
 chmod +x ./partitions.sh
-
-curl --location --remote-name https://github.com/digitalr00ts/korora-kickstart/raw/$branch/scripts/vm-guests.sh
+echo -n 'vm-guests.sh: '
+curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/scripts/vm-guests.sh
 chmod +x ./vm-guests.sh
 
 # ### ### ###
-# Runing scripts
+#   Runing scripts
 # ### ### ###
 ${runpath}/scripts/partitions.sh || exit 1
 ${runpath}/scripts/vm-guests.sh $([ $desktop -eq 1 ] && echo '--desktop') $([ $blockdevice == 'vda' ] && echo '--qemu')
