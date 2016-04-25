@@ -15,7 +15,7 @@ function block_check () {
 # ### ### ###
 [ -z ${startpath+x} ] && declare -x startpath="$(pwd)"
 [ -z ${runpath+x} ] && declare -x runpath='/run/install'
-[ -z ${master+x} ] && declare -x branch='master'
+[ -z ${branch+x} ] && declare -x branch='master'
 [ -z ${desktop+x} ] && declare -x desktop=0
 declare -x blockdevice=$(block_check) ; [ ! $blockdevice ] && exit 1
 declare -x skip_min=0
