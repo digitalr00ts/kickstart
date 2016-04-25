@@ -20,7 +20,7 @@ while true; do
   esac
 done
 
-echo "Virtual machine guest agents" >> $file
+echo "# Virtual machine guest agents" >> $file
 
 echo "%packages" >> $file
 [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'open-vm-tools' >> $file
