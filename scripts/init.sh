@@ -91,8 +91,10 @@ chmod +x ./vm-guests.sh
 # ### ### ###
 #   Runing scripts
 # ### ### ###
-${runpath}/scripts/partitions.sh || exit 1
-${runpath}/scripts/vm-guests.sh $([ $desktop -eq 1 ] && echo '--desktop') $([ $blockdevice == 'vda' ] && echo '--qemu')
+if [ ! -f ${startpath}/partitions.ks ] ; then
+  ${runpath}/scripts/partitions.sh || exit 1
+  ${runpath}/scripts/vm-guests.sh $([ $desktop -eq 1 ] && echo '--desktop') $([ $blockdevice == 'vda' ] && echo '--qemu')
+fi
 
 # ### ### ###
 # End by returning to starting directory
