@@ -22,8 +22,9 @@ echo "bootloader --boot-drive=$disk --timeout=1" >> $file
 echo "part /boot --recommended --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,filetype,sparse_super,flex_bg,uninit_bg,resize_inode -I 256 -N 1000\" --ondrive=$drive" >> $file
 echo "part pv.01 --grow --ondrive=$drive" >> $file
 echo "volgroup vg_$disk pv.01" >> $file
-# echo "logvol swap --hibernation --fstype=swap --size=1000 --vgname=vg_$disk --label=swap --name=lv_swap" >> $file
-echo "logvol swap --vgname=vg_$disk --name=lvswap --fstype=swap --size=512" >> $file
+echo "logvol swap --$([ $disk == 'vda' ] && echo 'hibernation' || echo 'recommended') --vgname=vg_$disk --name=lv_swap --fstype=swap --size=512" >> $file
+#  --label=swap
+# echo "logvol swap --vgname=vg_$disk --name=lvswap --fstype=swap --size=512" >> $file
 echo "logvol none --vgname=vg_$disk --name=lv_$disk --thinpool --size=1000 --grow" >> $file
 echo "logvol / --vgname=vg_$disk --name=lv_root --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 32768\" --size=8000 --thin --poolname=lv_$disk" >> $file
 echo "logvol /home --vgname=vg_$disk --name=lv_home --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --size=2000 --thin --poolname=lv_$disk" >> $file
