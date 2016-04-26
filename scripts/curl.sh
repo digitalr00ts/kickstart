@@ -67,6 +67,7 @@ if [ ! $cfg == 'min' ] ; then
   if [ ! $cfg == 'base' ] ; then
     echo -n 'base.ks: '
     curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base.cfg
+  fi
 fi
 
 if [ $desktop eq 1 ] ; then
