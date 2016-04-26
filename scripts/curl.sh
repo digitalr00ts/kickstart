@@ -77,8 +77,8 @@ if [ $desktop eq 1 ] ; then
   fi
 fi
 
-# echo -n 'korora-base.ks: '
-# curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
+echo -n 'korora-base.ks: '
+curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
 
 mkdir --parent ${runpath}/snippets && cd $_
 echo -n 'packagekit-cached-metadata.ks: '
