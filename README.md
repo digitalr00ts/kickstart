@@ -13,10 +13,17 @@ The builds are intended for use with online or local repositories,
 but not composed for building live distribution disks.
 
 ## MIN.CFG
-Minimal setup
+Minimal setup - Generic
 
 ## BASE.CFG
-Basic tools and cli
+Basic tools and cli - Korora
+Common base for server and desktop deployments
+
+## BASE-X.CFG
+Installs X11 and basic configuration for GUI deployments
+
+## XFCE-MIN.CFG
+Installs XFCE, but no applications.
 
 ## Xfce Desktop
 A customized Korora Xfce Desktop which is the bases for the other variants.
