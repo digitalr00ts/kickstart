@@ -70,7 +70,7 @@ if [ ! $cfg = 'min' ] ; then
   fi
 fi
 
-if [ $desktop eq 1 ] ; then
+if [ $desktop -eq 1 ] ; then
   if [ ! $cfg = 'base-x' ] ; then
     echo -n 'base-x.cfg: '
     curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base-x.cfg
