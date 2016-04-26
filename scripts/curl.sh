@@ -65,15 +65,19 @@ if [ ! $cfg = 'min' ] ; then
   echo -n 'min.cfg: '
   curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
   if [ ! $cfg = 'base' ] ; then
-    echo -n 'base.ks: '
+    echo -n 'base.cfg: '
     curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base.cfg
   fi
 fi
 
 if [ $desktop eq 1 ] ; then
   if [ ! $cfg = 'base-x' ] ; then
-    echo -n 'base-x.ks: '
+    echo -n 'base-x.cfg: '
     curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base-x.cfg
+  fi
+  if [ ! $cfg = 'xfce-min' ] ; then
+    echo -n 'xfce-min.cfg: '
+    curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/xfce-min.cfg
   fi
 fi
 
