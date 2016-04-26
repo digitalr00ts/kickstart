@@ -9,10 +9,8 @@ set -o errexit
 [ -z ${runpath+x} ] && declare -x runpath='/run/install'
 [ -z ${branch+x} ] && declare -x branch='master'
 [ -z ${desktop+x} ] && declare -x desktop=0
-declare -x skip_min=0
-declare -x micro=0
-
-curl_options='--progress-bar --location --remote-name'
+[ -z ${cfg+x} ] && declare cfg=''
+[ -z ${curl_options+x} ] && curl_options='--progress-bar --location --remote-name'
 
 # ### ### ###
 # Parse arguments
@@ -28,8 +26,13 @@ while true; do
       else
         echo "Option requires argument" ; exit 1 ;
       fi ;;
+    -c|--cfg)
+      if [ -n $2 ] ; then
+        cfg=$2 ; shift 2 ;
+      else
+        echo "Option requires argument" ; exit 1 ;
+      fi ;;
     -d|--desktop) desktop=1 ; shift ;;
-    -m|--min) skip_min=1 ; shift ;;
     --micro) micro=1 ; shift ;;
     --) shift; break ;;
     *) echo "Invaild option: $1"; exit 1;
@@ -41,31 +44,40 @@ done
 # ### ### ###
 cd $runpath
 
-if [ $desktop  -eq 1 ] ; then
-  echo -n 'digitalr00ts-korora-common-min.ks: '
-  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-korora-common-min.ks
-  echo -n 'digitalr00ts-xfce-packages.ks: '
-  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-xfce-packages.ks
-  echo -n 'fedora-live-minimization.ks: '
-  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-live-minimization.ks
-  echo -n 'fedora-xfce-packages.ks: '
-  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-xfce-packages.ks
-  echo -n 'korora-common-packages.ks: '
-  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-common-packages.ks
-  echo -n 'korora-xfce.ks: '
-  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-xfce.ks
-fi
+# if [ $desktop  -eq 1 ] ; then
+#   echo -n 'digitalr00ts-korora-common-min.ks: '
+#   curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-korora-common-min.ks
+#  echo -n 'digitalr00ts-xfce-packages.ks: '
+#  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/digitalr00ts-xfce-packages.ks
+#  echo -n 'fedora-live-minimization.ks: '
+#  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-live-minimization.ks
+#  echo -n 'fedora-xfce-packages.ks: '
+#  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/fedora-xfce-packages.ks
+#  echo -n 'korora-common-packages.ks: '
+#  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-common-packages.ks
+#  echo -n 'korora-xfce.ks: '
+#  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-xfce.ks
+# fi
 
-if [ ! $micro -eq 1 ] ; then
+if [ ! $cfg == 'min' ] ; then
   echo -n 'repos.ks: '
   curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/repos.ks
-  [ $skip_min -eq 0 ] && \
-    echo -n 'min.cfg: '
-    curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
+  echo -n 'min.cfg: '
+  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
+  if [ ! $cfg == 'base' ] ; then
+    echo -n 'base.ks: '
+    curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base.cfg
 fi
 
-echo -n 'korora-base.ks: '
-curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
+if [ $desktop eq 1 ] ; then
+  if [ ! $cfg == 'base-x' ] ; then
+    echo -n 'base-x.ks: '
+    curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base-x.cfg
+  fi
+fi
+
+# echo -n 'korora-base.ks: '
+# curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
 
 mkdir --parent ${runpath}/snippets && cd $_
 echo -n 'packagekit-cached-metadata.ks: '
