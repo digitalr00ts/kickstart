@@ -59,19 +59,19 @@ cd $runpath
 #  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-xfce.ks
 # fi
 
-if [ ! $cfg == 'min' ] ; then
+if [ ! $cfg = 'min' ] ; then
   echo -n 'repos.ks: '
   curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/repos.ks
   echo -n 'min.cfg: '
   curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/min.cfg
-  if [ ! $cfg == 'base' ] ; then
+  if [ ! $cfg = 'base' ] ; then
     echo -n 'base.ks: '
     curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base.cfg
   fi
 fi
 
 if [ $desktop eq 1 ] ; then
-  if [ ! $cfg == 'base-x' ] ; then
+  if [ ! $cfg = 'base-x' ] ; then
     echo -n 'base-x.ks: '
     curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/base-x.cfg
   fi
