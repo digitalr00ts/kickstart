@@ -30,6 +30,9 @@ if [ $desktop = 1 ] ; then
   echo "@guest-desktop-agents" >> $file
   [ ! $hyperv -eq 1 ] && echo -n '-' >> $file ; echo 'hyperv-daemons' >> $file
   [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'open-vm-tools-desktop' >> $file
+  [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'xorg-x11-drv-vmware' >> $file
+  [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'xorg-x11-drv-vmmouse' >> $file
   [ ! $qemu -eq 1 ] && echo -n '-' >> $file ; echo 'spice-vdagent' >> $file
+  [ ! $qemu -eq 1 ] && echo -n '-' >> $file ; echo 'xorg-x11-drv-qxl' >> $file
 fi
 echo "%end" >> $file
