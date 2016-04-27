@@ -23,9 +23,11 @@ done
 echo "# Virtual machine guest agents" >> $file
 
 echo "%packages" >> $file
+echo "@guest-agents" >> $file
 [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'open-vm-tools' >> $file
 [ ! $qemu -eq 1 ] && echo -n '-' >> $file ; echo 'qemu-guest-agent' >> $file
 if [ $desktop = 1 ] ; then
+  echo "@guest-desktop-agents" >> $file
   [ ! $hyperv -eq 1 ] && echo -n '-' >> $file ; echo 'hyperv-daemons' >> $file
   [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'open-vm-tools-desktop' >> $file
   [ ! $qemu -eq 1 ] && echo -n '-' >> $file ; echo 'spice-vdagent' >> $file
