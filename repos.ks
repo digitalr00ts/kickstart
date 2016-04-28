@@ -23,18 +23,8 @@ repo --name="RPMFusion-Non-Free-Updates" --mirrorlist=http://mirrors.rpmfusion.o
 
 # Other Repositories
 repo --name="Google Chrome" --baseurl=http://dl.google.com/linux/chrome/rpm/stable/$basearch/ --cost=1000
-repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/$releasever/$basearch/ --cost=1000
+# repo --name="VirtualBox" --baseurl=http://download.virtualbox.org/virtualbox/rpm/fedora/$releasever/$basearch/ --cost=1000
 
-%packages
-# adobe-release
-google-chrome-release
-# google-earth-release
-# google-talkplugin-release
-korora-repos
-rpmfusion-free-release
-rpmfusion-nonfree-release
-virtualbox-release
-%end
 %post
 
 tee /etc/yum.repos.d/docker.repo <<-'EOF'
