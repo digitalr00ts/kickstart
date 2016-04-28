@@ -24,10 +24,19 @@ done
 echo "# Virtual machine guest agents" >> $file
 
 echo "%packages" >> $file
+if [ ! $disk = 'vda' ] ; then
+  echo '# Hypervisor and container host (should be moved)'
+  echo 'qemu-kvm' >> $file
+  echo 'qemu-kvm-tools' >> $file
+  echo 'libvirt-daemon-kvm' >> $file
+  echo 'ksm' >> $file
+  [ $desktop = 1 ] && echo 'virt-manager' >> $file
+  echo 'docker-engine' >> $file
+  echo 'docker-engine-selinux' >> $file
+fi
 echo "@guest-agents" >> $file
 [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'open-vm-tools' >> $file
 [ ! $qemu -eq 1 ] && echo -n '-' >> $file ; echo 'qemu-guest-agent' >> $file
-[ $disk = 'vda' ] && echo -n '-' >> $file ; echo 'ksm' >> $file
 if [ $desktop = 1 ] ; then
   echo "@guest-desktop-agents" >> $file
   [ ! $hyperv -eq 1 ] && echo -n '-' >> $file ; echo 'hyperv-daemons' >> $file
