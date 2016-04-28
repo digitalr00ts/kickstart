@@ -4,6 +4,7 @@
 [ -z ${qemu+x} ] && qemu=0
 [ -z ${spice+x} ] && spice=0
 [ -z ${vmware+x} ] && vmware=0
+[ -z ${blockdevice+x} ] && disk='' || disk=$blockdevice
 [ -z ${runpath+x} ] && runpath='/run/install'
 file=${runpath}/vm-guests.ks
 
@@ -26,6 +27,7 @@ echo "%packages" >> $file
 echo "@guest-agents" >> $file
 [ ! $vmware -eq 1 ] && echo -n '-' >> $file ; echo 'open-vm-tools' >> $file
 [ ! $qemu -eq 1 ] && echo -n '-' >> $file ; echo 'qemu-guest-agent' >> $file
+[ $disk = 'vda' ] && echo -n '-' >> $file ; echo 'ksm' >> $file
 if [ $desktop = 1 ] ; then
   echo "@guest-desktop-agents" >> $file
   [ ! $hyperv -eq 1 ] && echo -n '-' >> $file ; echo 'hyperv-daemons' >> $file
