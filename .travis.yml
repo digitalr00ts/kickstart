@@ -2,6 +2,8 @@
 language: bash
 env:
   - KS_VER=F23
+  - runpath='.'
+  - blockdevice='vda'
 before_install:
   - python --version
   - pip --version
@@ -10,8 +12,6 @@ install:
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
   - (cd pykickstart && pip install --user .)
 before_script:
-  - declare -x blockdevice='vda'
-  - declare -x runpath='$(pwd)'
   - echo $runpath
   - ${runpath}/scripts/partitions.sh
   - ${runpath}/scripts/vm-guests.sh --desktop --qemu
