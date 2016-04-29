@@ -13,6 +13,8 @@ else
   exit 1
 fi
 
+disk=sdb
+
 [ -z ${runpath+x} ] && declare -x runpath='/run/install'
 file=${runpath}/partitions.ks
 
