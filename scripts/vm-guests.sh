@@ -8,7 +8,7 @@
 [ -z ${runpath+x} ] && runpath='/run/install'
 file=${runpath}/vm-guests.ks
 
-opts=$(getopt --options dhqv --long desktop,hyperv,qemu,vmware --name 'vm-guests.sh' -- "$@")
+opts=$(getopt --options dhqv --long desktop,hyperv,qemu,vmware,test --name 'vm-guests.sh' -- "$@")
 eval set -- "$opts"
 
 while true; do
@@ -16,6 +16,7 @@ while true; do
     -d|--desktop) desktop=1 ; shift ;;
     -q|--qemu) qemu=1 ; shift ;;
     -v|--vmware) vmware=1 ; shift ;;
+    --test) runpath='.' ; file=${runpath}/vm-guests.ks ; disk='vda' ; shift ;;
     --) shift; break ;;
     *) echo "Invaild option: $1"; exit 1 ;;
   esac

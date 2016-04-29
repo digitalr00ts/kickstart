@@ -10,11 +10,7 @@ install:
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
   - (cd pykickstart && pip install --user .)
 script:
-  - declare -x blockdevice='vda'
-  - declare -x runpath='.'
-  - echo $runpath
-  - echo $blockdevice
-  - ./scripts/partitions.sh
-  - ./scripts/vm-guests.sh --desktop --qemu
+  - ./scripts/partitions.sh vda test
+  - ./scripts/vm-guests.sh --desktop --qemu --test
   - ksvalidator --followincludes --version $KS_VER ./xfce-nfs.cfg
   - ksvalidator --followincludes --version $KS_VER ./xfce-git.cfg
