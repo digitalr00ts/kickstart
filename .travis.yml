@@ -11,10 +11,9 @@ install:
   - pip install --user six requests
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
   - (cd pykickstart && pip install --user .)
-before_script:
+script:
   - echo $runpath
   - ${runpath}/scripts/partitions.sh
   - ${runpath}/scripts/vm-guests.sh --desktop --qemu
-script:
   - ksvalidator --followincludes --version $KS_VER ./xfce-nfs.cfg
   - ksvalidator --followincludes --version $KS_VER ./xfce-git.cfg
