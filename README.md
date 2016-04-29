@@ -25,19 +25,8 @@ Installs X11 and basic configuration for GUI deployments
 ## XFCE-MIN.CFG
 Installs XFCE, but no applications.
 
-## Xfce Desktop
-A customized Korora Xfce Desktop which is the bases for the other variants.
-
-### To Do
-* Create git hosted kickstart cfg
-* Change default theme
-* Add branding
-* Change PCManFM settings
-* Add uBlock Origin for Chrome
-
-#### Related Projects
-* Docker repositories RPM
-* Atom RPM in RPM Fussion
+## XFCE.CFG
+My main XFCE setup
 
 ## Kodi
 Coming Soon
