@@ -1,21 +1,20 @@
 #!/bin/bash
-[ -z ${runpath+x} ] && declare -x runpath='/run/install'
-if [ $# -ge 2 ] ; then
-  if [ $2 = 'test' ] ; then
+if [ -n $1 ] ; then
+  if [ $1 = 'test' ] ; then
     runpath='.'
     blockdevice='vda'
+  else
+    disk=$1
   fi
-fi
-file=${runpath}/partitions.ks
-
-if [ -n $1 ] ; then
-  disk=$blockdevice
 elif [ -n '$blockdevice' ] ; then
-  disk=$1
+  disk=$blockdevice
 else
   echo "no block device" >&2
   exit 1
 fi
+
+[ -z ${runpath+x} ] && declare -x runpath='/run/install'
+file=${runpath}/partitions.ks
 
 echo "# Generated partition scheme for $disk" > $file
 echo "clearpart --drives=$disk" >> $file
