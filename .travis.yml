@@ -9,10 +9,11 @@ install:
   - pip install --user six requests
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
   - (cd pykickstart && pip install --user .)
-script:
-  - [ -z ${blockdevice+x} ] && declare -x blockdevice='vda'
-  - [ -z ${runpath+x} ] && declare -x runpath='.'
+before_script:
+  - declare -x blockdevice='vda'
+  - declare -x runpath='.'
   - ${runpath}/scripts/partitions.sh
   - ${runpath}/scripts/vm-guests.sh
+script:
   - ksvalidator --followincludes --version $KS_VER ./xfce-nfs.cfg
   - ksvalidator --followincludes --version $KS_VER ./xfce-git.cfg
