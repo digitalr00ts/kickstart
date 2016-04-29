@@ -1,6 +1,9 @@
 #!/bin/bash
 [ -z ${runpath+x} ] && declare -x runpath='/run/install'
-[ $2 = 'test' ] && runpath='.'
+if [ $2 = 'test' ] ; then
+  runpath='.'
+  blockdevice='vda'
+fi
 file=${runpath}/partitions.ks
 
 if [ -n $1 ] ; then
