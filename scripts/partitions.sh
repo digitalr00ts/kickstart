@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ -n $1 ] ; then
+if [ ! -z ${1+x} ] ; then
   if [ $1 = 'test' ] ; then
     runpath='.'
     blockdevice='vda'
