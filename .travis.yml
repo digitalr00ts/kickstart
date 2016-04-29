@@ -2,8 +2,6 @@
 language: bash
 env:
   - KS_VER=F23
-  - runpath='.'
-  - blockdevice='vda'
 before_install:
   - python --version
   - pip --version
@@ -13,9 +11,10 @@ install:
   - (cd pykickstart && pip install --user .)
 script:
   - declare -x blockdevice='vda'
-  - declare -x runpath='$(pwd)'
+  - declare -x runpath='.'
   - echo $runpath
-  - ${runpath}/scripts/partitions.sh
-  - ${runpath}/scripts/vm-guests.sh --desktop --qemu
+  - echo $blockdevice
+  - ./scripts/partitions.sh
+  - ./scripts/vm-guests.sh --desktop --qemu
   - ksvalidator --followincludes --version $KS_VER ./xfce-nfs.cfg
   - ksvalidator --followincludes --version $KS_VER ./xfce-git.cfg
