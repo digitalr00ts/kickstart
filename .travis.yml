@@ -1,5 +1,5 @@
 
-language: bash
+language: generic
 env:
   - KS_VER=F23
   - runpath='.'
