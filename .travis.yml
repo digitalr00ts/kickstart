@@ -11,9 +11,10 @@ install:
   - (cd pykickstart && pip install --user .)
 before_script:
   - declare -x blockdevice='vda'
-  - declare -x runpath='.'
+  - declare -x runpath='$(pwd)'
+  - echo $runpath
   - ${runpath}/scripts/partitions.sh
-  - ${runpath}/scripts/vm-guests.sh
+  - ${runpath}/scripts/vm-guests.sh --desktop --qemu
 script:
   - ksvalidator --followincludes --version $KS_VER ./xfce-nfs.cfg
   - ksvalidator --followincludes --version $KS_VER ./xfce-git.cfg
