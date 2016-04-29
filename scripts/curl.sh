@@ -81,13 +81,6 @@ if [ $desktop -eq 1 ] ; then
   fi
 fi
 
-echo -n 'korora-base.ks: '
-curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/korora-base.ks
-
-mkdir --parent ${runpath}/snippets && cd $_
-echo -n 'packagekit-cached-metadata.ks: '
-curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/snippets/packagekit-cached-metadata.ks
-
 mkdir --parent ${runpath}/scripts && cd $_
 echo -n 'partitions.sh: '
 curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/scripts/partitions.sh
