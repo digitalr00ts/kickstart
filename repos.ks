@@ -31,9 +31,19 @@ tee /etc/yum.repos.d/docker.repo <<-'EOF'
 [dockerrepo]
 name=Docker Repository
 baseurl=https://yum.dockerproject.org/repo/main/fedora/$releasever/
-enabled=1
+enabled=0
 gpgcheck=1
 gpgkey=https://yum.dockerproject.org/gpg
+EOF
+
+tee /etc/yum.repos.d/intel-graphics.repo <<-'EOF'
+[Intel_Linux-Graphics]
+name=Intel:Linux-Graphics
+type=rpm-md
+baseurl=https://download.01.org/gfx/repos/repos/repos/fedora/$releasever/
+gpgcheck=1
+gpgkey=https://download.01.org/gfx/RPM-GPG-KEY-ilg-3
+enabled=0
 EOF
 
 # ### ### ###
