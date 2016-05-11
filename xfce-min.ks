@@ -1,9 +1,7 @@
 # digitalr00ts xfce-min kickstart file
 #platform=x86, AMD64, or Intel EM64T
 
-text
-
-%include base-x.cfg
+%include x-base.cfg
 
 %packages
 # ### ### ###
@@ -17,8 +15,8 @@ NetworkManager-vpnc
 NetworkManager-vpnc-gnome
 -Thunar
 -abrt-desktop
-adwaita-gtk2-theme
-adwaita-icon-theme
+-adwaita-gtk2-theme
+-adwaita-icon-theme
 -albatross-gtk2-theme
 -albatross-gtk3-theme
 -albatross-xfwm4-theme
@@ -27,7 +25,7 @@ alsa-utils
 -bluebird-gtk3-theme
 -bluebird-xfwm4-theme
 desktop-backgrounds-compat
-fedora-icon-theme
+-fedora-icon-theme
 firewall-config
 fros-recordmydesktop
 greybird-gtk2-theme
@@ -37,12 +35,12 @@ greybird-xfwm4-theme
 gtk-xfce-engine
 gvfs
 gvfs-archive
-initial-setup-gui
-lightdm-gtk
+-initial-setup-gui
+-lightdm-gtk
 network-manager-applet
 nm-connection-editor
 openssh-askpass
-rodent-icon-theme
+-rodent-icon-theme
 -thunar-archive-plugin
 -thunar-media-tags-plugin
 -thunar-volman
@@ -72,16 +70,16 @@ yumex
 # @xfce-extra-plugins
 # ### ### ###
 -xfce4-battery-plugin
-xfce4-cpugraph-plugin
-xfce4-diskperf-plugin
+-xfce4-cpugraph-plugin
+-xfce4-diskperf-plugin
 -xfce4-eyes-plugin
 -xfce4-fsguard-plugin
 -xfce4-genmon-plugin
 xfce4-mailwatch-plugin
-xfce4-mount-plugin
-xfce4-netload-plugin
+-xfce4-mount-plugin
+-xfce4-netload-plugin
 -xfce4-sensors-plugin
-xfce4-systemload-plugin
+-xfce4-systemload-plugin
 xfce4-taskmanager
 -xfce4-time-out-plugin
 -xfce4-verve-plugin
@@ -95,50 +93,12 @@ xfce4-whiskermenu-plugin
 # ### ### ###
 gnome-disk-utility
 
+bluecurve-cursor-theme
+calendar
 dnssec-trigger-panel
 elementary-xfce-icon-theme
 korora-settings-xfce
 pcmanfm
-%end
-
-%pre --log=/tmp/xfce-min.cfg-pre.log
-#!/bin/bash
-function block_check () {
-  [ -d /sys/block/vda ] && echo vda && return 0
-  [ -d /sys/block/sda ] && echo sda && return 0
-  [ -d /sys/block/hda ] && echo hda && return 0
-  echo "No block device that I recognize" >&2 ; return 1
-}
-
-# Initialize global variables if necessary
-# Constants
-[ -z ${startpath+x} ] && declare -x startpath="$(pwd)"
-[ -z ${runpath+x} ] && declare -x runpath='/run/install'
-[ -z ${curl_options+x} ] && curl_options='--progress-bar --location --remote-name'
-[ -z ${blockdevice+x} ] && declare -x blockdevice=$(block_check) ; [ ! $blockdevice ] && exit 1
-# Variables
-[ -z ${branch+x} ] && declare -x branch='x'
-[ -z ${desktop+x} ] && declare -x desktop=1
-[ -z ${cfg+x} ] && declare -x cfg='xfce-min'
-
-# Checks for kickstart files and scripts
-# If not found will pull from Github
-if [ ! -f ${startpath}/scripts/curl.sh ] ; then
-  echo "Pulling Kicstart files and scripts from Github" >&2
-  echo "Using branch: ${branch}" >&2
-  mkdir --parent $runpath/scripts && cd $_
-  echo -n 'curl.sh: '
-  curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/scripts/curl.sh
-  chmod +x curl.sh
-  ${runpath}/scripts/curl.sh
-  cd ${startpath}
-fi
-
-#   Run scripts
-if [ ! -f ${startpath}/partitions.ks ] ; then
-  ${runpath}/scripts/partitions.sh || exit 1
-  ${runpath}/scripts/vm-guests.sh $([ $desktop -eq 1 ] && echo '--desktop') $([ $blockdevice == 'vda' ] && echo '--qemu')
-fi
 %end
 
 %post
@@ -150,6 +110,7 @@ crudini --set --verbose /etc/xdg/pcmanfm/default/pcmanfm.conf ui media_in_new_ta
 crudini --set --verbose /etc/skel/.config/xfce4/terminal/terminalrc Configuration BackgroundMode ''
 # xmlstarlet edit --update "//property[@name='IconThemeName']/@value" --value "elementary-xfce-darker" /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 xmlstarlet edit --inplace --update "//property[@name='IconThemeName']/@value" --value "elementary-xfce-darker" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
+xmlstarlet edit --inplace --update "//property[@name='CursorThemeName']/@value" --value "Bluecurve" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 echo "exec /usr/bin/xfce4-session" > /etc/skel/.xinitrc
 
 users=$(ls -d1 /home/*/)
