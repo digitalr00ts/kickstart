@@ -2,7 +2,7 @@
 if [ ! -z ${1+x} ] ; then
   if [ $1 = 'test' ] ; then
     runpath='.'
-    blockdevice='vda'
+    disk='vda'
   else
     disk=$1
   fi
