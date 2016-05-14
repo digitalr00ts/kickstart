@@ -2,13 +2,10 @@
 language: python
 env:
   - KS_VER=F23
-before_install:
-  - python --version
-  - pip --version
 install:
-  - pip install --user six requests
+  - pip install six requests
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
-  - (cd pykickstart && pip install --user .)
+  - (cd pykickstart && pip install .)
 script:
   - ./scripts/partitions.sh test
   - ./scripts/vm-guests.sh --desktop --qemu --test
