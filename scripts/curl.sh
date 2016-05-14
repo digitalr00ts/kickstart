@@ -83,6 +83,8 @@ if [ $desktop -eq 1 ] ; then
       curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/xfce.ks
       echo -n 'x-applications.ks: '
       curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/x-applications.ks
+      echo -n 'kodi.ks: '
+      curl ${curl_options} https://github.com/digitalr00ts/korora-kickstart/raw/$branch/kodi.ks
     fi
   fi
 fi
