@@ -9,5 +9,14 @@ install:
 script:
   - ./scripts/partitions.sh test
   - ./scripts/vm-guests.sh --desktop --qemu --test
+  - ksvalidator --version $KS_VER ./repos.ks
+  - ksvalidator --followincludes --version $KS_VER ./min.cfg
+  - ksvalidator --followincludes --version $KS_VER ./base.cfg
+  - ksvalidator --version $KS_VER ./x-base.ks
+  - ksvalidator --version $KS_VER ./x-extras.ks
+  - ksvalidator --version $KS_VER ./x-applications.ks
+  - ksvalidator --version $KS_VER ./xfce-min.ks
+  - ksvalidator --version $KS_VER ./xfce.ks
   - ksvalidator --followincludes --version $KS_VER ./workstation.cfg
+  - ksvalidator --version $KS_VER ./kodi.ks
   - ksvalidator --followincludes --version $KS_VER ./htpc.cfg
