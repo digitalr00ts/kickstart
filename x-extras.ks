@@ -48,14 +48,16 @@ paps
 # system-config-printer-udev
 
 # Scanner Support
+# Epson
 # iscan
+# HP
 # libsane-hpaio
 # sane-backends-drivers-cameras
 # sane-backends-drivers-scanners
 # sane-frontends
+# simple-scan
 # xsane
 
-
-pharlap
+-pharlap
 yumex-dnf
 %end
