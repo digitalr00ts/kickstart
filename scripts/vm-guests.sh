@@ -16,7 +16,7 @@ while true; do
     -d|--desktop) desktop=1 ; shift ;;
     -q|--qemu) qemu=1 ; shift ;;
     -v|--vmware) vmware=1 ; shift ;;
-    --test) runpath='.' ; file=${runpath}/vm-guests.ks ; disk='vda' ; shift ;;
+    --test) runpath='.' ; file=${runpath}/vm-guests.ks ; disk='vda' ; test=1 shift ;;
     --) shift; break ;;
     *) echo "Invaild option: $1"; exit 1 ;;
   esac
@@ -48,3 +48,5 @@ if [ $desktop = 1 ] ; then
   [ ! $qemu -eq 1 ] && echo -n '-' >> $file ; echo 'xorg-x11-drv-qxl' >> $file
 fi
 echo "%end" >> $file
+
+[ ${test} = '1' ] && cat ${file}

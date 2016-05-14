@@ -39,3 +39,5 @@ echo "# packages based on block device" >> $file
 echo "%packages" >> $file
 echo "$([ $disk != 'vda' ] && echo '-')qemu-guest-agent" >> $file
 echo "%end" >> $file
+
+[ $1 = 'test' ] && cat ${file}
