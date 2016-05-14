@@ -101,7 +101,7 @@ libva-utils
 libva-vdpau-driver
 %end
 
-%include base.cfg
+# %include base.cfg
 
 %post
 
