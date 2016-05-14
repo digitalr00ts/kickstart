@@ -50,4 +50,6 @@ allowed_users = kodi
 EOF
 
 chmod 644 /etc/X11/Xwrapper.config
+
+# systemctl enable kodi.service
 %end
