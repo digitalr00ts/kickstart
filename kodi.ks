@@ -2,8 +2,8 @@
 #platform=x86, AMD64, or Intel EM64T
 
 %include x-base.ks
-services --enabled=kodi
-firewall --enabled --service=mdns
+services --enabled kodi
+# firewall --enabled --service mdns
 
 user --name=kodi --iscrypted --password=$1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/
 
