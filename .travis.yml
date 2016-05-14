@@ -1,10 +1,10 @@
 
-language: bash
+language: python
 env:
   - KS_VER=F23
 before_install:
   - python --version
-  - pip install --upgrade pip
+  - pip --version
 install:
   - pip install --user six requests
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
