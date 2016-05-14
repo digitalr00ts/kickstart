@@ -46,7 +46,7 @@ EOF
 
 # Configure Xwrapper To Allow Non-Console Users, Kodi, To Start X-Server
 cat <<"EOF" >/etc/X11/Xwrapper.config
-allowed_users = kodi
+allowed_users = anybody
 EOF
 
 chmod 644 /etc/X11/Xwrapper.config
