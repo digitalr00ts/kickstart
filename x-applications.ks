@@ -36,4 +36,5 @@ smplayer
 uget
 xsane-gimp
 
+tuned-gtk
 %end
