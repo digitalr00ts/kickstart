@@ -5,7 +5,7 @@
 services --enabled kodi
 # firewall --enabled --service mdns
 
-user --name=kodi --iscrypted --password=$1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/
+# user --name=kodi --iscrypted --password=$1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/
 
 %packages
 dbus-x11
@@ -16,6 +16,7 @@ upower
 %end
 
 %post
+useradd --system kodi
 
 # Create Systemd Service File For X-Windows / Kodi
 cat <<"EOF" >/etc/systemd/system/kodi.service
