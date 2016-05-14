@@ -13,3 +13,4 @@ script:
   - ./scripts/partitions.sh test
   - ./scripts/vm-guests.sh --desktop --qemu --test
   - ksvalidator --followincludes --version $KS_VER ./workstation.cfg
+  - ksvalidator --followincludes --version $KS_VER ./htpc.cfg
