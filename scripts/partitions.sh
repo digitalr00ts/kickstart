@@ -40,4 +40,4 @@ echo "%packages" >> $file
 echo "$([ $disk != 'vda' ] && echo '-')qemu-guest-agent" >> $file
 echo "%end" >> $file
 
-[ $1 = 'test' ] && cat ${file}
+[ -z ${1+x} ] || ( [ ${1} = 'test' ] && cat ${file} )
