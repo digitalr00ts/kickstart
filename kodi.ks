@@ -5,7 +5,7 @@
 services --enabled=kodi
 firewall --enabled --service=mdns
 
-user --name=kodi --groups=wheel --iscrypted --password=$1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/
+user --name=kodi --iscrypted --password=$1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/
 
 %packages
 dbus-x11
