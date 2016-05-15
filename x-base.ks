@@ -95,6 +95,7 @@ adobe-release
 google-chrome-release
 google-earth-release
 google-talkplugin-release
+intellinuxgraphics-repo
 
 libva
 libva-utils
