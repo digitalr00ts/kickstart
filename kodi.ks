@@ -16,7 +16,7 @@ upower
 %end
 
 %post
-useradd --system kodi
+useradd --system kodi-standalone
 
 # Create Systemd Service File For X-Windows / Kodi
 cat <<"EOF" >/etc/systemd/system/kodi.service
@@ -39,12 +39,12 @@ EOF
 # Reconfigure PolicyKit To Enable Poweroff, Suspend and Similiar Functions
 cat <<"EOF" >/etc/polkit-1/localauthority/50-local.d/kodi_shutdown.pkla
 [Actions for kodi user]
-Identity=unix-user:kodi
+Identity=unix-user:kodi-standalone
 Action=org.freedesktop.devicekit.power.*;org.freedesktop.upower.*;org.freedesktop.consolekit.system.*;org.freedesktop.login1.*
 ResultAny=yes
 EOF
 
-# Configure Xwrapper To Allow Non-Console Users, Kodi, To Start X-Server
+# Configure Xwrapper To Allow Non-Console Users, kodi-standalone, To Start X-Server
 cat <<"EOF" >/etc/X11/Xwrapper.config
 allowed_users = anybody
 EOF
