@@ -67,6 +67,7 @@ pavucontrol
 light-locker
 lightdm-gtk
 lightdm-gtk-greeter-settings
+xguest
 
 %end
 
