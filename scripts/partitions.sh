@@ -25,8 +25,9 @@ fi
 file=${runpath}/partitions.ks
 
 echo "# Generated partition scheme for $disk2" > $file
-echo "clearpart --drives=$disk2" >> $file
-[ "$disk2" = 'vda' ] && echo "zerombr" >> $file
+echo "clearpart --drives=$disk1" >> $file
+[ "$disk1" != "$disk2" ] && (echo "clearpart --drives=$disk2" >> $file)
+[ "$disk1" = 'vda' ] && echo "zerombr" >> $file
 echo "bootloader --boot-drive=$disk2 --timeout=1" >> $file
 
 # echo "autopart --type=lvm --fstype=ext4" >> $file
