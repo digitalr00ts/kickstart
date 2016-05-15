@@ -4,15 +4,15 @@ if [ ! -z ${1+x} ] ; then
     runpath='.'
     disk1='vda'
     disk2=$disk1
-  elif ([ $1 = 'two' ] && [ ! -n $blockdevice ]) ; then
-    [ $blockdevice = 'vda'] && disk1='vdb'
-    [ $blockdevice = 'sda'] && disk1='sdb'
-    [ $blockdevice = 'hda'] && disk1='hdb'
+  elif ([ $1 = 'two' ] && [ -n $blockdevice ]) ; then
+    [ "$blockdevice" == 'vda' ] && disk1='vdb'
+    [ "$blockdevice" == 'sda' ] && disk1='sdb'
+    [ "$blockdevice" == 'hda' ] && disk1='hdb'
     disk2=$blockdevice
   else
     disk1=$1
   fi
-elif [ -n '$blockdevice' ] ; then
+elif [ -n $blockdevice ] ; then
   disk1=$blockdevice
   disk2=$blockdevice
 else
