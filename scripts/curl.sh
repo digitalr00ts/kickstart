@@ -39,6 +39,8 @@ while true; do
   esac
 done
 
+# Crude work around to network issue.
+# Better solution would be to check and loop until domain can resolve.
 ping github.com -c 10
 
 # ### ### ###
