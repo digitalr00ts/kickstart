@@ -39,6 +39,8 @@ while true; do
   esac
 done
 
+dig github.com +short +tries=1000
+
 # ### ### ###
 # Get nessacary files
 # ### ### ###
