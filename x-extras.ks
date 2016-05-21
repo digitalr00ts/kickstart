@@ -59,5 +59,6 @@ paps
 # xsane
 
 -pharlap
+pulseaudio-equalizer
 yumex-dnf
 %end
