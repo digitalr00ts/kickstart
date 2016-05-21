@@ -64,7 +64,7 @@ xfwm4
 xfwm4-theme-nodoka
 xfwm4-themes
 -xscreensaver-base
-yumex
+-yumex
 
 # ### ### ###
 # @xfce-extra-plugins
