@@ -1,7 +1,7 @@
 # digitalr00ts xfce-min kickstart file
 #platform=x86, AMD64, or Intel EM64T
 
-%include x-base.ks
+#%include x-base.ks
 
 %packages
 # ### ### ###
