@@ -45,11 +45,11 @@ fi
 echo "logvol swap --$([ ! $disk1 == 'vda' ] && echo 'hibernation' || echo 'recommended') --vgname=vg_$disk1 --name=lv_swap --fstype=swap --size=512" >> $file
 echo "logvol none --vgname=vg_$disk1 --name=lv_$disk1 --thinpool --size=1000 --grow" >> $file
 echo '# root ### ### ###' >> $file
-echo "logvol / --vgname=vg_$disk2 --name=lv_root --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async\" --size=8000 --thin --poolname=lv_$disk2" >> $file
+echo "logvol / --vgname=vg_$disk2 --name=lv_root --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 16384\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async\" --size=8000 --thin --poolname=lv_$disk2" >> $file
 echo '# home ### ### ###' >> $file
-echo "logvol /home --vgname=vg_$disk1 --name=lv_home --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --size=10000 --thin --poolname=lv_$disk1" >> $file
+echo "logvol /home --vgname=vg_$disk1 --name=lv_home --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 16384\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --size=10000 --thin --poolname=lv_$disk1" >> $file
 echo '# var ### ### ###' >> $file
-echo "logvol /var --vgname=vg_$disk1 --name=lv_var --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 32768\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --size=2000 --thin --poolname=lv_$disk1" >> $file
+echo "logvol /var --vgname=vg_$disk1 --name=lv_var --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,has_journal,dir_nlink,resize_inode -I 256 -i 16384\" --fsoptions=\"rw,relatime,lazytime,suid,dev,exec,auto,nouser,async\" --size=2000 --thin --poolname=lv_$disk1" >> $file
 
 # echo >> $file
 # echo "# packages based on block device" >> $file
