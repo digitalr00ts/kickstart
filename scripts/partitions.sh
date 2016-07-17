@@ -42,7 +42,8 @@ if [ "$disk1" != "$disk2" ] ; then
   echo "volgroup vg_$disk2 pv.02" >> $file
   echo "logvol none --vgname=vg_$disk2 --name=lv_$disk2 --thinpool --size=1000 --grow" >> $file
 fi
-echo "logvol swap --$([ ! $disk1 == 'vda' ] && echo 'hibernation' || echo 'recommended') --vgname=vg_$disk1 --name=lv_swap --fstype=swap --size=512" >> $file
+# echo "logvol swap --$([ ! $disk1 == 'vda' ] && echo 'hibernation' || echo 'recommended') --vgname=vg_$disk1 --name=lv_swap --fstype=swap --size=512" >> $file
+echo "logvol swap --recommended --vgname=vg_$disk1 --name=lv_swap --fstype=swap >> $file
 echo "logvol none --vgname=vg_$disk1 --name=lv_$disk1 --thinpool --size=1000 --grow" >> $file
 echo '# root ### ### ###' >> $file
 echo "logvol / --vgname=vg_$disk2 --name=lv_root --fstype=ext4 --mkfsoptions=\"-O none,extent,extra_isize,ext_attr,dir_index,filetype,sparse_super,flex_bg,uninit_bg,large_file,dir_nlink,resize_inode -I 256 -i 16384\" --fsoptions=\"rw,noatime,suid,dev,exec,auto,nouser,async\" --size=10000 --thin --poolname=lv_$disk2" >> $file
