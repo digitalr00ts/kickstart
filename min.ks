@@ -19,7 +19,7 @@ selinux --enforcing
 sshpw --username=root '' --lock
 sshpw --username=commander $1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/ --iscrypted
 
-user --name=default_admin --groups=wheel --iscrypted --password=$1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/
+user --name=superuser --groups=wheel --iscrypted --password=$1$k4aUN3va$URZYG5mTDY2ZVnvZy.XxL/
 
 %packages --excludedocs
 @core --nodefaults
