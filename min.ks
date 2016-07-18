@@ -7,7 +7,6 @@ repo --name="Fedora-Update" --mirrorlist=http://mirrors.fedoraproject.org/mirror
 
 keyboard 'us'
 lang en_USi.UTF-8
-timezone America/Los_Angeles --isUtc --ntpservers=0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org
 
 ## Optional ##
 text
