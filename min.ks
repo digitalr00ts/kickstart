@@ -8,8 +8,6 @@ repo --name="Fedora-Update" --mirrorlist=http://mirrors.fedoraproject.org/mirror
 keyboard 'us'
 lang en_USi.UTF-8
 
-## Optional ##
-text
 eula --agreed
 reboot
 
