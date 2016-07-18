@@ -157,13 +157,13 @@ samba
 samba-winbind
 setools-console
 # system-config-firewall-tui
-unburden-home-dir
+## unburden-home-dir
 
 -anaconda*
-korora-repos
-rpmfusion-free-release
-rpmfusion-nonfree-release
-virtualbox-release
+## korora-repos
+## rpmfusion-free-release
+## rpmfusion-nonfree-release
+## virtualbox-release
 %end
 
 %post
