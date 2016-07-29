@@ -193,9 +193,11 @@ curl -L https://gist.githubusercontent.com/anonymous/8eb2019db2e278ba99be/raw/25
 crudini --set /etc/default/grub '' GRUB_FORCE_HIDDEN_MENU true
 crudini --set /etc/default/grub '' GRUB_GFXPAYLOAD_LINUX keep
 crudini --set /etc/default/grub '' GRUB_TERMINAL gfxterm
+sed --in-place 's/ = /=/g' /etc/default/grub
 
 [ -e /usr/share/fonts/dejavu/DejaVuSansMono.ttf ] && grub2-mkfont --output=/boot/grub2/unicode.pf2 /usr/share/fonts/dejavu/DejaVuSansMono.ttf
 
 [ -e /boot/grub2/grub.cfg ] && grub2-mkconfig -o /boot/grub2/grub.cfg
+[ -e /boot/efi/EFI/fedora/grub.cfg ] && dnf install grub2-efi-modules
 [ -e /boot/efi/EFI/fedora/grub.cfg ] && grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
 %end
