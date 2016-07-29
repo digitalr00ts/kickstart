@@ -71,8 +71,6 @@ xguest
 
 %end
 
-%include xfce-min.ks
-
 %post
 curl --progress-bar --location --output atom.rpm https://atom.io/download/rpm
 rpm --upgrade --verbose --hash atom.rpm
