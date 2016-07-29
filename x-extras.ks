@@ -20,10 +20,10 @@ pulseaudio-utils
 # gstreamer-plugins-espeak
 gstreamer-plugins-good
 
-faac
-ffmpeg
-ffmpegthumbnailer
-gstreamer-ffmpeg
+#faac
+#ffmpeg
+#ffmpegthumbnailer
+#gstreamer-ffmpeg
 
 # ### ### ###
 @printing --nodefaults
