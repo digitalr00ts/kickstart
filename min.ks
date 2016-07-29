@@ -106,7 +106,7 @@ do
 done
 
 # enable magic keys
-echo "kernel.sysrq = 1" >> /etc/sysctl.conf
+# echo "kernel.sysrq = 1" >> /etc/sysctl.conf
 
 # enable discards on LVM for trim
 sed -i 's/issue_discards = 0/issue_discards = 1/g' /etc/lvm/lvm.conf
