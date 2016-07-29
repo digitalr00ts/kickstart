@@ -6,7 +6,7 @@ repo --name="Fedora-Everything" --mirrorlist=http://mirrors.fedoraproject.org/mi
 repo --name="Fedora-Update" --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
 
 keyboard 'us'
-lang en_USi.UTF-8
+lang en_US.UTF-8
 
 eula --agreed
 reboot
