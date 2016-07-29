@@ -38,14 +38,14 @@ xorg-x11-drv-evdev
 xorg-x11-drv-fbdev
 -xorg-x11-drv-freedreno
 -xorg-x11-drv-geode
-xorg-x11-drv-intel
+#xorg-x11-drv-intel
 -xorg-x11-drv-mga
 xorg-x11-drv-modesetting
-xorg-x11-drv-nouveau
+#xorg-x11-drv-nouveau
 -xorg-x11-drv-omap
 -xorg-x11-drv-openchrome
 -xorg-x11-drv-qxl
-xorg-x11-drv-synaptics
+#xorg-x11-drv-synaptics
 xorg-x11-drv-vesa
 -xorg-x11-drv-vmmouse
 -xorg-x11-drv-vmware
@@ -90,12 +90,12 @@ system-config-printer
 
 -PackageKit*
 
--korora-release-workstation
-adobe-release
-google-chrome-release
-google-earth-release
-google-talkplugin-release
-intellinuxgraphics-repo
+#-korora-release-workstation
+#adobe-release
+#google-chrome-release
+#google-earth-release
+#google-talkplugin-release
+#intellinuxgraphics-repo
 
 libva
 libva-utils
@@ -110,5 +110,5 @@ libva-vdpau-driver
 #mkdir /etc/skel/{Documents,Downloads,Music,Pictures,Videos}
 mkdir /etc/skel/Desktop
 
-systemctl set-default graphical.target
+#systemctl set-default graphical.target
 %end
