@@ -111,7 +111,7 @@ crudini --set --verbose /etc/skel/.config/xfce4/terminal/terminalrc Configuratio
 # xmlstarlet edit --update "//property[@name='IconThemeName']/@value" --value "elementary-xfce-darker" /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 xmlstarlet edit --inplace --update "//property[@name='IconThemeName']/@value" --value "elementary-xfce-darker" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
 xmlstarlet edit --inplace --update "//property[@name='CursorThemeName']/@value" --value "Bluecurve" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
-echo "exec /usr/bin/xfce4-session" > /etc/skel/.xinitrc
+echo "exec /usr/bin/startxfce4" > /etc/skel/.xinitrc
 
 users=$(ls -d1 /home/*/)
 for folder in $users
