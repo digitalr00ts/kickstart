@@ -12,7 +12,7 @@ authconfig
 dnf-plugins-core
 dracut-config-rescue
 firewalld
-NetworkManager
+# NetworkManager
 # ppc64-utils
 # ------
 # optional
