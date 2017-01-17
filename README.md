@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/digitalr00ts/korora-kickstart.svg?branch=master)](https://travis-ci.org/digitalr00ts/korora-kickstart)
+[![Build Status](https://travis-ci.org/digitalr00ts/korora-kickstart.svg?branch=f25)](https://travis-ci.org/digitalr00ts/korora-kickstart)
 
 # korora-kickstart
 The digitalr00ts Fedora spins.
