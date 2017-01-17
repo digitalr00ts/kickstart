@@ -12,7 +12,7 @@ authconfig
 dnf-plugins-core
 dracut-config-rescue
 firewalld
-# NetworkManager
+NetworkManager
 # ppc64-utils
 # ------
 # optional
@@ -155,10 +155,9 @@ openssh-server
 
 # ### ### ###
 dnf-automatic
-dnssec-trigger
+# dnssec-trigger
 git
 kernel-core
-korora-extras
 ldns-utils
 tmux
 vim-enhanced
@@ -169,12 +168,12 @@ xmlstarlet
 
 akmods
 dkms
-dnf-plugin-system-upgrade
+# dnf-plugin-system-upgrade
 redhat-lsb-core
 macchanger
 NetworkManager-tui
-samba
-samba-winbind
+# samba
+# samba-winbind
 setools-console
 # system-config-firewall-tui
 ## unburden-home-dir
