@@ -1,7 +1,7 @@
 
 language: python
 env:
-  - KS_VER=F23
+  - KS_VER=F25
 install:
   - pip install six requests
   - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
