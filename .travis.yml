@@ -4,7 +4,7 @@ env:
   - KS_VER=F25
 install:
   - pip install six requests
-  - git clone --depth 1 -b r2.20-1 git://github.com/rhinstaller/pykickstart.git
+  - git clone --depth 1 -b r3.5-1 git://github.com/rhinstaller/pykickstart.git
   - (cd pykickstart && pip install .)
 script:
   - ./scripts/partitions.sh test
