@@ -3,6 +3,26 @@
 
 %packages
 # ### ### ###
+# @core
+# ### ### ###
+# ------
+# default
+# ------
+authconfig
+dnf-plugins-core
+dracut-config-rescue
+firewalld
+NetworkManager
+# ppc64-utils
+# ------
+# optional
+# ------
+# dracut-config-generic
+# initial-setup
+# uboot-images-armv7
+# uboot-tools
+
+# ### ### ###
 # @standard
 # ### ### ###
 -abrt-cli
