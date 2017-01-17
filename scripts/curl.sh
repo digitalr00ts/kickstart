@@ -7,7 +7,7 @@ set -o errexit
 # ### ### ###
 [ -z ${startpath+x} ] && declare -x startpath="$(pwd)"
 [ -z ${runpath+x} ] && declare -x runpath='/run/install'
-[ -z ${branch+x} ] && declare -x branch='master'
+[ -z ${branch+x} ] && declare -x branch='f25'
 [ -z ${desktop+x} ] && declare -x desktop=0
 [ -z ${cfg+x} ] && declare cfg=''
 [ -z ${curl_options+x} ] && curl_options='--progress-bar --location --remote-name'

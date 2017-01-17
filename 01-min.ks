@@ -39,7 +39,7 @@ function block_check () {
 [ -z ${curl_options+x} ] && curl_options='--progress-bar --location --remote-name'
 [ -z ${blockdevice+x} ] && declare -x blockdevice=$(block_check) ; [ ! $blockdevice ] && exit 1
 # Variables
-[ -z ${branch+x} ] && declare -x branch='master'
+[ -z ${branch+x} ] && declare -x branch='f25'
 [ -z ${desktop+x} ] && declare -x desktop=0
 # [ -z ${cfg+x} ] && declare -x cfg='base'
 
