@@ -25,22 +25,22 @@ NetworkManager
 # ### ### ###
 # @standard
 # ### ### ###
--abrt-cli
+# abrt-cli
 acl
 at
 attr
 bash-completion
--bc
+# bc
 bind-utils
 bridge-utils
 -btrfs-progs
 bzip2
 cifs-utils
 coolkey
--cpio
+# cpio
 crontabs
 cryptsetup
--cyrus-sasl-plain
+# cyrus-sasl-plain
 dbus
 deltarpm
 dos2unix
@@ -97,51 +97,60 @@ tcp_wrappers
 -telnet
 time
 traceroute
--tree
+# tree
 unzip
 usbutils
--vconfig
+# vconfig
 wget
 which
--wireless-tools
+# wireless-tools
 words
 zip
 
 # ### ### ###
 # @system-tools
 # ### ### ###
--BackupPC
+# ------
+# default
+# ------
+# BackupPC
+# bonnie++
+chrony
+# cifs-utils
+# jigdo
+libreswan
 NetworkManager-l2tp
--NetworkManager-openconnect
+NetworkManager-libreswan
+# NetworkManager-openconnect
 NetworkManager-openvpn
 NetworkManager-vpnc
--bonnie++
-chrony
-cifs-utils
--jigdo
-libreswan
 nmap
 -ntfs-3g
 -openconnect
-openldap-clients
+# openldap-clients
 openvpn
-samba-client
+# samba-client
 -screen
 setserial
 -tigervnc
 vpnc
--xdelta
--zisofs-tools
--zsh
+# xdelta
+# zisofs-tools
+# zsh
 
 # ### ### ###
 # @headless-management
 # ### ### ###
-PackageKit
--cockpit
+# cockpit-bridge
+# cockpit-networkmanager
+# cockpit-shell
+# cockpit-storaged
+# cockpit-ws
 openssh-server
--rolekit
--tog-pegasus
+PackageKit
+# rolekit
+# cockpit-kubernetes
+# cockpit-pcp
 
 # ### ### ###
 dnf-automatic
