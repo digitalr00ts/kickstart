@@ -1,5 +1,6 @@
-# digitalr00ts minimal kickstart file
+#version=F25
 #platform=x86, AMD64, or Intel EM64T
+# digitalr00ts minimal kickstart file
 
 install
 repo --name="Fedora-Everything" --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
