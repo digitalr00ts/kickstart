@@ -5,7 +5,7 @@ python:
 env:
   - KS_VER=F25
 install:
-  - pip install six requests
+  - pip install six requests ordered_set
   - git clone --depth 1 -b r3.5-1 git://github.com/rhinstaller/pykickstart.git
   - (cd pykickstart && pip install .)
 script:
