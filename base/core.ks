@@ -59,3 +59,6 @@ NetworkManager
 #initial-setup
 #uboot-images-armv7
 #uboot-tools
+
+%end
+
