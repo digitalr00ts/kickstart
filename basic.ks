@@ -1,4 +1,4 @@
-# base/init.ks
+# basic.ks
 # platform=x86, AMD64, or Intel EM64T
 # digitalr00ts kickstart file
 
