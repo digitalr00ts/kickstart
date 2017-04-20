@@ -8,4 +8,4 @@ install:
   - pip install six requests ordered_set
   - git clone --depth 1 -b r3.5-1 git://github.com/rhinstaller/pykickstart.git && pip install pykickstart/
 script:
-  - set -xeo pipefail; for KS in $(ls -1 ksappend/); do ksvalidator --followincludes --version F25 ./ksappend/${KS} ; done
+  - set -xeo pipefail; for KS in $(ls -1 ksappend/); do ksvalidator --followincludes --version F25 ./ksappend/${KS}; done; set +x
