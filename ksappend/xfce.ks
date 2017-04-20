@@ -3,6 +3,7 @@
 # digitalr00ts kickstart file
 
 %ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/basic.ks
+%ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/x-base.ks
 %ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/x-basic.ks
 %ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/_x-apps.ks
 

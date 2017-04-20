@@ -5,5 +5,7 @@
 %ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/basic.ks
 %ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/server-host.ks
 
-%ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/server/gui/admin-tool.ks
+%ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/x-base.ks
+%ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/ksappend/x-basic.ks
 %ksappend https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/server/gui/virtualization.ks
+
