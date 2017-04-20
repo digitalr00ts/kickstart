@@ -1,7 +1,7 @@
 
 language: python
 python:
-  - "3.6"
+  - "3.6.1"
 env:
   - KS_VER=F25
 install:
