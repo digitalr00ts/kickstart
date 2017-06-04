@@ -6,3 +6,6 @@
 %include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/base/core.ks
 %include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f25-dev/base/standard.ks
 
+%packages
+vim
+%end
