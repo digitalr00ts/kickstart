@@ -80,7 +80,7 @@ traceroute
 #tree
 unzip
 usbutils
-util-linux-user
+#util-linux-user
 vconfig
 #wget
 which
