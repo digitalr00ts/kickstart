@@ -47,7 +47,7 @@ util-linux
 vim-minimal
 
 # Default
-#authconfig
+authconfig
 dnf-plugins-core
 #dracut-config-rescue
 firewalld
