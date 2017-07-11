@@ -6,6 +6,6 @@ env:
   - KS_VER=F25
 install:
   - pip install six requests ordered_set
-  - git clone --depth 1 -b r3.5-1 git://github.com/rhinstaller/pykickstart.git && pip install pykickstart/
+  - git clone --depth 1 -b r3.6-1 git://github.com/rhinstaller/pykickstart.git && pip install pykickstart/
 script:
     - set -xeo pipefail; for KS in $(find . -name \*.ks); do ksvalidator --followincludes --version F25 ${KS}; done; set +x
