@@ -14,6 +14,8 @@ abrt-desktop
 #albatross-gtk3-theme
 #albatross-xfwm4-theme
 alsa-utils
+#arc-theme
+#blueberry
 #bluebird-gtk2-theme
 #bluebird-gtk3-theme
 #bluebird-xfwm4-theme

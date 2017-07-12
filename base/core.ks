@@ -41,6 +41,7 @@ rpm
 selinux-policy-targeted
 setup
 shadow-utils
+#sssd-common
 sudo
 systemd
 util-linux
@@ -52,12 +53,14 @@ dnf-plugins-core
 #dracut-config-rescue
 firewalld
 NetworkManager
-#ppc64-utils
 
 # Optional
 #dracut-config-generic
 #initial-setup
+#ppc64-diag
+#ppc64-utils
 #uboot-images-armv7
+#uboot-images-armv8
 #uboot-tools
 
 %end
