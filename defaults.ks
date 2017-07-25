@@ -1,6 +1,7 @@
 # defaults.ks
 
 install
+reboot
 text
 
 url --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
