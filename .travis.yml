@@ -3,9 +3,9 @@ language: python
 python:
   - "3.6"
 env:
-  - KS_VER=F25
+  - KS_VER=F26
 install:
   - pip install six requests ordered_set
-  - git clone --depth 1 -b r3.6-1 git://github.com/rhinstaller/pykickstart.git && pip install pykickstart/
+  - git clone --depth 1 -b r3.7-1 git://github.com/rhinstaller/pykickstart.git && pip install pykickstart/
 script:
-    - set -xeo pipefail; for KS in $(find . -name \*.ks); do ksvalidator --followincludes --version F25 ${KS}; done; set +x
+    - set -xeo pipefail; for KS in $(find . -name \*.ks); do ksvalidator --followincludes --version ${KS_VER} ${KS}; done; set +x
