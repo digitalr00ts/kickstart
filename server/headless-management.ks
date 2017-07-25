@@ -19,10 +19,12 @@ rolekit
 
 # Optional
 #cockpit-kubernetes
-cockpit-pcp
+# Fatal error on installation, disabling for now
+# cockpit-pcp
 
 # Not Included
-docker-cockpit
+# Anaconda throws error that is missing even though it is in comps-f26.xml
+#docker-cockpit
 
 %end
 

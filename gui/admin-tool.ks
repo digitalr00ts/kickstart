@@ -12,7 +12,9 @@ fros-recordmydesktop
 gnome-disk-utility
 recordmydesktop
 setroubleshoot
-system-config-date
+# Anaconda for several Fedora versions has complained this is missing.
+# I do not know what the issue is.
+#system-config-date
 system-config-keyboard
 system-config-language
 system-config-users
