@@ -144,7 +144,7 @@
         "script/qemu.sh",
         "script/virtualbox.sh",
         "script/parallels.sh",
-        "custom-script.sh",
+        "script/custom-script.sh",
         "script/cleanup.sh"
       ],
       "type": "shell"
