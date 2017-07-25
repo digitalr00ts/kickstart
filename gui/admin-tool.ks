@@ -8,7 +8,6 @@
 %packages
 
 abrt-desktop
-authconfig-gtk
 fros-recordmydesktop
 gnome-disk-utility
 recordmydesktop
