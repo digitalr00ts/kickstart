@@ -5,7 +5,6 @@
 %include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/ksappend/basic.ks
 
 %include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/server/core.ks
-#%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/server/container-management.ks
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/server/docker-ce.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/server/container-management.ks
 %include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/server/headless-management.ks
 %include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/server/virtualization-headless.ks
