@@ -6,7 +6,9 @@ repo --name rpmfusion-free --mirrorlist http://mirrors.rpmfusion.org/mirrorlist?
 repo --name rpmfusion-nonfree --mirrorlist http://mirrors.rpmfusion.org/mirrorlist?repo=nonfree-fedora-updates-released-$releasever&arch=$basearch --cost 1001
 
 %packages
+
 rpmfusion-free-release
 rpmfusion-nonfree-release
+
 %end
 
