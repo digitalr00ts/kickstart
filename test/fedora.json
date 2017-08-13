@@ -53,10 +53,27 @@
         ],
         [
           "modifyvm", "{{.Name}}", "--cpus", "{{ user `cpus` }}"
+        ],
+        [
+          "createhd",
+          "--format",
+          "VMDK",
+          "--filename",
+          "second_disk.vmdk",
+          "--variant",
+		  "Stream",
+          "--size",
+		  "10000"
         ]
       ],
       "virtualbox_version_file": ".vbox_version",
-      "vm_name": "{{ user `vm_name` }}"
+      "vm_name": "{{ user `vm_name` }}",
+	  "iso_interface": "ide",
+	  "hard_drive_nonrotational": true,
+	  "hard_drive_discard": true,
+	  "hard_drive_interface": "sata",
+	  "sata_port_count": 6,
+	  "guest_additions_mode": "attach"
     },
     {
       "boot_command": [
@@ -153,7 +170,7 @@
   "variables": {
     "_comment": "digitalr00ts : built with packer",
     "cpus": "2",
-    "disk_size": "16384",
+    "disk_size": "8162",
     "ftp_proxy": "{{env `ftp_proxy`}}",
     "headless": "",
     "http_proxy": "{{env `http_proxy`}}",
@@ -169,7 +186,7 @@
     "no_proxy": "{{env `no_proxy`}}",
     "parallels_guest_os_type": "fedora-core",
     "rsync_proxy": "{{env `rsync_proxy`}}",
-    "shutdown_command": "echo 'not shutting down for manual inspection'",
+    "shutdown_command": "/sbin/shutdown -P now",
     "ssh_password": "vagrant",
     "ssh_username": "vagrant",
     "update": "false",
