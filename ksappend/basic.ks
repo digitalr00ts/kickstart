@@ -7,5 +7,9 @@
 %include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/base/standard.ks
 
 %packages
+
+git
 vim
+
 %end
+
