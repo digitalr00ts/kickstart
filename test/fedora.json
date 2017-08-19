@@ -64,7 +64,7 @@
 		  "Stream",
           "--size",
 		  "10000"
-        ]
+		]
       ],
       "virtualbox_version_file": ".vbox_version",
       "vm_name": "{{ user `vm_name` }}",
@@ -72,8 +72,7 @@
 	  "hard_drive_nonrotational": true,
 	  "hard_drive_discard": true,
 	  "hard_drive_interface": "sata",
-	  "sata_port_count": 6,
-	  "guest_additions_mode": "attach"
+	  "sata_port_count": 6
     },
     {
       "boot_command": [

@@ -9,7 +9,7 @@ if [[ $PACKER_BUILDER_TYPE =~ virtualbox ]]; then
 
     VBOX_VERSION=$(cat $SSH_USER_HOME/.vbox_version)
     mount -o loop $SSH_USER_HOME/VBoxGuestAdditions_$VBOX_VERSION.iso /mnt
-    sh /mnt/VBoxLinuxAdditions.run --nox11
+    sh /mnt/VBoxLinuxAdditions.run #--nox11
     umount /mnt
     rm -rf $SSH_USER_HOME/VBoxGuestAdditions_$VBOX_VERSION.iso
     rm -f $SSH_USER_HOME/.vbox_version
