@@ -4,12 +4,12 @@
 
 xconfig --startxonboot
 
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/repos/rpmfusion.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26/repos/rpmfusion.ks
 
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/ksappend/x-basic.ks
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/ksappend/_x-apps.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26/ksappend/x-basic.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26/ksappend/_x-apps.ks
 
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/gui/xfce/apps.ks
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/gui/xfce/desktop.ks
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/gui/xfce/extra-plugins.ks
-%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26-dev/gui/xfce/media.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26/gui/xfce/apps.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26/gui/xfce/desktop.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26/gui/xfce/extra-plugins.ks
+%include https://raw.githubusercontent.com/digitalr00ts/korora-kickstart/f26/gui/xfce/media.ks
