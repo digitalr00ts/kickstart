@@ -4,8 +4,11 @@ install
 reboot
 text
 
-url --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
-repo --name="fedora-updates" --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
+#url --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=fedora-$releasever&arch=$basearch
+#repo --name="fedora-updates" --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
+
+# cuz fedora mirrors suck sometimes
+url -url https://mirrors.lug.mtu.edu/fedora/linux/releases/26/Everything/x86_64/os/
 
 network --bootproto=dhcp
 
