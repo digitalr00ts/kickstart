@@ -8,7 +8,7 @@ text
 #repo --name="fedora-updates" --mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=updates-released-f$releasever&arch=$basearch
 
 # cuz fedora mirrors suck sometimes
-url --url https://mirrors.lug.mtu.edu/fedora/linux/releases/26/Everything/x86_64/os/
+url --url https://dl.fedoraproject.org/pub/fedora/linux/releases/26/Everything/x86_64/os/
 
 network --bootproto=dhcp
 
