@@ -26,6 +26,8 @@ rolekit
 # Anaconda throws error that is missing even though it is in comps-f26.xml
 #docker-cockpit
 #pcp-pmda-kvm
+#tuned
+#tuned-utils-systemtap
 
 # Kimchi in repo is very old. v1.5.1
 #kimchi
