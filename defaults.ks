@@ -9,7 +9,7 @@ text
 
 # cuz fedora mirrors suck sometimes
 url --url https://dl.fedoraproject.org/pub/fedora/linux/releases/26/Everything/x86_64/os/
-repo --name="fedora-updates" --url https://dl.fedoraproject.org/pub/fedora/linux/updates/26/x86_64/
+repo --name="fedora-updates" --baseurl https://dl.fedoraproject.org/pub/fedora/linux/updates/26/x86_64/
 
 network --bootproto=dhcp
 
