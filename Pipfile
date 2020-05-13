@@ -1,0 +1,15 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+pykickstart = {editable = true,git = "https://github.com/pykickstart/pykickstart.git",ref = "r3.25"}
+six = "*"
+requests = "*"
+ordered-set = "*"
+
+[requires]
+python_version = "3.8"
