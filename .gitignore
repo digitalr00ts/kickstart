@@ -1,0 +1,9 @@
+.venv/
+venv/
+.tox/
+.vagrant/
+packer/packer
+packer_cache/
+*manifest.json
+output-*/
+boxes/
