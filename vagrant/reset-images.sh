@@ -2,7 +2,7 @@
 
 set -e
 
-for BOX in $(vagrant box list | grep -o '^file://boxes/fedora.*\.box') ; do
+for BOX in $(vagrant --no-tty box list | grep -o '^file://.*boxes/fedora.*\.box') ; do
   vagrant box remove ${BOX} --force
 done
 
