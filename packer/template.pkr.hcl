@@ -37,6 +37,7 @@ source "qemu" "fedora" {
   accelerator        = "kvm"
   iso_url            = "${local.iso_url}"
   iso_checksum       = "${local.iso_checksum}"
+  output_directory   = "output/{{build_type}}"
   ssh_timeout        = "60000s"
   ssh_wait_timeout   = "60000s"
   ssh_username       = "vagrant"
@@ -48,7 +49,7 @@ source "qemu" "fedora" {
   disk_detect_zeroes = "unmap"
   disk_discard       = "unmap"
   disk_size          = "10240M"
-  http_directory     = "../kickstart"
+  http_directory     = "kickstart"
   boot_key_interval  = "10ms"
   boot_wait          = "1s"
   boot_command       = ["<tab> inst.text inst.sshd ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"]
@@ -61,7 +62,7 @@ build {
   sources     = ["source.qemu.fedora"]
 
   provisioner "ansible" {
-    playbook_file = "./playbook.yml"
+    playbook_file = "packer/playbook.yml"
   }
 /*
   provisioner "inspec" {
@@ -73,15 +74,15 @@ build {
   post-processors {
     post-processor "vagrant" {
       name                           = "box"
-      include                        = ["info.json"]
+      include                        = ["packer/info.json"]
       vagrantfile_template_generated = true
-      output                         = "../vagrant/boxes/{{.BuildName}}${var.version}_{{.Provider}}.box"
+      output                         = "output/boxes/{{.BuildName}}${var.version}_{{.Provider}}.box"
       keep_input_artifact            = true
     }
     post-processor "checksum" {
       name           = "sha256"
       checksum_types = ["sha256"]
-      output         = "../vagrant/boxes/{{.BuildName}}${var.version}.checksum"
+      output         = "output/boxes/{{.BuildName}}${var.version}.checksum"
     }
     post-processor "manifest" {
       strip_path = true
