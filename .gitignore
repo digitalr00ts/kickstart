@@ -2,8 +2,8 @@
 venv/
 .tox/
 .vagrant/
+.kitchen/
 packer/packer
 packer_cache/
 *manifest.json
-output-*/
-boxes/
+output/
