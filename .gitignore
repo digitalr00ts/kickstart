@@ -1,3 +1,4 @@
+.bundle/bin
 .venv/
 venv/
 .tox/
