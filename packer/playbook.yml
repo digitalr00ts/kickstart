@@ -1,8 +1,0 @@
----
-- name: 'ssh hardening'
-  hosts: default
-  become: yes
-  roles:
-    - dev-sec.ssh-hardening
-  vars:
-    sftp_enabled: true
