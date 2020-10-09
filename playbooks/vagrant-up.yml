@@ -1,0 +1,6 @@
+---
+- name: Vagrant Up
+  hosts: all
+  gather_facts: false
+  tasks:
+    - include_tasks: tasks/ping.yml
