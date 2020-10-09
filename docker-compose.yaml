@@ -1,0 +1,32 @@
+---
+# FIXME: Network between container and KVM
+version: "3.7"
+x-volumes:
+  &default-volumes
+  - type: bind
+    source: .
+    target: /mnt/project
+  - type: bind
+    source: /var/run/libvirt/libvirt-sock
+    target: /var/run/libvirt/libvirt-sock
+  - type: bind
+    source: /var/run/libvirt/libvirt-sock-ro
+    target: /var/run/libvirt/libvirt-sock-ro
+services:
+  provisioner:
+    build:
+      context: docker
+    image: local/provisioner
+    privileged: true
+    hostname: provisioner
+    # network_mode: "host"
+    volumes: *default-volumes
+    working_dir: /mnt/project
+  vagrant:
+    image: local/provisioner
+    privileged: true
+    hostname: vagrant.provisioner
+    volumes: *default-volumes
+    working_dir: /mnt/project/vagrant
+    entrypoint: vagrant
+    command: --help

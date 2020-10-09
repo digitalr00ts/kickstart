@@ -1,0 +1,5 @@
+---
+BUNDLE_DISABLE_VERSION_CHECK: true
+BUNDLE_NO-CACHE: true
+BUNDLE_BIN: "/usr/local/bin"
+BUNDLE_PATH: "/opt/deps/vendor"
