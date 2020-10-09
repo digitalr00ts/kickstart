@@ -8,3 +8,4 @@ packer/packer
 packer_cache/
 *manifest.json
 output/
+bin/
