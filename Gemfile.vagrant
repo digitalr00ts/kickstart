@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
+
+group :vagrant, :optional => false do
+    gem "vagrant", :git => "https://github.com/hashicorp/vagrant.git"
+    gem "json", "~> 2.3"
+    gem "io-console", "~> 0.5.6"
+    gem "nokogiri", "~> 1.10"
+    gem "erubis", "~> 2.7"
+end
