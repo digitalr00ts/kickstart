@@ -2,13 +2,13 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  # config.trigger.before :provision do |trigger|
-  #   trigger.name = "Clean up"
-  #   trigger.info = "Deleting previous images and boxes."
-  #   trigger.run  = {path: "reset-images.sh"}
-  # end
+  config.trigger.before :provision do |trigger|
+    trigger.name = "Clean up"
+    trigger.info = "Deleting previous images and boxes."
+    trigger.run  = {path: "scripts/reset-images.sh"}
+  end
 
-  config.vm.box = "file://../output/boxes/fedora32_libvirt.box"
+  config.vm.box = "file://output/boxes/fedora32_libvirt.box"
 
   #shitty workaround for now
   config.ssh.insert_key = false
@@ -36,8 +36,9 @@ Vagrant.configure("2") do |config|
     libvirt.input :type => "tablet", :bus => "usb"
   end
 
-  # config.vm.provision "ansible" do |ansible|
-  #   ansible.playbook = "../ansible/hello.yml"
-  # end
+  config.vm.provision "ansible" do |ansible|
+    ansible.host_key_checking = false
+    ansible.playbook = "playbooks/vagrant-up.yml"
+  end
 
 end
