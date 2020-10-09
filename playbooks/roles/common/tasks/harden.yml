@@ -1,0 +1,9 @@
+---
+- name: ssh-hardening
+  include_role:
+    name: dev-sec.ssh-hardening
+  vars:
+    sftp_enabled: true
+# - name: os-hardening
+#   include_role:
+#     name: dev-sec.os-hardening
