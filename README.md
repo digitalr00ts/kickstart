@@ -27,8 +27,7 @@
 ## Setup
 
 ```bash
-ansible-galaxy role install dev-sec.os-hardening --force
-ansible-galaxy install dev-sec.ssh-hardening --force
+./scripts/install.sh
 ```
 
 ## Usage
@@ -36,10 +35,7 @@ ansible-galaxy install dev-sec.ssh-hardening --force
 ### Build
 
 ```bash
-# cd packer
-# rm -rf -- output-*
-# ./packer build template.pkr.hcl
-packer build -force packer/template.pkr.hcl
+bin/packer build -force packer/template.pkr.hcl
 ```
 
 ## Other Usage
@@ -47,18 +43,31 @@ packer build -force packer/template.pkr.hcl
 ### Run
 
 ```bash
-cd vagrant
-vagrant provision
-vagrant up
+bin/vagrant provision
+bin/vagrant up
 ansible all -m ping
-vagrant ssh
+bin/vagrant ssh
 ```
 
 ### Validate
 
 ```bash
-packer/packer validate packer/template.pkr.hcl
+bin/packer validate packer/template.pkr.hcl
 ksvalidator --followincludes --version F32 kickstart/ks.cfg
+```
+
+## Usage via Docker
+
+NOTE: Working in progress
+
+FIXME: Networking between containers and KVM.
+
+```sh
+docker-compose build --compress --pull --build-arg UID=$(id -u) --build-arg GID=$(id -g) --build-arg GID_LIBVIRT=$(getent group libvirt | cut -d':' -f3)
+docker-compose run --rm -e PACKER_LOG=1 provisioner packer build -force packer/template.pkr.hcl
+
+remote-viewer spice+unix://output/qemu/fedora32.spice
+minicom -D unix\#output/qemu/fedora32.console
 ```
 
 ## To DO
