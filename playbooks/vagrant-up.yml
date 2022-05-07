@@ -1,6 +1,8 @@
 ---
+# - hosts: all
+#   connection: local
 - name: Vagrant Up
   hosts: all
-  gather_facts: false
+  gather_facts: no
   tasks:
     - include_tasks: tasks/ping.yml

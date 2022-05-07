@@ -1,0 +1,17 @@
+---
+- name: Enabling GUI at Boot
+  block:
+    - name: Enable graphical.target
+      ansible.builtin.systemd:
+        name: graphical.target
+        enabled: yes
+    - name: Set Runlevel for Graphical
+      ansible.builtin.file:
+        path: /etc/systemd/system/default.target
+        state: link
+        src: /usr/lib/systemd/system/graphical.target
+      # systemd:
+      #   default_set: graphical.target
+      #   default_apply: only
+      notify:
+        - Reboot

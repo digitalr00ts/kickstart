@@ -1,0 +1,15 @@
+---
+- name: Adding Users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    state: present
+    groups: "{{ item.groups }}"
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: user
+# - debug:
+#     msg: "{{ item }}"
+#   loop: "{{ user.results }}"
+#   loop_control:
+#     label: "{{ item.name }}"

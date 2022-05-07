@@ -11,7 +11,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "file://output/boxes/fedora32_libvirt.box"
 
   #shitty workaround for now
-  config.ssh.insert_key = false
+  # config.ssh.insert_key = false
 
   # config.vm.box_check_update = false
 
@@ -26,9 +26,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :libvirt do |libvirt|
     libvirt.driver = "kvm"
-    libvirt.cpus = 2
+    libvirt.cpus = 4
     # libvirt.cputopology :sockets => '2', :cores => '2', :threads => '2'
-    libvirt.memory = 1024
+    libvirt.memory = 2048
     libvirt.video_type = "qxl"
     libvirt.graphics_type = "spice"
     libvirt.input :type => "keyboard", :bus => "usb"
@@ -37,7 +37,6 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "ansible" do |ansible|
-    ansible.host_key_checking = false
     ansible.playbook = "playbooks/vagrant-up.yml"
   end
 

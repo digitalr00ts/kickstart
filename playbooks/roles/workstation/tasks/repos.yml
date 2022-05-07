@@ -1,0 +1,10 @@
+---
+- name: Adding VSCodium Repository
+  ansible.builtin.yum_repository:
+    name: gitlab.com_paulcarroty_vscodium_repo
+    description: VSCodium Repository
+    file: vscodium
+    baseurl: https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/rpms/
+    gpgcheck: yes
+    gpgkey: https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg
+    repo_gpgcheck: yes

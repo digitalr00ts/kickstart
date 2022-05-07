@@ -1,0 +1,46 @@
+---
+pkgs:
+  Darwin:
+    # pyenv_darwin_build_dependencies:
+    - readline
+    - xz
+  RedHat:
+    # CLI base
+    - xdg-user-dirs
+    # CLI
+    - flatpak
+    - fzf
+    - git-core
+    - git-core-doc
+    - starship
+    - neovim
+    # GNOME base
+    - gdm
+    - xdg-user-dirs-gtk
+    - gnome-terminal
+    - nautilus
+    - gnome-terminal-nautilus
+    # pyenv_redhat_build_dependencies:
+    - bzip2
+    - bzip2-devel
+    - openssl-devel
+    - readline-devel
+    - sqlite
+    - sqlite-devel
+    - zlib-devel
+    # pyenv_redhat_additional_build_dependencies:
+    - aria2
+    - findutils
+    - git-core
+    - gcc
+    - libffi-devel
+    - make
+    - tar
+    - xz
+    - xz-devel
+    # 3rd party
+    - codium
+
+flatpaks:
+  - org.mozilla.firefox
+  - org.signal.Signal

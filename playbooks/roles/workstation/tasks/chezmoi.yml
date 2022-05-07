@@ -1,0 +1,18 @@
+---
+# TODO: Figure out how to run this once and not for every host.
+- name: Getting Latest Release of Chezmoi
+  community.general.github_release:
+    user: twpayne
+    repo: chezmoi
+    action: latest_release
+  register: chezmoi_latest
+  delegate_to: localhost
+  become: no
+
+- name: Installing Chezmoi
+  ansible.builtin.yum:
+    name: "https://github.com/twpayne/chezmoi/releases/latest/download/chezmoi-{{ chezmoi_latest.get('tag') | trim('v') }}-{{ ansible_facts.architecture }}.rpm"
+    disable_gpg_check: yes
+  # Faster to skip downloading rpm, but Ansible recap report `skip` instead of `ok`.
+  # TODO: change to https://docs.ansible.com/ansible/latest/user_guide/playbooks_tests.html#comparing-versions
+  # when: "ansible_facts.packages.get('chezmoi', [{'version': 0}])[0].get('version') != chezmoi_latest.get('tag').lstrip('v')"

@@ -1,6 +1,19 @@
 ---
+collections:
+  - name: community.general
+    type: galaxy
 roles:
   - name: dev-sec.os-hardening
     type: galaxy
   - name: dev-sec.ssh-hardening
+    type: galaxy
+  - name: suzuki-shunsuke.pyenv
+    type: galaxy
+  - name: suzuki-shunsuke.pyenv-module
+    type: galaxy
+  - name: suzuki-shunsuke.pyenv-virtualenv
+    type: galaxy
+  - name: elliotweiser.osx-command-line-tools
+    type: galaxy
+  - name: geerlingguy.homebrew
     type: galaxy

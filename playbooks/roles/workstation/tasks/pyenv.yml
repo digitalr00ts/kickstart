@@ -1,0 +1,60 @@
+---
+- name: Install Pyenv
+  include_role:
+    name: suzuki-shunsuke.pyenv
+  vars:
+    pyenv_root: "{{ item.home }}/.local/pyenv"
+    # TODO: Make changes to bashrc, `eval "$(pyenv init -)", and symbolic link to ~/.local/bin/pyenv
+    pyenv_rc_path: "{{ item.home }}/.bashrc"
+
+- name: Getting Available Python Versions
+  pyenv:
+    pyenv_root: "{{ item.home }}/.local/pyenv"
+    list: yes
+  register: result
+
+- name: Install Latest Python
+  pyenv:
+    version: "{{ result.versions | select('match', '^(\\d*\\.){2}\\d*$') | sort | last }}"
+    pyenv_root: "{{ item.home }}/.local/pyenv"
+  environment:
+    CFLAGS: -O3 -pipe -march=native -Wno-unused-value -Wno-empty-body -Wno-parentheses-equality
+    CONFIGURE_OPTS: --enable-optimizations
+    # TODO: Use facts to detect cores/threads
+    MAKE_OPTS: --jobs {{ ansible_processor_nproc }} {% if ansible_processor_nproc > 1 %}--max-load {{ ansible_processor_nproc * .75 }}{% endif %}
+    PYTHON_BUILD_ARIA2_OPTS: --min-split-size=1M --max-connection-per-server=10 --optimize-concurrent-downloads=true
+  async: 10200
+  poll: 30
+
+- name: pyenv versions --bare
+  pyenv:
+    subcommand: versions
+    pyenv_root: "{{ item.home }}/.local/pyenv"
+  register: result
+
+# TODO: (Maybe) Change to managing file with lastest at top
+- name: Setting Default Python Version to Latest
+  pyenv:
+    subcommand: global
+    versions: "{{ result.versions }}"
+    pyenv_root: "{{ item.home }}/.local/pyenv"
+
+# - debug:
+  # var: result.versions
+
+    # msg:
+#   vars:
+#     list: yes
+#     # pyenv_root: "{{ ansible_env.HOME }}/.ghq/github.com/pyenv/pyenv"
+#     # pyenv_root: "{{ansible_env.HOME}}/.pyenv"
+#   register: result
+# - name: pyenv ver
+#   include_role:
+#     name: suzuki-shunsuke.pyenv-module
+#   vars:
+#     subcommand: versions
+# - debug:
+#     var: result
+#   register: r
+# - debug:
+#     var: r

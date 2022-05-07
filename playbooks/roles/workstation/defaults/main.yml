@@ -1,0 +1,4 @@
+users:
+  - name: xsc27
+    groups: wheel
+    pyenv: yes

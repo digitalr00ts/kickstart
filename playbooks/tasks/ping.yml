@@ -1,4 +1,4 @@
 ---
-- name: is_alive
-  ping:
+- name: I'm alive
+  ansible.builtin.ping:
     data: "Hello World!"

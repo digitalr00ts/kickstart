@@ -1,0 +1,98 @@
+- name: Gathering Facts
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - 'hardware'
+
+- import_role:
+    name: suzuki-shunsuke.pyenv-module
+
+# TODO: fork to remove need for --ask-sudo-pass
+#       https://github.com/geerlingguy/ansible-role-homebrew/blob/master/tasks/main.yml#L7
+# TODO: Disable Analytics
+- include_role:
+    name: geerlingguy.homebrew
+  vars:
+    homebrew_cask_accept_external_apps: yes
+    homebrew_installed_packages:
+      - bash
+      - curl
+      - docker-completion
+      - fzf
+      - git
+      - gpg2
+      - jq
+      - neovim
+      - openjdk
+      - starship
+      - zsh-autosuggestions
+    #   non-common
+    #   - go
+      - kubectl
+      - lastpass-cli
+      - tfenv
+    #   Python dependencies
+      - aria2
+      - readline
+      - sqlite
+      - xz
+    homebrew_cask_apps:
+      - barrier
+      - clean-me
+      - eqmac
+      - homebrew/cask/docker
+      - homebrew/cask/lastpass
+      - homebrew/cask/lulu
+      - homebrew/cask-fonts/font-fira-code
+      - firefox
+      - iterm2
+      - keepingyouawake
+      - pongsaver
+      - vscodium
+    #   aws deps
+      - homebrew/cask/session-manager-plugin  # returning invalid cask even though manual installed
+
+- name: Install Pyenv
+  include_role:
+    name: suzuki-shunsuke.pyenv
+  vars:
+    pyenv_root: "{{ ansible_user_dir }}/.local/pyenv"
+    # TODO: Make changes to bashrc, `eval "$(pyenv init -)", and symbolic link to ~/.local/bin/pyenv
+    pyenv_rc_path: "{{ ansible_user_dir }}/.zshrc"
+
+- name: Getting Available Python Versions
+  pyenv:
+    pyenv_root: "{{ ansible_user_dir }}/.local/pyenv"
+    list: yes
+  register: result
+
+- name: Install Latest Python
+  pyenv:
+    version: "{{ result.versions | select('match', '^(\\d*\\.){2}\\d*$') | sort | last }}"
+    pyenv_root: "{{ ansible_user_dir }}/.local/pyenv"
+  environment:
+    CFLAGS: -O3 -pipe -march=native -Wno-unused-value -Wno-empty-body -Wno-parentheses-equality
+    # CONFIGURE_OPTS: --enable-optimizations
+    # TODO: Use facts to detect cores/threads
+    MAKE_OPTS: --jobs {{ ansible_processor_cores }}
+    PYTHON_BUILD_ARIA2_OPTS: --min-split-size=1M --max-connection-per-server=10 --optimize-concurrent-downloads=true
+  async: 10200
+  poll: 30
+
+- name: pyenv versions --bare
+  pyenv:
+    subcommand: versions
+    pyenv_root: "{{ ansible_user_dir }}/.local/pyenv"
+  register: result
+
+# TODO: (Maybe) Change to managing file with lastest at top
+- name: Setting Default Python Version to Latest
+  pyenv:
+    subcommand: global
+    versions: "{{ result.versions }}"
+    pyenv_root: "{{ ansible_user_dir }}/.local/pyenv"
+
+#   become: yes
+#   become_password: "NO"
+#   vars:
+#     homebrew_cask_accept_external_apps: true

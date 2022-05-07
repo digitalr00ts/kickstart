@@ -1,0 +1,5 @@
+---
+- name: Seting Bash Defaults
+  ansible.builtin.copy:
+    dest: /etc/profile.d/
+    src: files/profile.d/

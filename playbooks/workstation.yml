@@ -1,0 +1,21 @@
+---
+# - name: common
+#   import_playbook: site.yml
+# - name: GUI Workstation
+#   hosts: all
+#   become: no
+#   gather_facts: yes
+#   roles:
+#     - role: suzuki-shunsuke.pyenv-module
+#       when: ansible_distribution != 'MacOSX'
+#     - role: workstation
+#       when: ansible_facts['os_family']|lower != 'darwin'
+
+- name: Mac Workstation
+  hosts: all
+  become: no
+  gather_facts: no
+  roles:
+    - role: suzuki-shunsuke.pyenv-module
+    - role: macbook
+    #   when: ansible_distribution == 'MacOSX'

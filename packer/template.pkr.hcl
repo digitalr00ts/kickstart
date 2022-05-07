@@ -3,9 +3,9 @@ variable "headless" {
   type    = bool
 }
 variable "type" {
-  default     = "net"
+  default     = "boot"
   type        = string
-  description = "Server, Workstation, or Net"
+  description = "Server, Workstation, or Boot"
 }
 variable "version" {
   default = "32"
@@ -24,12 +24,14 @@ locals {
   media        = {
     "server"      = "dvd"
     "workstation" = "Live"
-    "net"         = "netinst"
+    "boot"         = "netinst"
   }
-  type         = "${var.type == "net" ? "server" : lower(var.type)}"
-  iso_base     = "https://download.fedoraproject.org/pub/fedora/linux/releases/${var.version}/${title(local.type)}/x86_64/iso"
+  type         = "${var.type == "boot" ? "everything" : lower(var.type)}"
+  reltype      = "${var.version == "Rawhide" ? "development" : "releases"}"
+  iso_base     = "https://download.fedoraproject.org/pub/fedora/linux/${local.reltype}/${lower(var.version)}/${title(local.type)}/x86_64/iso"
   iso_url      = "${local.iso_base}/Fedora-${title(local.type)}-${lookup(local.media, lower(var.type), title(var.type))}-x86_64-${var.version}-${var.release}.iso"
-  iso_checksum = "file:${local.iso_base}/Fedora-${title(local.type)}-${var.version}-${var.release}-x86_64-CHECKSUM"
+  # iso_checksum = "file:${local.iso_base}/Fedora-${title(local.type)}-${var.version}-${var.release}-x86_64-CHECKSUM"
+  iso_checksum = "file:${local.iso_base}/Fedora-${title(local.type)}-${var.version}-x86_64-${var.release}-CHECKSUM"
 }
 
 source "qemu" "fedora" {

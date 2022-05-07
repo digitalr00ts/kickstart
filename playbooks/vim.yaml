@@ -1,0 +1,5 @@
+---
+- hosts: all
+  tasks:
+    - name: ensure vim is at the latest version
+      dnf: pkg=vim state=latest

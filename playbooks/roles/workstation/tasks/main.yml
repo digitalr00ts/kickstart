@@ -1,0 +1,38 @@
+---
+  # PRETASKS
+- name: Removing Unneeded Packages
+  ansible.builtin.dnf:
+    autoremove: yes
+- name: Upgrading Installed Packages
+  dnf:
+    name: "*"
+    state: latest
+- name: Gathering Facts
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - 'hardware'
+- name: Gathering Package Facts
+  package_facts:
+    manager: auto
+- import_role:
+    name: suzuki-shunsuke.pyenv-module
+
+- include_tasks: repos.yml
+- include_tasks: pkgs.yml
+- include_tasks: cli.yml
+- include_tasks: gui.yml
+- include_tasks: flatpaks.yml
+- include_tasks: chezmoi.yml
+- include_tasks: users.yml
+- name: Setting Up Python for Users
+  include_tasks:
+    file: pyenv.yml
+    apply:
+      become: yes
+      become_user: "{{ item.name }}"
+  vars:
+  loop: "{{ user.results }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.item.get('pyenv') | bool

@@ -1,0 +1,4 @@
+---
+- name: Installing Packages
+  ansible.builtin.package:
+    name: "{{ pkgs[ansible_os_family] }}"
