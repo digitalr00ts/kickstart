@@ -1,0 +1,31 @@
+---
+name: CI
+
+on: push
+
+jobs:
+
+  pre-commit:
+    name: Pre-Commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: digitalr00ts/action-pre-commit@v0
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-qemu-action@v2
+        with:
+          platforms: x86-64
+      - uses: digitalr00ts/action-download2toolcache@v1
+        with:
+          uri: 'https://releases.hashicorp.com/packer/1.8.2/packer_1.8.2_linux_amd64.zip'
+          name: 'packer'
+          version: '1.8.2'
+      - name: Initialize
+        runs: packer build -only='*.virtualbox-iso.*' packer
+      - name: Build
+        runs: packer build -only='*.virtualbox-iso.*' packer
