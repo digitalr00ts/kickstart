@@ -1,0 +1,16 @@
+---
+- name: ssh-hardening
+  include_role:
+    name: devsec.hardening.ssh_hardening
+  vars:
+    sftp_enabled: true
+- name: os-hardening
+  include_role:
+    name: devsec.hardening.os_hardening
+  vars:
+    # TODO: Set variable for different systems
+    os_desktop_enable: false
+    # TODO: Check for Debian based OSes
+    os_apt_enabled: false
+    # TODO: Check for RHEL, Fedora, OpenSuse
+    os_yum_enabled: false
