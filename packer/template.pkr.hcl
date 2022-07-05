@@ -1,51 +1,33 @@
-variable "headless" {
-  default = true
-  type    = bool
-}
-variable "type" {
-  default     = "boot"
-  type        = string
-  description = "Server, Workstation, or Boot"
-}
-variable "version" {
-  default = "32"
-  type    = string
-}
-variable "release" {
-  default = "1.6"
-  type    = string
-}
-variable "password" {
-  default = "vagrant"
-  type    = string
-}
-
-locals {
-  media        = {
-    "server"      = "dvd"
-    "workstation" = "Live"
-    "boot"         = "netinst"
+packer {
+  required_version = "~>1.7"
+  required_plugins {
+    qemu = {
+      version = "~> 1.0"
+      source  = "github.com/hashicorp/qemu"
+    }
+    vagrant = {
+      version = "~> 1.0"
+      source  = "github.com/hashicorp/vagrant"
+    }
+    virtualbox = {
+      version = "~> 1.0"
+      source  = "github.com/hashicorp/virtualbox"
+    }
   }
-  type         = "${var.type == "boot" ? "everything" : lower(var.type)}"
-  reltype      = "${var.version == "Rawhide" ? "development" : "releases"}"
-  iso_base     = "https://download.fedoraproject.org/pub/fedora/linux/${local.reltype}/${lower(var.version)}/${title(local.type)}/x86_64/iso"
-  iso_url      = "${local.iso_base}/Fedora-${title(local.type)}-${lookup(local.media, lower(var.type), title(var.type))}-x86_64-${var.version}-${var.release}.iso"
-  # iso_checksum = "file:${local.iso_base}/Fedora-${title(local.type)}-${var.version}-${var.release}-x86_64-CHECKSUM"
-  iso_checksum = "file:${local.iso_base}/Fedora-${title(local.type)}-${var.version}-x86_64-${var.release}-CHECKSUM"
 }
 
 source "qemu" "fedora" {
-  headless           = "${var.headless}"
-  accelerator        = "kvm"
-  qmp_enable         = true
-  qemuargs           = [
+  headless    = "${var.headless}"
+  accelerator = "kvm"
+  qmp_enable  = true
+  qemuargs = [
     ["-chardev", "socket,id=serial0,path={{ .OutputDir }}/{{ .Name }}.console,server,nowait"],
-    ["-serial",  "chardev:serial0"],
-    ["-spice",   "unix,addr={{ .OutputDir }}/{{ .Name }}.spice,disable-ticketing"],
-    ["-device",  "virtio-serial"],
+    ["-serial", "chardev:serial0"],
+    ["-spice", "unix,addr={{ .OutputDir }}/{{ .Name }}.spice,disable-ticketing"],
+    ["-device", "virtio-serial"],
     ["-chardev", "spicevmc,id=vdagent,debug=0,name=vdagent"],
-    ["-device",  "virtserialport,chardev=vdagent,name=com.redhat.spice.0"],
-  ]
+    ["-device", "virtserialport,chardev=vdagent,name=com.redhat.spice.0"],
+  ] // "
   vnc_use_password   = true
   iso_url            = "${local.iso_url}"
   iso_checksum       = "${local.iso_checksum}"
@@ -68,16 +50,60 @@ source "qemu" "fedora" {
   // shutdown_command   = "echo '${var.password}' | sudo -S shutdown -P now"
 }
 
+source "virtualbox-iso" "fedora" {
+  guest_os_type           = "Fedora_64"
+  headless                = var.headless
+  iso_url                 = local.iso_url
+  iso_checksum            = local.iso_checksum
+  output_directory        = "output/{{build_type}}"
+  ssh_timeout             = "60000s"
+  ssh_username            = "vagrant"
+  ssh_password            = "${var.password}"
+  vm_name                 = "fedora${var.version}"
+  cpus                    = "2"
+  memory                  = "1024"
+  gfx_controller          = "vmsvga"
+  gfx_vram_size           = "8"
+  disk_size               = "10240"
+  hard_drive_discard      = true
+  audio_controller        = "hda"
+  guest_additions_mode    = "attach"
+  virtualbox_version_file = ""
+  http_directory          = "kickstart"
+  boot_wait               = "3s"
+  boot_command = [
+    "<up><tab><wait>",
+    "<bs><bs><bs>bs><bs>",
+    "inst.text ",
+    // "inst.sshd ",
+    "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg ",
+    // "inst.nosave=all ",
+    "<enter>",
+  ]
+  shutdown_command = "echo '${var.password}' | sudo -S shutdown -P now"
+}
+
 build {
   name        = "Fedora"
   description = "Fedora"
-  sources     = ["source.qemu.fedora"]
+  sources = [
+    "source.qemu.fedora",
+    "source.virtualbox-iso.fedora",
+  ]
 
   provisioner "ansible" {
-    playbook_file = "playbooks/site.yml"
+    playbook_file       = "playbooks/site.yaml"
+    extra_arguments     = ["-v"]
+    user                = "packer"
+    galaxy_file         = "requirements.yaml"
+    keep_inventory_file = true
+    ansible_ssh_extra_args = [
+      "-o 'HostKeyAlgorithms ssh-rsa' ",
+      "-o IdentitiesOnly=yes"
+    ]
   }
 
-/*
+  /*
   provisioner "inspec" {
     inspec_env_vars = ["CHEF_LICENSE=accept"]
     profile         = "https://github.com/dev-sec/linux-baseline"
@@ -86,11 +112,12 @@ build {
 
   post-processors {
     post-processor "vagrant" {
-      name                           = "box"
-      include                        = ["packer/info.json"]
-      vagrantfile_template_generated = true
-      output                         = "output/boxes/{{.BuildName}}${var.version}_{{.Provider}}.box"
-      keep_input_artifact            = true
+      // name                           = "box"
+      include = ["packer/info.json"]
+      // vagrantfile_template_generated = true
+      output              = "output/boxes/{{.BuildName}}${var.version}_{{.Provider}}.box"
+      keep_input_artifact = true
+      compression_level   = 9
     }
     post-processor "checksum" {
       name           = "sha256"
