@@ -5,8 +5,8 @@ source "https://rubygems.org"
 git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
 group :chef, :optional => false do
-    gem "inspec-bin", "~>4.23.10"
-    gem "test-kitchen", "~>2.7.1"
+    gem "inspec-bin" #, "~>4.23.10"
+    gem "test-kitchen" #, "~>2.7.1"
     gem 'kitchen-ansiblepush'
     gem "kitchen-vagrant"
     gem "kitchen-inspec"
