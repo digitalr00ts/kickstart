@@ -35,7 +35,8 @@
 ### Build
 
 ```bash
-bin/packer build -force packer/template.pkr.hcl
+bin/packer build -timestamp-ui -force -var-file='packer/f36.pkrvars.hcl' -only='*.virtualbox-iso.*' packer
+bin/packer build -timestamp-ui -force -only='*.qemu.*' packer
 ```
 
 ## Other Usage
