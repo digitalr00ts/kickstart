@@ -5,27 +5,27 @@ driver:
   # pre_create_command: 'vagrant/reset-images.sh'
 
 provisioner:
-    name: ansible_push
-    chef_bootstrap_url: nil
-    ansible_config: ansible.cfg
-    playbook: playbooks/site.yml
-    remote_user: vagrant
-    verbose: v
+  name: ansible_push
+  chef_bootstrap_url: nil
+  ansible_config: ansible.cfg
+  playbook: playbooks/site.yml
+  remote_user: vagrant
+  verbose: v
 
 verifier:
   name: inspec
 
 platforms:
-- name: fedora-32
-  driver:
-    provider: libvirt
-    box_url: file://../../../output/boxes/fedora32_libvirt.box
-    vagrantfiles:
-    - 'vagrant/Vagrantfile'
+  - name: fedora-32
+    driver:
+      provider: libvirt
+      box_url: file://../../../output/boxes/fedora32_libvirt.box
+      vagrantfiles:
+        - 'vagrant/Vagrantfile'
 
 suites:
   - name: default
     verifier:
       inspec_tests:
-      - name: cis-benchmark
-        git: 'https://github.com/dev-sec/cis-dil-benchmark.git'
+        - name: cis-benchmark
+          git: 'https://github.com/dev-sec/cis-dil-benchmark.git'

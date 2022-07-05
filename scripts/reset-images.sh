@@ -12,4 +12,3 @@ sudo \
     --vol "${IMAGE}" \
     --pool default
 done
-

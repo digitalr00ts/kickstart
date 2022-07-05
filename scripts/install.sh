@@ -45,4 +45,3 @@ else
   .venv/bin/ansible-galaxy install --force --role-file requirements.yml
   printf 'Enable Python virtual environment: `. .venv/bin/activate`'
 fi
-
