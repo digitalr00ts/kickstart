@@ -1,4 +1,4 @@
-.bundle/bin
+.bundle/vendor
 .venv/
 venv/
 .tox/
