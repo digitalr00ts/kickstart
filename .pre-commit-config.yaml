@@ -21,3 +21,15 @@ repos:
     rev: v1.26.3
     hooks:
       - id: yamllint
+  - repo: local
+    hooks:
+      - id: packer_validate
+        name: Packer Validate
+        entry: scripts/packer-lint.sh validate
+        language: system
+        files: '.*pkr.*.hcl$'
+      - id: packer_fmt
+        name: Packer Format
+        entry: scripts/packer-lint.sh fmt
+        language: system
+        files: '.*pkr.*.hcl$'
