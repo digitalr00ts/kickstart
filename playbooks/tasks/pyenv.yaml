@@ -1,0 +1,7 @@
+- role: staticdev.pyenv
+  pyenv_env: system
+  # pyenv_path: "{{ home }}/pyenv"
+  # pyenv_owner: "{{ instance_owner }}"
+  pyenv_global: {{ pyenv.versions}}
+  # pyenv_enable_autocompletion: false
+  pyenv_python_versions: {{ pyenv.versions}}

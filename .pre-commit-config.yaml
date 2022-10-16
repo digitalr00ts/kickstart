@@ -14,13 +14,17 @@ repos:
       - id: trailing-whitespace
         args: ['--markdown-linebreak-ext=md']
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.6.15
+    rev: v1.6.17
     hooks:
       - id: actionlint-docker
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.3
+    rev: v1.27.1
     hooks:
       - id: yamllint
+  # - repo: https://github.com/ansible-community/ansible-lint.git
+  #   rev: v6.5.2
+  #   hooks:
+  #     - id: ansible-lint
   - repo: local
     hooks:
       - id: packer_validate

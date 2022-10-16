@@ -1,10 +1,10 @@
 ---
-  # PRETASKS
+# PRETASKS
 - name: Removing Unneeded Packages
   ansible.builtin.dnf:
     autoremove: yes
 - name: Upgrading Installed Packages
-  dnf:
+  ansible.builtin.dnf:
     name: "*"
     state: latest
 - name: Gathering Facts
@@ -13,20 +13,21 @@
       - '!all'
       - 'hardware'
 - name: Gathering Package Facts
-  package_facts:
+  ansible.builtin.package_facts:
     manager: auto
-- import_role:
+- name: pyenv-module
+  ansible.builtin.import_role:
     name: suzuki-shunsuke.pyenv-module
 
-- include_tasks: repos.yml
-- include_tasks: pkgs.yml
-- include_tasks: cli.yml
-- include_tasks: gui.yml
-- include_tasks: flatpaks.yml
-- include_tasks: chezmoi.yml
-- include_tasks: users.yml
+- ansible.builtin.include_tasks: repos.yml
+- ansible.builtin.include_tasks: pkgs.yml
+- ansible.builtin.include_tasks: cli.yml
+- ansible.builtin.include_tasks: gui.yml
+- ansible.builtin.include_tasks: flatpaks.yml
+- ansible.builtin.include_tasks: chezmoi.yml
+- ansible.builtin.include_tasks: users.yml
 - name: Setting Up Python for Users
-  include_tasks:
+  ansible.builtin.include_tasks:
     file: pyenv.yml
     apply:
       become: yes

@@ -9,3 +9,4 @@ packer_cache/
 *manifest.json
 output/
 bin/
+*.log

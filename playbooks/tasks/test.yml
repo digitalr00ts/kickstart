@@ -1,31 +1,31 @@
 - name: check if rules file exists
-  stat:
+  ansible.builtin.stat:
     path: /etc/shorewall/rules
   register: shorewall_rules
 
 - name: Gather the package facts
-  package_facts:
+  ansible.builtin.package_facts:
     manager: auto
 - name: Show facts available on the system
   ansible.builtin.debug:
     var: ansible_facts
-- name: Check whether a package called foobar is installed
-  debug:
-    msg: "{{ ansible_facts.packages['chezmoi'][0].get('version') }} versions of foobar are installed!"
-  when: "'chezmoi' in ansible_facts.packages"
+# - name: Check whether a package called foobar is installed
+#   ansible.builtin.debug:
+#     msg: "{{ ansible_facts.packages['chezmoi'][0].get('version') }} versions of foobar are installed!"
+#   when: "'chezmoi' in ansible_facts.packages"
 
-- name: Get latest release of a public repository
-  community.general.github_release:
-    user: twpayne
-    repo: chezmoi
-    action: latest_release
-  register: chezmoi_latest
-  delegate_to: localhost
+# - name: Get latest release of a public repository
+#   community.general.github_release:
+#     user: twpayne
+#     repo: chezmoi
+#     action: latest_release
+#   register: chezmoi_latest
+#   delegate_to: localhost
 
-- name: chezmoi_latest
-  debug:
-    msg: "{{ chezmoi_latest.get('tag') | trim('v') }}"
-- name: Install Chezmoi
-  yum:
-    name: "https://github.com/twpayne/chezmoi/releases/download/{{- chezmoi_latest.get('tag') -}}/chezmoi-{{- chezmoi_latest.get('tag') | trim('v') -}}-{{- ansible_facts.architecture -}}.rpm"
-  when: "'chezmoi' not in ansible_facts.packages or chezmoi_latest != ansible_facts.packages['chezmoi'][0].get('version')"
+# - name: chezmoi_latest
+#   ansible.builtin.debug:
+#     msg: "{{ chezmoi_latest.get('tag') | trim('v') }}"
+# - name: Install Chezmoi
+#   ansible.builtin.yum:
+#     name: "https://github.com/twpayne/chezmoi/releases/download/{{- chezmoi_latest.get('tag') -}}/chezmoi-{{- chezmoi_latest.get('tag') | trim('v') -}}-{{- ansible_facts.architecture -}}.rpm"
+#   when: "'chezmoi' not in ansible_facts.packages or chezmoi_latest != ansible_facts.packages['chezmoi'][0].get('version')"

@@ -1,11 +1,10 @@
----
-- name: ssh-hardening
-  include_role:
+- name: ssh_hardening
+  ansible.builtin.include_role:
     name: devsec.hardening.ssh_hardening
   vars:
     sftp_enabled: true
 - name: os-hardening
-  include_role:
+  ansible.builtin.include_role:
     name: devsec.hardening.os_hardening
   vars:
     # TODO: Set variable for different systems

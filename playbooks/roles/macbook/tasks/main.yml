@@ -10,7 +10,7 @@
 # TODO: fork to remove need for --ask-sudo-pass
 #       https://github.com/geerlingguy/ansible-role-homebrew/blob/master/tasks/main.yml#L7
 # TODO: Disable Analytics
-- include_role:
+- ansible.builtin.include_role:
     name: geerlingguy.homebrew
   vars:
     homebrew_cask_accept_external_apps: yes
@@ -53,7 +53,7 @@
       - homebrew/cask/session-manager-plugin  # returning invalid cask even though manual installed
 
 - name: Install Pyenv
-  include_role:
+  ansible.builtin.include_role:
     name: suzuki-shunsuke.pyenv
   vars:
     pyenv_root: "{{ ansible_user_dir }}/.local/pyenv"

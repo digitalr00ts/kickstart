@@ -59,7 +59,7 @@ source "virtualbox-iso" "fedora" {
   ssh_timeout             = "60000s"
   ssh_username            = "vagrant"
   ssh_password            = "${var.password}"
-  vm_name                 = "fedora${var.version}"
+  vm_name                 = "Fedora${var.version}"
   cpus                    = "2"
   memory                  = "1024"
   gfx_controller          = "vmsvga"
@@ -73,10 +73,13 @@ source "virtualbox-iso" "fedora" {
   boot_wait               = "3s"
   boot_command = [
     "<up><tab><wait>",
-    "<bs><bs><bs>bs><bs>",
+    "<bs><bs><bs><bs><bs>",
     "inst.text ",
     // "inst.sshd ",
-    "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg ",
+    // "inst.nokill ",
+    "inst.notmux ",
+    "inst.ksstrict ",
+    "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg",
     // "inst.nosave=all ",
     "<enter>",
   ]
@@ -91,17 +94,17 @@ build {
     "source.virtualbox-iso.fedora",
   ]
 
-  provisioner "ansible" {
-    playbook_file       = "playbooks/site.yaml"
-    extra_arguments     = ["-v"]
-    user                = "packer"
-    galaxy_file         = "requirements.yaml"
-    keep_inventory_file = true
-    ansible_ssh_extra_args = [
-      "-o 'HostKeyAlgorithms ssh-rsa' ",
-      "-o IdentitiesOnly=yes"
-    ]
-  }
+  // provisioner "ansible" {
+  //   playbook_file       = "playbooks/site.yaml"
+  //   extra_arguments     = ["-v"]
+  //   user                = "packer"
+  //   galaxy_file         = "requirements.yaml"
+  //   keep_inventory_file = true
+  //   ansible_ssh_extra_args = [
+  //     "-o 'HostKeyAlgorithms ssh-rsa' ",
+  //     "-o IdentitiesOnly=yes"
+  //   ]
+  // }
 
   /*
   provisioner "inspec" {

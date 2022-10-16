@@ -2,11 +2,19 @@
 
 ## Summary
 
-## Features
+### Features
 * OS Hardening
 * CIS Linux Baseline Benchmark
 * Vagrant Base Image
 * Ansible Playbooks/Roles/Tasks
+
+### Requirements
+
+* [QEMU](https://www.qemu.org/)
+* [Packer]()
+* [Ansible]()
+* [Vagrant]
+* [libvirt]
 
 ### F32 References
 
@@ -70,6 +78,44 @@ docker-compose run --rm -e PACKER_LOG=1 provisioner packer build -force packer/t
 remote-viewer spice+unix://output/qemu/fedora32.spice
 minicom -D unix\#output/qemu/fedora32.console
 ```
+
+## Setup on Mac
+
+NOTE: WIP, might need to create a spice-server formula
+
+The prebuilt QEMU binaies do not have support for the [SPICE](https://spice-space.org/) protocol.
+
+1. ```sh
+   brew install openssl@3
+   # brew link openssl, maybe
+   ```
+1. ```
+   git clone --depth 1 --tag v0.15.0 https://gitlab.freedesktop.org/spice/spice.git
+   PKG_CONFIG_PATH="/usr/local/opt/openssl@3/lib/pkgconfig" LDFLAGS="-L/usr/local/opt/openssl@3/lib" CPPFLAGS="-I/usr/local/opt/openssl@3/include" ./configure --disable-sasl --disable-tests --prefix=/usr/local/opt/spice-server --libdir=/usr/local/opt/spice-server/lib --includedir=/usr/local/opt/spice-server/include
+   ln -sv /usr/local/opt/spice-server/lib/pkgconfig/spice-server.pc /usr/local/share/pkgconfig/spice-server.pc
+   ln -sv /usr/local/opt/spice-server/lib/pkgconfig/spice-server.pc /usr/local/opt/spice-protocol/share/pkgconfig  # Hack for brew, until i make a formula
+   ```
+1. Edit the brew formula for QEMU
+    ```sh
+    brew edit qemu
+    ```
+    In `Class Qemu < Formula`:
+    1. Add `depends_on spice-protocol`
+    2. Under `def install` add `--enable-spice` to list for `args`
+1. Build QEMU
+    ```
+    PKG_CONFIG_PATH="/usr/local/opt/spice-server/lib/pkgconfig" \
+    LDFLAGS="-L/usr/local/opt/spice-server/lib" \
+    CFLAGS="-I/usr/local/opt/spice-server/include/" \
+    brew install --build-from-source --verbose qemu
+    ```
+1.  ```sh
+    brew install libvirt
+    ```
+    ```
+    PKG_CONFIG_PATH="/usr/local/opt/spice-protocol/share/pkgconfig/:/usr/local/opt/pixman/lib/pkgconfig/:/usr/local/opt/glib/lib/pkgconfig/:/usr/local/opt/spice-server/lib/pkgconfig:$PKG_CONFIG_PATH" LDFLAGS="-L/usr/local/opt/spice-server/lib" CPPFLAGS="-I/usr/local/opt/spice-server/include/" LIBTOOL=glibtool ./configure --prefix="${HOMEBREW_FORMULA_PREFIX}" --disable-bsd-user --disable-guest-agent --enable-curses --enable-libssh --enable-slirp=system --enable-vde --enable-virtfs --enable-zstd --extra-cflags=-DNCURSES_WIDECHAR=1 --disable-sdl --enable-spice --smbd="${HOMEBREW_PREFIX}/sbin/samba-dot-org-smbd" --disable-gtk --enable-cocoa
+    ```
+
 
 ## To DO
 * [ ] Inspec
