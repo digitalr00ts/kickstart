@@ -1,4 +1,3 @@
----
 name: CI
 
 on: push
@@ -9,12 +8,10 @@ jobs:
     name: Pre-Commit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: digitalr00ts/action-download2toolcache@v0
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-packer@v3
         with:
-          uri: 'https://releases.hashicorp.com/packer/1.8.2/packer_1.8.2_linux_amd64.zip'
-          name: 'packer'
-          version: '1.8.2'
+          version: "1.11.2"
       - uses: digitalr00ts/action-pre-commit@v0
 
   # build:
