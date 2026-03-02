@@ -15,6 +15,8 @@ OUTPUT_DIR="output"
 IMAGE_PATH="${OUTPUT_DIR}/${VARIANT}/fedora-${FEDORA_VERSION}"
 SSH_PORT="${SSH_PORT:-2222}"
 SSH_USER="root"
+# SSH_PASS is set for documentation but authentication is handled by SSH keys
+# shellcheck disable=SC2034
 SSH_PASS="packer"
 
 echo "========================================"

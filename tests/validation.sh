@@ -135,7 +135,8 @@ check_partitions() {
 
     print_info "Checking disk partitions..."
 
-    local output=$(ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
+    local output
+    output=$(ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
                       "df -h /" 2>/dev/null)
 
     if echo "${output}" | grep -q "/"; then
@@ -174,7 +175,8 @@ check_python() {
 
     print_info "Checking Python installation..."
 
-    local version=$(ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
+    local version
+    version=$(ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
                        "python3 --version" 2>&1)
 
     if echo "${version}" | grep -q "Python 3"; then
