@@ -2,7 +2,7 @@
 extends: default
 ignore-from-file:
   - .gitignore
-  - .yamlignore
+  # - .yamlignore
 rules:
   braces:
     min-spaces-inside: 0
@@ -15,6 +15,7 @@ rules:
     min-spaces-inside-empty: 0
     max-spaces-inside-empty: 2
   comments:
+    min-spaces-from-content: 1
     ignore:
       - .github/
   comments-indentation: disable
