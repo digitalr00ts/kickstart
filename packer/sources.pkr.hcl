@@ -35,9 +35,9 @@ source "qemu" "fedora" {
   vm_name          = "fedora-${var.fedora_version}-${var.variant}"
 
   # Hardware Configuration
-  disk_size  = var.disk_size
-  memory     = var.memory
-  cpus       = var.cpus
+  disk_size      = var.disk_size
+  memory         = var.memory
+  cpus           = var.cpus
   disk_interface = "virtio"
   net_device     = "virtio-net"
 

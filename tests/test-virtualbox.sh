@@ -40,13 +40,13 @@ print_info "Found OVF: ${OVF_FILE}"
 # Cleanup function
 cleanup() {
     print_info "Cleaning up..."
-    
+
     # Power off VM if running
     if VBoxManage showvminfo "${VM_NAME}" &>/dev/null; then
         print_info "Powering off VM..."
         VBoxManage controlvm "${VM_NAME}" poweroff 2>/dev/null || true
         sleep 2
-        
+
         # Unregister and delete VM
         print_info "Removing VM..."
         VBoxManage unregistervm "${VM_NAME}" --delete 2>/dev/null || true

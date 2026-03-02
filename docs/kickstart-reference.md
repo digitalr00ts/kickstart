@@ -20,26 +20,31 @@ http/
 The base kickstart provides fundamental system settings:
 
 ### Installation Method
+
 - **Text mode**: Non-interactive installation
 - **ISO install**: Installs from mounted ISO media
 
 ### Localization
+
 - **Language**: en_US.UTF-8
 - **Keyboard**: us
 - **Timezone**: UTC (modify for your location)
 
 ### Network Configuration
+
 - **Method**: DHCP with IPv4
 - **Hostname**: localhost.localdomain (temporary, change post-installation)
 - **Interface**: Automatic activation on boot
 
 ### Authentication
+
 - **Root Password**: "packer" (TEMPORARY - for build automation only)
   - ⚠️ **Security Warning**: This is a temporary password used only during the build process
   - Must be changed post-installation or via Ansible provisioning
   - Never use these images in production without changing the password
 
 ### Disk Partitioning
+
 - **Strategy**: Automatic partitioning with LVM
 - **VG Name**: fedora
 - **Layout**:
@@ -49,14 +54,17 @@ The base kickstart provides fundamental system settings:
 - **Benefits**: Easy resizing, snapshots, and management
 
 ### Bootloader
+
 - **Location**: MBR
 - **Timeout**: 1 second (fast boot)
 
 ### Services
+
 - **Firewall**: Enabled
 - **SELinux**: Enforcing (default security posture)
 
 ### Base Packages
+
 - **Minimal**: @core group
 - **Python 3**: Required for Ansible provisioning
 - **Additional**: Network tools, development basics
@@ -66,6 +74,7 @@ The base kickstart provides fundamental system settings:
 Includes base configuration plus server-specific packages:
 
 ### Additional Packages
+
 - **System Administration**: sudo, vim, tmux
 - **Network Tools**: curl, wget, bind-utils, net-tools, nmap-ncat
 - **Version Control**: git
@@ -73,6 +82,7 @@ Includes base configuration plus server-specific packages:
 - **Compression**: bzip2, tar
 
 ### Use Cases
+
 - Headless servers
 - Virtual machines
 - Container hosts
@@ -83,17 +93,20 @@ Includes base configuration plus server-specific packages:
 Includes base configuration plus desktop environment:
 
 ### Desktop Environment
+
 - **Environment**: GNOME Workstation (@workstation-product-environment)
 - **X Server**: @base-x
 - **Display Manager**: GDM (GNOME Display Manager)
 
 ### Additional Applications
+
 - **Browser**: Firefox
 - **Terminal**: gnome-terminal
 - **Development**: @development-tools
 - **Utilities**: Standard GNOME applications
 
 ### Use Cases
+
 - Developer workstations
 - Desktop VMs
 - Testing environments
@@ -113,20 +126,26 @@ After kickstart completes:
 To customize kickstart files:
 
 ### Modify Base Settings
+
 Edit `http/ks-base.cfg` for changes affecting all variants:
+
 - Timezone: Change `timezone UTC` line
 - Root password: Change `rootpw` line (don't forget to update Packer variables)
 - Partition scheme: Modify `autopart` or replace with custom `part` directives
 
 ### Modify Packages
+
 Edit variant-specific files:
+
 - **Server**: Add packages to `%packages` section in `ks-server.cfg`
 - **Workstation**: Add packages to `%packages` section in `ks-workstation.cfg`
 
 ### Add Post-Install Scripts
+
 Add `%post` sections to kickstart files for shell commands that run after package installation but before reboot.
 
 Example:
+
 ```bash
 %post
 echo "Custom configuration" > /etc/custom.conf
@@ -137,6 +156,7 @@ systemctl enable myservice
 ## Validation
 
 Validate kickstart syntax (if ksvalidator is available):
+
 ```bash
 ksvalidator http/ks-base.cfg
 ksvalidator http/ks-server.cfg

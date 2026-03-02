@@ -5,6 +5,7 @@ This document describes how to test and validate Fedora images built with Packer
 ## Overview
 
 The testing infrastructure validates that built images:
+
 - Boot successfully
 - Have network connectivity
 - Include required packages
@@ -55,6 +56,7 @@ make test-all
 Common validation functions used by all test scripts:
 
 **Functions:**
+
 - `wait_for_ssh()` - Wait for SSH to become available
 - `check_boot()` - Verify system booted successfully
 - `check_ssh()` - Test SSH connectivity
@@ -70,6 +72,7 @@ Common validation functions used by all test scripts:
 ### test-qemu.sh
 
 Tests QEMU-built images by:
+
 1. Launching VM with QEMU
 2. Forwarding SSH port (default: 2222)
 3. Waiting for SSH availability
@@ -77,6 +80,7 @@ Tests QEMU-built images by:
 5. Cleaning up VM on exit
 
 **Usage:**
+
 ```bash
 ./tests/test-qemu.sh [variant]
 
@@ -91,6 +95,7 @@ SSH_PORT=3333 ./tests/test-qemu.sh server
 ### test-virtualbox.sh
 
 Tests VirtualBox-built images by:
+
 1. Importing OVF into VirtualBox
 2. Configuring port forwarding (default: 2223)
 3. Starting VM headless
@@ -98,6 +103,7 @@ Tests VirtualBox-built images by:
 5. Removing test VM on exit
 
 **Usage:**
+
 ```bash
 ./tests/test-virtualbox.sh [variant]
 
@@ -109,6 +115,7 @@ Tests VirtualBox-built images by:
 ### test-ansible-collection.sh
 
 Tests Ansible collection integration:
+
 - Verifies Ansible installation
 - Validates configuration files
 - Checks playbook syntax
@@ -116,6 +123,7 @@ Tests Ansible collection integration:
 - Validates both local and GitHub workflows
 
 **Usage:**
+
 ```bash
 ./tests/test-ansible-collection.sh
 
@@ -139,6 +147,7 @@ qemu-system-x86_64 \
 ```
 
 Access via SSH:
+
 ```bash
 ssh -p 2222 root@localhost
 # Password: packer
@@ -239,6 +248,7 @@ make build-server-qemu
 ### Standard Workstation Checks
 
 All server checks plus:
+
 - Firefox installed
 - GNOME packages present
 - GDM service available
@@ -295,6 +305,7 @@ Failed: 2
 **Problem**: Test cannot connect via SSH
 
 **Solutions:**
+
 - Verify VM actually booted (check QEMU process is running)
 - Check SSH port is not already in use: `lsof -i :2222`
 - Verify root password is still "packer" in kickstart
@@ -306,6 +317,7 @@ Failed: 2
 **Problem**: QEMU or VirtualBox fails to start VM
 
 **Solutions:**
+
 - Check image file exists and is readable
 - Verify sufficient RAM available on host
 - For QEMU: Check KVM is available: `lsmod | grep kvm`
@@ -317,6 +329,7 @@ Failed: 2
 **Problem**: Required packages reported as not installed
 
 **Solutions:**
+
 - Verify kickstart includes the packages
 - Check Ansible playbook for package installation tasks
 - SSH into VM manually and verify: `rpm -qa | grep package-name`
@@ -327,6 +340,7 @@ Failed: 2
 **Problem**: SSH port forwarding fails
 
 **Solutions:**
+
 - Use different port: `SSH_PORT=3333 ./tests/test-qemu.sh server`
 - Find and kill process using port: `lsof -ti :2222 | xargs kill`
 - Wait for previous test cleanup to complete
@@ -385,7 +399,7 @@ time ./tests/test-qemu.sh server | grep "SSH is available"
 
 ```bash
 # Monitor resource usage during test
-vmstat 1 & 
+vmstat 1 &
 ./tests/test-qemu.sh server
 killall vmstat
 ```
@@ -394,7 +408,7 @@ killall vmstat
 
 ```bash
 # Check image sizes
-ls -lh output/*/* 
+ls -lh output/*/*
 du -sh output/
 ```
 

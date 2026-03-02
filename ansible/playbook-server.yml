@@ -5,26 +5,26 @@
 - name: Provision Fedora Server Image
   hosts: all
   become: true
-  
+
   vars:
     # Fedora version passed from Packer
     # fedora_version: "{{ fedora_version }}"
     image_variant: "server"
-  
+
   pre_tasks:
     - name: Display provisioning information
       ansible.builtin.debug:
         msg: |
           Provisioning Fedora {{ fedora_version | default('unknown') }} Server
           Using drts01 collection from: {{ lookup('env', 'ANSIBLE_COLLECTIONS_PATH') | default('default path') }}
-    
+
     - name: Ensure system is up to date
       ansible.builtin.dnf:
         name: "*"
         state: latest
-        update_cache: yes
+        update_cache: true
       tags: ['update']
-    
+
     - name: Install common server packages
       ansible.builtin.dnf:
         name:
@@ -37,7 +37,7 @@
           - nmap-ncat
         state: present
       tags: ['packages']
-  
+
   tasks:
     # Placeholder for drts01 collection roles
     # Once the collection structure is known, add role calls here
@@ -45,21 +45,21 @@
     # - name: Apply base server configuration
     #   ansible.builtin.include_role:
     #     name: drts01.collection.base
-    
+
     # - name: Configure server-specific settings
     #   ansible.builtin.include_role:
     #     name: drts01.collection.server
-    
+
     - name: Placeholder - Configure server settings
       ansible.builtin.debug:
         msg: "Server provisioning tasks will be configured based on drts01 collection roles"
-  
+
   post_tasks:
     - name: Clean up DNF cache
       ansible.builtin.command: dnf clean all
       changed_when: true
       tags: ['cleanup']
-    
+
     - name: Display completion message
       ansible.builtin.debug:
         msg: "Fedora {{ fedora_version | default('unknown') }} Server provisioning complete"

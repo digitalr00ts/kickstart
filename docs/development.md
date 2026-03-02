@@ -24,26 +24,31 @@ pre-commit install --hook-type commit-msg
 The pre-commit hooks validate:
 
 #### 1. **Kickstart Files** (`http/*.cfg`)
+
 - Syntax validation with `ksvalidator` (if available)
 - Trailing whitespace
 - File endings
 
 #### 2. **Packer Templates** (`packer/*.pkr.hcl`)
+
 - Format checking (`packer fmt`)
 - Template validation (`packer validate`)
 - Syntax correctness
 
 #### 3. **Ansible Files** (`ansible/*.yml`)
+
 - Ansible-lint validation
 - YAML syntax
 - Best practices enforcement
 
 #### 4. **Shell Scripts** (`scripts/*.sh`, `tests/*.sh`)
+
 - ShellCheck validation
 - Executable permissions
 - Shebang presence
 
 #### 5. **General Files**
+
 - YAML syntax validation
 - Trailing whitespace removal
 - End-of-file fixing
@@ -52,6 +57,7 @@ The pre-commit hooks validate:
 - Secret detection
 
 #### 6. **Build Artifacts** (blocked)
+
 - ISO files
 - QCOW2 images
 - VDI images
@@ -80,6 +86,7 @@ pre-commit autoupdate
 ### Fixing Issues
 
 Many hooks auto-fix issues:
+
 - `trailing-whitespace` - removes trailing spaces
 - `end-of-file-fixer` - ensures files end with newline
 - `packer fmt` - formats Packer templates
@@ -87,6 +94,7 @@ Many hooks auto-fix issues:
 - `ansible-lint --write` - fixes Ansible issues
 
 After auto-fixes, review changes and re-stage:
+
 ```bash
 git add .
 git commit -m "your message"
@@ -95,6 +103,7 @@ git commit -m "your message"
 ### Bypassing Hooks (Not Recommended)
 
 Only in emergencies:
+
 ```bash
 git commit --no-verify -m "emergency fix"
 ```
@@ -119,6 +128,7 @@ pip install ansible-lint black isort detect-secrets
 ### Making Changes
 
 1. **Create a branch**:
+
    ```bash
    git checkout -b feature/my-feature
    ```
@@ -128,18 +138,20 @@ pip install ansible-lint black isort detect-secrets
    - Test locally
 
 3. **Run validations**:
+
    ```bash
    # Run all pre-commit checks
    pre-commit run --all-files
-   
+
    # Validate Packer
    make validate
-   
+
    # Test Ansible
    ./tests/test-ansible-collection.sh
    ```
 
 4. **Commit changes**:
+
    ```bash
    git add .
    git commit -m "descriptive message"
@@ -147,6 +159,7 @@ pip install ansible-lint black isort detect-secrets
    ```
 
 5. **Push and create PR**:
+
    ```bash
    git push origin feature/my-feature
    ```
@@ -291,6 +304,7 @@ If a hook fails:
 ### Common Issues
 
 **Packer validation fails:**
+
 ```bash
 # Ensure checksums are updated
 vim packer/fedora-43.pkrvars.hcl
@@ -300,6 +314,7 @@ cd packer && packer validate -var-file=fedora-43.pkrvars.hcl .
 ```
 
 **Ansible-lint fails:**
+
 ```bash
 # Review specific rule
 ansible-lint --list-rules
@@ -309,6 +324,7 @@ ansible-lint --write ansible/playbook-server.yml
 ```
 
 **ShellCheck warnings:**
+
 ```bash
 # Review specific warning
 shellcheck scripts/my-script.sh
@@ -320,6 +336,7 @@ shellcheck scripts/my-script.sh
 ### Skipping Specific Files
 
 Edit `.pre-commit-config.yaml`:
+
 ```yaml
 - id: some-hook
   exclude: ^path/to/exclude/
@@ -348,11 +365,12 @@ Pre-commit hooks should also run in CI:
 
 ## Getting Help
 
-- Pre-commit docs: https://pre-commit.com/
-- Packer docs: https://www.packer.io/docs
-- Ansible-lint: https://ansible-lint.readthedocs.io/
-- ShellCheck: https://www.shellcheck.net/
+- Pre-commit docs: <https://pre-commit.com/>
+- Packer docs: <https://www.packer.io/docs>
+- Ansible-lint: <https://ansible-lint.readthedocs.io/>
+- ShellCheck: <https://www.shellcheck.net/>
 
 For project-specific issues:
+
 - Check [troubleshooting.md](troubleshooting.md)
 - Open an issue on GitHub

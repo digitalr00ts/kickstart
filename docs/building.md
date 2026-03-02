@@ -13,6 +13,7 @@ Ensure the following tools are installed:
 - **Make**: `make --version`
 
 Check all prerequisites:
+
 ```bash
 make init  # This will verify Packer and initialize plugins
 ```
@@ -20,27 +21,31 @@ make init  # This will verify Packer and initialize plugins
 ## Quick Start
 
 1. **Update ISO checksums** in `packer/fedora-43.pkrvars.hcl`:
+
    ```bash
    # Download the checksums from Fedora
    wget https://download.fedoraproject.org/pub/fedora/linux/releases/43/Server/x86_64/iso/Fedora-Server-43-1.1-x86_64-CHECKSUM
-   
+
    # View the checksum
    cat Fedora-Server-43-1.1-x86_64-CHECKSUM
-   
+
    # Update packer/fedora-43.pkrvars.hcl with actual checksums
    ```
 
 2. **Initialize Packer plugins**:
+
    ```bash
    make init
    ```
 
 3. **Validate configuration**:
+
    ```bash
    make validate
    ```
 
 4. **Build a server image**:
+
    ```bash
    make build-server-qemu
    ```
@@ -131,6 +136,7 @@ make build-server-qemu
 ```
 
 This will:
+
 1. Install `drts01.collection` from GitHub
 2. Apply provisioning from the collection
 3. Create the final image
@@ -153,10 +159,13 @@ The build will use your local collection instead of downloading from GitHub.
 
 1. **Modify local collection** at your development path
 2. **Set environment variable**:
+
    ```bash
    export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collections
    ```
+
 3. **Build and test**:
+
    ```bash
    make build-server-qemu
    ./tests/test-qemu.sh server
@@ -165,6 +174,7 @@ The build will use your local collection instead of downloading from GitHub.
 ### Collection Requirements
 
 Edit `ansible/requirements.yml` to:
+
 - Change collection version/branch
 - Add additional collections
 - Configure for air-gapped environments
@@ -174,31 +184,37 @@ Edit `ansible/requirements.yml` to:
 Understanding what happens during a build:
 
 ### 1. ISO Download (First Build Only)
+
 Packer downloads and caches the Fedora ISO:
+
 - Cache location: `.packer_cache/`
 - Verifies checksum before use
 - Reuses cached ISO for subsequent builds
 
 ### 2. VM Creation
+
 - Creates virtual machine with specified resources
 - Attaches ISO as boot media
 - Starts HTTP server for kickstart file
 
 ### 3. Kickstart Installation
+
 - Boots from ISO
 - Fetches kickstart from Packer's HTTP server
 - Performs automated installation
 - Reboots into installed system
 
 ### 4. Provisioning
+
 - **Shell Provisioner**: Installs Python and dependencies
-- **Ansible Provisioner**: 
+- **Ansible Provisioner**:
   - Installs collections (if needed)
   - Runs playbook for variant
   - Applies configuration
 - **Shell Provisioner**: Final cleanup
 
 ### 5. Image Export
+
 - Shuts down VM
 - Exports image in platform format:
   - QEMU: qcow2 format
@@ -217,6 +233,7 @@ Typical build times (varies by hardware):
 | Workstation | VirtualBox | 30-45 min |
 
 Factors affecting build time:
+
 - Internet connection speed (ISO download, package downloads)
 - CPU cores available
 - Disk I/O speed
@@ -247,13 +264,14 @@ output/
 
 **Problem**: `invalid checksum` error
 
-**Solution**: Update checksums in `packer/fedora-43.pkrvars.hcl` with actual values from https://getfedora.org/
+**Solution**: Update checksums in `packer/fedora-43.pkrvars.hcl` with actual values from <https://getfedora.org/>
 
 ### SSH Timeout
 
 **Problem**: Packer times out waiting for SSH
 
 **Solutions**:
+
 - Check kickstart has correct root password
 - Verify network configuration in kickstart
 - Increase `ssh_timeout` in `packer/sources.pkr.hcl`
@@ -264,6 +282,7 @@ output/
 **Problem**: Ansible cannot find `drts01.collection`
 
 **Solutions**:
+
 - Verify `ansible/requirements.yml` has correct GitHub URL
 - Check network connectivity
 - For local development, ensure `ANSIBLE_COLLECTIONS_PATH` is set correctly
@@ -274,6 +293,7 @@ output/
 **Problem**: Build fails due to insufficient disk space
 
 **Solutions**:
+
 - Clean previous builds: `make clean`
 - Remove Packer cache: `rm -rf .packer_cache/`
 - Free up host disk space
@@ -308,6 +328,7 @@ To support multiple Fedora versions:
 By default, builds run headless. To watch the installation:
 
 Edit `packer/sources.pkr.hcl` and change:
+
 ```hcl
 headless = false  # Shows VM window during build
 ```
@@ -315,8 +336,9 @@ headless = false  # Shows VM window during build
 ### Parallel Builds
 
 Build multiple variants simultaneously:
+
 ```bash
-make build-server-qemu & 
+make build-server-qemu &
 make build-workstation-qemu &
 wait
 ```
@@ -326,6 +348,7 @@ wait
 ## Next Steps
 
 After building images:
+
 1. **Test**: See [testing.md](testing.md) for validation procedures
 2. **Deploy**: Use images for your infrastructure
 3. **Automate**: Integrate into CI/CD pipelines

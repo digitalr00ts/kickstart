@@ -5,6 +5,7 @@ Automated build system for creating reproducible Fedora workstation and server i
 ## Overview
 
 This project provides a Packer-based infrastructure to build Fedora images with:
+
 - **Minimal kickstart configurations** for base OS installation
 - **Ansible provisioning** using the drts01 collection
 - **Multi-platform support** for QEMU/KVM and VirtualBox
@@ -41,11 +42,11 @@ cd kickstart
 # IMPORTANT: Update ISO checksums first!
 # Edit packer/fedora-43.pkrvars.hcl and replace placeholder checksums
 # Get actual checksums from: https://getfedora.org/
-# 
+#
 # Example:
 # wget https://download.fedoraproject.org/pub/fedora/linux/releases/43/Server/x86_64/iso/Fedora-Server-43-1.1-x86_64-CHECKSUM
 # cat Fedora-Server-43-1.1-x86_64-CHECKSUM
-# 
+#
 # Then update the iso_checksum_server value in packer/fedora-43.pkrvars.hcl
 
 # Initialize Packer plugins
@@ -167,21 +168,25 @@ Run `make help` to see descriptions of all targets.
 ## System Requirements
 
 ### Host System
+
 - Linux host (Fedora, RHEL, Ubuntu, Debian)
 - CPU with virtualization support (Intel VT-x or AMD-V)
 - KVM enabled for QEMU builds
 
 ### Disk Space
+
 - ~5GB per image variant (sparse qcow2 format for QEMU)
 - ~10GB for ISO cache (.packer_cache/)
 - ~50GB recommended for building all variants with headroom
 
 ### Memory
+
 - Server builds: 2GB VM + 2GB host = 4GB+ total recommended
 - Workstation builds: 2GB VM + 2GB host = 4GB+ total recommended  
 - More memory speeds up builds significantly
 
 ### Build Time
+
 - Server variant: 15-25 minutes (QEMU with KVM)
 - Workstation variant: 25-40 minutes (QEMU with KVM)
 - Times vary based on:
@@ -220,6 +225,7 @@ See [docs/kickstart-reference.md](docs/kickstart-reference.md#security-considera
 ## Current Status
 
 ### Completed
+
 - ✅ Project structure and foundation
 - ✅ Kickstart configurations (server and workstation)
 - ✅ Packer templates (QEMU ready, VirtualBox prepared)
@@ -229,11 +235,13 @@ See [docs/kickstart-reference.md](docs/kickstart-reference.md#security-considera
 - ✅ Complete documentation
 
 ### Ready for Use
+
 - ✅ QEMU/KVM builds (fully tested)
 - ⚠️ VirtualBox builds (templates ready, requires VirtualBox installation)
 - ⚠️ Requires ISO checksum updates in `packer/fedora-43.pkrvars.hcl`
 
 ### Optional (Not Yet Implemented)
+
 - ⬜ Vagrant post-processor (templates prepared)
 - ⬜ Additional Fedora versions (structure supports, needs vars files)
 

@@ -47,7 +47,7 @@ fi
 print_info "Validating ansible.cfg..."
 if [ -f "ansible/ansible.cfg" ]; then
     print_success "ansible.cfg exists"
-    
+
     # Check for important settings
     if grep -q "collections_path" ansible/ansible.cfg; then
         print_success "collections_path is configured"
@@ -78,7 +78,7 @@ done
 print_info "Testing local collection path support..."
 if [ -n "${ANSIBLE_COLLECTIONS_PATH}" ]; then
     print_success "ANSIBLE_COLLECTIONS_PATH is set: ${ANSIBLE_COLLECTIONS_PATH}"
-    
+
     # Check if the path exists
     if [ -d "${ANSIBLE_COLLECTIONS_PATH}" ]; then
         print_success "Collection path directory exists"
@@ -94,7 +94,7 @@ print_info "Testing collection installation from GitHub..."
 if [ -f "ansible/requirements.yml" ]; then
     # Create a temporary directory for testing
     TEMP_COLLECTIONS_DIR=$(mktemp -d)
-    
+
     if ansible-galaxy collection install \
         -r ansible/requirements.yml \
         -p "${TEMP_COLLECTIONS_DIR}" \
@@ -103,7 +103,7 @@ if [ -f "ansible/requirements.yml" ]; then
     else
         print_warning "Collection installation test skipped (may require network access)"
     fi
-    
+
     # Cleanup
     rm -rf "${TEMP_COLLECTIONS_DIR}"
 else

@@ -40,7 +40,7 @@ print_summary() {
     echo -e "${GREEN}Passed:${NC} ${TESTS_PASSED}"
     echo -e "${RED}Failed:${NC} ${TESTS_FAILED}"
     echo "========================================"
-    
+
     if [ ${TESTS_FAILED} -gt 0 ]; then
         return 1
     fi
@@ -54,9 +54,9 @@ wait_for_ssh() {
     local user=$3
     local max_attempts=${4:-30}
     local attempt=0
-    
+
     print_info "Waiting for SSH on ${host}:${port}..."
-    
+
     while [ $attempt -lt $max_attempts ]; do
         if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
                -p ${port} ${user}@${host} "exit" 2>/dev/null; then
@@ -66,7 +66,7 @@ wait_for_ssh() {
         ((attempt++))
         sleep 2
     done
-    
+
     print_failure "SSH timeout after ${max_attempts} attempts"
     return 1
 }
@@ -76,9 +76,9 @@ check_boot() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Checking if system booted successfully..."
-    
+
     if ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
            "uptime" 2>/dev/null; then
         print_success "System is running"
@@ -94,9 +94,9 @@ check_ssh() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Testing SSH access..."
-    
+
     if ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
            "whoami" 2>/dev/null | grep -q "${user}"; then
         print_success "SSH access working"
@@ -114,9 +114,9 @@ check_packages() {
     local user=$3
     shift 3
     local packages=("$@")
-    
+
     print_info "Checking required packages..."
-    
+
     for package in "${packages[@]}"; do
         if ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
                "rpm -q ${package}" 2>/dev/null | grep -q "^${package}"; then
@@ -132,12 +132,12 @@ check_partitions() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Checking disk partitions..."
-    
+
     local output=$(ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
                       "df -h /" 2>/dev/null)
-    
+
     if echo "${output}" | grep -q "/"; then
         print_success "Root partition is mounted"
         echo "${output}" | tail -1
@@ -153,9 +153,9 @@ check_lvm() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Checking LVM configuration..."
-    
+
     if ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
            "sudo lvs" 2>/dev/null | grep -q "root"; then
         print_success "LVM is configured"
@@ -171,12 +171,12 @@ check_python() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Checking Python installation..."
-    
+
     local version=$(ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
                        "python3 --version" 2>&1)
-    
+
     if echo "${version}" | grep -q "Python 3"; then
         print_success "Python is installed: ${version}"
         return 0
@@ -193,9 +193,9 @@ check_services() {
     local user=$3
     shift 3
     local services=("$@")
-    
+
     print_info "Checking system services..."
-    
+
     for service in "${services[@]}"; do
         if ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
                "sudo systemctl is-active ${service}" 2>/dev/null | grep -q "active"; then
@@ -211,9 +211,9 @@ check_network() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Checking network configuration..."
-    
+
     # Check if we can ping a public DNS
     if ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
            "ping -c 1 8.8.8.8" 2>/dev/null | grep -q "1 received"; then
@@ -230,9 +230,9 @@ check_dnf() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Checking DNF package manager..."
-    
+
     if ssh -o StrictHostKeyChecking=no -p ${port} ${user}@${host} \
            "sudo dnf --version" 2>/dev/null | grep -q "dnf"; then
         print_success "DNF is working"
@@ -248,9 +248,9 @@ get_system_info() {
     local host=$1
     local port=$2
     local user=$3
-    
+
     print_info "Gathering system information..."
-    
+
     echo ""
     echo "System Information:"
     echo "----------------------------------------"

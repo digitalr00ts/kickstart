@@ -4,7 +4,7 @@
 # Build block - connects sources with provisioners
 build {
   name = "fedora-${var.fedora_version}-${var.variant}"
-  
+
   # Sources to build from
   sources = [
     "source.qemu.fedora"
@@ -17,13 +17,13 @@ build {
   provisioner "ansible" {
     playbook_file = "ansible/playbook-${var.variant}.yml"
     galaxy_file   = "ansible/requirements.yml"
-    
+
     # Pass Fedora version to playbook
     extra_arguments = [
       "--extra-vars",
       "fedora_version=${var.fedora_version}"
     ]
-    
+
     # Support for local collection development
     # Set ANSIBLE_COLLECTIONS_PATH environment variable to use local collections
     # Example: export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collections
@@ -31,7 +31,7 @@ build {
       "ANSIBLE_CONFIG=ansible/ansible.cfg",
       "ANSIBLE_FORCE_COLOR=1"
     ]
-    
+
     # Use SSH for connection
     use_proxy = false
   }

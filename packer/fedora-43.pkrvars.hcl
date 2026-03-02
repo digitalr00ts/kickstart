@@ -12,7 +12,7 @@ iso_url_server = "https://download.fedoraproject.org/pub/fedora/linux/releases/4
 # Verify from: https://getfedora.org/security/
 iso_checksum_server = "sha256:16fd70ddae2c7de13e485637c3da1fb385dd8220389f988279ea3b3d561243cc"
 
-# Fedora 43 Workstation ISO  
+# Fedora 43 Workstation ISO
 # For workstation builds, use this ISO URL
 iso_url_workstation = "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Workstation/x86_64/iso/Fedora-Workstation-Live-x86_64-43-1.1.iso"
 
