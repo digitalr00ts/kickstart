@@ -8,10 +8,10 @@ Common issues and solutions when building Fedora images with Packer.
 
 **Error:**
 
-```
+```bash
 Error: invalid checksum: encoding/hex: invalid byte: U+0052 'R'
 in sha256:REPLACE_WITH_ACTUAL_FEDORA_43_SERVER_CHECKSUM
-```
+```bash
 
 **Cause:** Placeholder checksums in `packer/fedora-43.pkrvars.hcl` haven't been replaced with actual values.
 
@@ -29,10 +29,10 @@ in sha256:REPLACE_WITH_ACTUAL_FEDORA_43_SERVER_CHECKSUM
 
 **Error:**
 
-```
+```bash
 Warning: Undefined variable: iso_url_server
 Warning: Undefined variable: iso_checksum_server
-```
+```bash
 
 **Cause:** Variables used in `.pkrvars.hcl` but not declared in `variables.pkr.hcl`.
 
@@ -46,7 +46,7 @@ variable "iso_url_server" {
 variable "iso_checksum_server" {
   type = string
 }
-```
+```bash
 
 Or ignore if using `iso_url` and `iso_checksum` directly.
 
@@ -54,9 +54,9 @@ Or ignore if using `iso_url` and `iso_checksum` directly.
 
 **Error:**
 
-```
+```bash
 Error: Failed to load plugin: terraform-plugin-sdk/v2/plugin.Serve
-```
+```bash
 
 **Cause:** Packer plugins not initialized.
 
@@ -66,15 +66,15 @@ Error: Failed to load plugin: terraform-plugin-sdk/v2/plugin.Serve
 packer init packer/
 # or
 make init
-```
+```bash
 
 ### HTTP Server Port Already in Use
 
 **Error:**
 
-```
+```bash
 Error: listen tcp :8000: bind: address already in use
-```
+```bash
 
 **Cause:** Another process using port 8000 (Packer's default HTTP server port).
 
@@ -87,7 +87,7 @@ lsof -i :8000
 # Kill it or change Packer HTTP port in sources.pkr.hcl
 http_port_min = 8100
 http_port_max = 8200
-```
+```bash
 
 ## Kickstart Issues
 
@@ -95,9 +95,9 @@ http_port_max = 8200
 
 **Error:**
 
-```
+```bash
 Timeout waiting for SSH
-```
+```bash
 
 **Causes & Solutions:**
 
@@ -129,15 +129,15 @@ url --url=https://mirrors.fedoraproject.org/metalink?repo=fedora-43&arch=x86_64
 
 # Or use local mirror
 url --url=http://your-local-mirror/fedora/43/
-```
+```bash
 
 ### Disk Partitioning Errors
 
 **Error:**
 
-```
+```bash
 Error: Not enough space in volume group
-```
+```bash
 
 **Cause:** Disk size too small for selected packages.
 
@@ -148,7 +148,7 @@ Error: Not enough space in volume group
 packer build -var disk_size=80000 ...
 
 # Or reduce packages in kickstart
-```
+```bash
 
 ## Ansible Issues
 
@@ -156,9 +156,9 @@ packer build -var disk_size=80000 ...
 
 **Error:**
 
-```
+```bash
 ERROR! couldn't resolve module/action 'drts01.collection.role_name'
-```
+```bash
 
 **Causes & Solutions:**
 
@@ -172,7 +172,7 @@ ERROR! couldn't resolve module/action 'drts01.collection.role_name'
    ansible-galaxy collection install -r ansible/requirements.yml
    ```
 
-2. **Wrong ANSIBLE_COLLECTIONS_PATH**
+1. **Wrong ANSIBLE_COLLECTIONS_PATH**
 
    ```bash
    # Check path
@@ -182,7 +182,7 @@ ERROR! couldn't resolve module/action 'drts01.collection.role_name'
    export ANSIBLE_COLLECTIONS_PATH=/correct/path
    ```
 
-3. **GitHub access issues**
+2. **GitHub access issues**
 
    ```bash
    # Test GitHub connectivity
@@ -196,9 +196,9 @@ ERROR! couldn't resolve module/action 'drts01.collection.role_name'
 
 **Error:**
 
-```
+```bash
 ERROR! Ansible requires Python but it was not found on the system
-```
+```bash
 
 **Cause:** Python not installed before Ansible provisioner runs.
 
@@ -211,15 +211,15 @@ provisioner "shell" {
     "alternatives --set python /usr/bin/python3"
   ]
 }
-```
+```bash
 
 ### Playbook Syntax Error
 
 **Error:**
 
-```
+```bash
 ERROR! Syntax Error while loading YAML
-```
+```bash
 
 **Cause:** Invalid YAML in playbook files.
 
@@ -231,7 +231,7 @@ python3 -c "import yaml; yaml.safe_load(open('ansible/playbook-server.yml'))"
 
 # Or use ansible-lint if available
 ansible-lint ansible/playbook-server.yml
-```
+```bash
 
 ## QEMU Issues
 
@@ -239,9 +239,9 @@ ansible-lint ansible/playbook-server.yml
 
 **Error:**
 
-```
+```bash
 Could not access KVM kernel module: No such file or directory
-```
+```bash
 
 **Cause:** KVM not loaded or not available.
 
@@ -259,15 +259,15 @@ sudo modprobe kvm_amd
 
 # Or build without KVM (slower)
 # Edit sources.pkr.hcl: accelerator = "none"
-```
+```bash
 
 ### Permission Denied on /dev/kvm
 
 **Error:**
 
-```
+```bash
 Could not access /dev/kvm: Permission denied
-```
+```bash
 
 **Cause:** User not in kvm group.
 
@@ -282,15 +282,15 @@ newgrp kvm
 
 # Verify
 groups | grep kvm
-```
+```bash
 
 ### QEMU Command Not Found
 
 **Error:**
 
-```
+```bash
 exec: "qemu-system-x86_64": executable file not found in $PATH
-```
+```bash
 
 **Cause:** QEMU not installed.
 
@@ -305,7 +305,7 @@ sudo apt install qemu-kvm qemu-utils
 
 # Verify
 which qemu-system-x86_64
-```
+```bash
 
 ## VirtualBox Issues
 
@@ -313,9 +313,9 @@ which qemu-system-x86_64
 
 **Error:**
 
-```
+```bash
 exec: "VBoxManage": executable file not found in $PATH
-```
+```bash
 
 **Cause:** VirtualBox not installed or not in PATH.
 
@@ -330,15 +330,15 @@ export PATH=$PATH:/usr/local/bin
 
 # Or skip VirtualBox builds
 make build-server-qemu  # Use QEMU only
-```
+```bash
 
 ### VirtualBox Kernel Modules Not Loaded
 
 **Error:**
 
-```
+```bash
 Kernel driver not installed (rc=-1908)
-```
+```bash
 
 **Cause:** VirtualBox kernel modules not compiled/loaded.
 
@@ -351,7 +351,7 @@ sudo /sbin/vboxconfig
 # Or
 sudo dnf reinstall kernel-devel kernel-headers
 sudo /usr/lib/virtualbox/vboxdrv.sh setup
-```
+```bash
 
 ### VirtualBox Extension Pack Missing
 
@@ -365,7 +365,7 @@ sudo /usr/lib/virtualbox/vboxdrv.sh setup
 wget https://download.virtualbox.org/virtualbox/7.0.14/Oracle_VM_VirtualBox_Extension_Pack-7.0.14.vbox-extpack
 
 VBoxManage extpackinstall Oracle_VM_VirtualBox_Extension_Pack-7.0.14.vbox-extpack
-```
+```bash
 
 ## Build Performance Issues
 
@@ -396,9 +396,9 @@ VBoxManage extpackinstall Oracle_VM_VirtualBox_Extension_Pack-7.0.14.vbox-extpac
 
 **Error:**
 
-```
+```bash
 No space left on device
-```
+```bash
 
 **Solutions:**
 
@@ -415,15 +415,15 @@ du -sh output/ .packer_cache/
 
 # Build with smaller disk
 packer build -var disk_size=20000 ...
-```
+```bash
 
 ### Out of Memory
 
 **Error:**
 
-```
+```bash
 Cannot allocate memory
-```
+```bash
 
 **Solutions:**
 
@@ -437,7 +437,7 @@ free -h
 
 # Use swap
 sudo swapon -a
-```
+```bash
 
 ## Testing Issues
 
@@ -454,15 +454,15 @@ qemu-img check output/server/fedora-43
 # Rebuild image
 make clean
 make build-server-qemu
-```
+```bash
 
 ### SSH Port Conflict in Tests
 
 **Error:**
 
-```
+```bash
 Address already in use
-```
+```bash
 
 **Solution:**
 
@@ -472,7 +472,7 @@ SSH_PORT=3333 ./tests/test-qemu.sh server
 
 # Or find and kill process
 lsof -ti :2222 | xargs kill -9
-```
+```bash
 
 ### Test Timeout
 
@@ -483,7 +483,7 @@ Edit test script and increase timeout:
 
 ```bash
 wait_for_ssh "localhost" "${SSH_PORT}" "${SSH_USER}" 120  # 120 attempts
-```
+```bash
 
 ## Network Issues
 
@@ -498,14 +498,14 @@ wait_for_ssh "localhost" "${SSH_PORT}" "${SSH_USER}" 120  # 120 attempts
    network --device=link --bootproto=dhcp --nameserver=8.8.8.8
    ```
 
-2. **Firewall blocking**
+1. **Firewall blocking**
 
    ```bash
    # Check firewall rules in VM
    ssh -p 2222 root@localhost "firewall-cmd --list-all"
    ```
 
-3. **Network mode wrong**
+2. **Network mode wrong**
    - QEMU: Using `-net user` (should work)
    - VirtualBox: Check NAT is enabled
 
@@ -513,9 +513,9 @@ wait_for_ssh "localhost" "${SSH_PORT}" "${SSH_USER}" 120  # 120 attempts
 
 **Error:**
 
-```
+```bash
 Failed to download metadata for repo 'fedora'
-```
+```bash
 
 **Causes:**
 
@@ -531,7 +531,7 @@ ssh -p 2222 root@localhost "curl -I https://mirrors.fedoraproject.org"
 
 # Try different mirror in kickstart
 # Use metalink for automatic mirror selection
-```
+```bash
 
 ## Getting Help
 
@@ -543,23 +543,23 @@ If you can't resolve an issue:
    PACKER_LOG=1 packer build ... 2>&1 | tee build.log
    ```
 
-2. **Check Logs:**
+1. **Check Logs:**
    - Packer output
    - VM console (set `headless = false`)
    - System logs in VM: `/var/log/anaconda/`
 
-3. **Search Issues:**
+2. **Search Issues:**
    - Packer GitHub issues
    - Fedora mailing lists
    - Stack Overflow
 
-4. **Ask for Help:**
+3. **Ask for Help:**
    - Provide full error message
    - Include Packer version: `packer version`
    - Include system info: `uname -a`
    - Attach relevant logs
 
-5. **Report Bugs:**
+4. **Report Bugs:**
    - For this project: Use GitHub issues
    - For Packer: <https://github.com/hashicorp/packer/issues>
    - For Fedora: <https://bugzilla.redhat.com/>

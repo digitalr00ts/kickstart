@@ -27,7 +27,7 @@ make test-qemu VARIANT=workstation
 # Or use the test script directly
 ./tests/test-qemu.sh server
 ./tests/test-qemu.sh workstation
-```
+```bash
 
 ### Test VirtualBox Images
 
@@ -41,13 +41,13 @@ make test-virtualbox VARIANT=workstation
 # Or use the test script directly
 ./tests/test-virtualbox.sh server
 ./tests/test-virtualbox.sh workstation
-```
+```bash
 
 ### Test All Platforms
 
 ```bash
 make test-all
-```
+```bash
 
 ## Test Scripts
 
@@ -90,7 +90,7 @@ Tests QEMU-built images by:
 
 # With custom SSH port
 SSH_PORT=3333 ./tests/test-qemu.sh server
-```
+```bash
 
 ### test-virtualbox.sh
 
@@ -110,7 +110,7 @@ Tests VirtualBox-built images by:
 # Examples
 ./tests/test-virtualbox.sh server
 ./tests/test-virtualbox.sh workstation
-```
+```bash
 
 ### test-ansible-collection.sh
 
@@ -130,7 +130,7 @@ Tests Ansible collection integration:
 # With local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/collections
 ./tests/test-ansible-collection.sh
-```
+```bash
 
 ## Manual Testing
 
@@ -144,14 +144,14 @@ qemu-system-x86_64 \
   -net nic,model=virtio \
   -net user,hostfwd=tcp::2222-:22 \
   -display gtk
-```
+```bash
 
 Access via SSH:
 
 ```bash
 ssh -p 2222 root@localhost
 # Password: packer
-```
+```bash
 
 ### Import to VirtualBox Manually
 
@@ -164,7 +164,7 @@ VBoxManage startvm fedora-43
 
 # Or use GUI
 virtualbox &
-```
+```bash
 
 ### Test with libvirt
 
@@ -181,7 +181,7 @@ virt-install \
 
 # Access console
 virt-viewer fedora-43-test
-```
+```bash
 
 ## Ansible Collection Testing Workflow
 
@@ -196,7 +196,7 @@ make build-server-qemu
 
 # 3. Verify Ansible provisioning worked
 ssh -p 2222 root@localhost "rpm -qa | grep -i <expected-package>"
-```
+```bash
 
 ### Test Development Workflow (Local)
 
@@ -215,7 +215,7 @@ make build-server-qemu
 
 # 5. Verify your local changes were applied
 ssh -p 2222 root@localhost "check your changes here"
-```
+```bash
 
 ### Test Collection Changes Iteratively
 
@@ -229,7 +229,7 @@ make build-server-qemu
 
 # 3. Test changes
 ./tests/test-qemu.sh server
-```
+```bash
 
 ## Validation Checks
 
@@ -258,7 +258,7 @@ All server checks plus:
 
 ### Successful Test Output
 
-```
+```bash
 ========================================
 Testing QEMU Image: Fedora 43 server
 ========================================
@@ -283,11 +283,11 @@ Test Summary
 Passed: 15
 Failed: 0
 ========================================
-```
+```bash
 
 ### Failed Test Output
 
-```
+```bash
 ✗ Package firefox is not installed
 ✗ SSH access failed
 ========================================
@@ -296,7 +296,7 @@ Test Summary
 Passed: 13
 Failed: 2
 ========================================
-```
+```bash
 
 ## Troubleshooting Tests
 
@@ -361,7 +361,7 @@ test-images:
     paths:
       - output/
     expire_in: 1 week
-```
+```bash
 
 ### Automated Testing Script
 
@@ -384,7 +384,7 @@ echo "==> Testing"
 make test-qemu
 
 echo "==> All tests passed!"
-```
+```bash
 
 ## Performance Testing
 
@@ -393,7 +393,7 @@ echo "==> All tests passed!"
 ```bash
 # Time from VM start to SSH available
 time ./tests/test-qemu.sh server | grep "SSH is available"
-```
+```bash
 
 ### Resource Usage Test
 
@@ -402,7 +402,7 @@ time ./tests/test-qemu.sh server | grep "SSH is available"
 vmstat 1 &
 ./tests/test-qemu.sh server
 killall vmstat
-```
+```bash
 
 ### Image Size
 
@@ -410,7 +410,7 @@ killall vmstat
 # Check image sizes
 ls -lh output/*/*
 du -sh output/
-```
+```bash
 
 ## Best Practices
 

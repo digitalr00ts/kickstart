@@ -225,11 +225,11 @@ Packer downloads and caches the Fedora ISO:
 
 Typical build times (varies by hardware):
 
-| Variant | Platform | Time |
-|---------|----------|------|
-| Server | QEMU | 15-25 min |
-| Workstation | QEMU | 25-40 min |
-| Server | VirtualBox | 20-30 min |
+| Variant     | Platform   | Time      |
+|-------------|------------|-----------|
+| Server      | QEMU       | 15-25 min |
+| Workstation | QEMU       | 25-40 min |
+| Server      | VirtualBox | 20-30 min |
 | Workstation | VirtualBox | 30-45 min |
 
 Factors affecting build time:
@@ -244,7 +244,7 @@ Factors affecting build time:
 
 After successful build:
 
-```
+```text
 output/
 ├── qemu/
 │   ├── server/

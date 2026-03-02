@@ -1,6 +1,7 @@
 # Fedora Image Builder
 
-Automated build system for creating reproducible Fedora workstation and server images for QEMU and VirtualBox using Packer, Kickstart, and Ansible.
+Automated build system for creating reproducible Fedora workstation and server images for QEMU and
+VirtualBox using Packer, Kickstart, and Ansible.
 
 ## Overview
 
@@ -34,7 +35,7 @@ This project provides a Packer-based infrastructure to build Fedora images with:
 
 ### Initial Setup
 
-```bash
+```sh
 # Clone the repository
 git clone https://github.com/digitalr00ts/kickstart.git
 cd kickstart
@@ -54,7 +55,7 @@ make init
 
 # Validate templates (will fail until checksums are updated)
 make validate
-```
+```text
 
 ### Build Your First Image
 
@@ -67,7 +68,7 @@ make build-server-virtualbox
 
 # Build workstation variant
 make build-workstation-qemu
-```
+```text
 
 Images are output to the `output/` directory organized by platform and variant.
 
@@ -76,7 +77,7 @@ Images are output to the `output/` directory organized by platform and variant.
 ```bash
 # Build all combinations (server/workstation × QEMU/VirtualBox)
 make build-all
-```
+```text
 
 ### Testing Images
 
@@ -89,11 +90,11 @@ make test-virtualbox
 
 # Test all platforms
 make test-all
-```
+```text
 
 ## Project Structure
 
-```
+```text
 kickstart/
 ├── http/                    # Kickstart files served via HTTP during install
 │   ├── ks-base.cfg         # Base configuration (shared)
@@ -112,7 +113,7 @@ kickstart/
 ├── scripts/                 # Utility scripts
 ├── tests/                   # Testing infrastructure
 └── docs/                    # Documentation
-```
+```text
 
 ## Ansible Collection Support
 
@@ -122,7 +123,7 @@ kickstart/
 # Set environment variable to use local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
 make build-server-qemu
-```
+```text
 
 ### Using GitHub Collection (Production)
 
@@ -130,7 +131,7 @@ make build-server-qemu
 # Unset local path to use GitHub collection
 unset ANSIBLE_COLLECTIONS_PATH
 make build-server-qemu
-```
+```text
 
 ### Testing Collection Changes
 
@@ -142,7 +143,7 @@ cd ansible/
 ansible-playbook -i <vm-ip>, playbook-server.yml \
   --extra-vars "ansible_collections_path=/path/to/local/collections" \
   --user root
-```
+```text
 
 ## Available Make Targets
 
@@ -161,7 +162,7 @@ make test-all          # Test all images
 make clean             # Remove build artifacts
 make status            # Show build status and artifacts
 make quick             # Quick build - server on QEMU only
-```
+```text
 
 Run `make help` to see descriptions of all targets.
 
@@ -266,6 +267,6 @@ pre-commit install
 
 # Run manually
 pre-commit run --all-files
-```
+```text
 
 See [docs/development.md](docs/development.md) for full development guide.

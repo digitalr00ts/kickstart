@@ -4,11 +4,12 @@ This document describes the kickstart configuration files used for Fedora image 
 
 ## Overview
 
-The kickstart files follow a minimal configuration philosophy, providing only essential settings while allowing maximum flexibility for post-installation customization via Ansible.
+The kickstart files follow a minimal configuration philosophy, providing only essential settings while
+allowing maximum flexibility for post-installation customization via Ansible.
 
 ## File Structure
 
-```
+```text
 http/
 ├── ks-base.cfg         # Base configuration (shared)
 ├── ks-server.cfg       # Server variant (includes base)
