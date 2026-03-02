@@ -36,11 +36,17 @@ build {
     use_proxy = false
   }
 
-  # Post-processor: Vagrant box creation
-  post-processor "vagrant" {
-    output               = "${var.output_directory}/vagrant/fedora-${var.fedora_version}-${var.variant}-{{.Provider}}.box"
-    compression_level    = 9
-    keep_input_artifact  = true
-    vagrantfile_template = null
+  post-processors {
+    # Post-processor: Vagrant box creation
+    post-processor "vagrant" {
+      output               = "${var.output_directory}/vagrant/fedora-${var.fedora_version}-${var.variant}-{{.Provider}}.box"
+      compression_level    = 9
+      keep_input_artifact  = true
+      vagrantfile_template = null
+    }
+
+    post-processor "manifest" {
+      strip_path = true
+    }
   }
 }

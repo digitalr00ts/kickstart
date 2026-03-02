@@ -55,6 +55,8 @@ source "qemu" "fedora" {
   ssh_password     = var.ssh_password
   ssh_timeout      = var.ssh_timeout
   ssh_wait_timeout = var.ssh_timeout
+  
+  vnc_use_password = true
 
   # Boot Configuration
   boot_wait = var.boot_wait
@@ -66,5 +68,5 @@ source "qemu" "fedora" {
   shutdown_command = "sudo systemctl poweroff"
 
   # Headless mode (no GUI)
-  headless = true
+  headless = false
 }

@@ -91,3 +91,9 @@ variable "http_directory" {
   default     = "http"
   description = "Directory containing kickstart files"
 }
+
+variable "headless" {
+  type        = bool
+  default     = true
+  description = "Whether to run the build in headless mode (default: true)"
+}
