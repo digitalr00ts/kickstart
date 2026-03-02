@@ -61,7 +61,7 @@ source "qemu" "fedora" {
   # Boot Configuration
   boot_wait = var.boot_wait
   boot_command = [
-    "<up><tab> inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-${var.variant}.cfg<enter><wait>"
+    "<up>e<down><down><down><left><bs><bs><bs><bs> inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-${var.variant}.cfg<leftCtrlOn>x<leftCtrlOff><wait>"
   ]
 
   # Shutdown Configuration
