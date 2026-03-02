@@ -9,10 +9,6 @@ packer {
       version = ">= 1.1.0"
       source  = "github.com/hashicorp/qemu"
     }
-    virtualbox = {
-      version = ">= 1.1.0"
-      source  = "github.com/hashicorp/virtualbox"
-    }
     ansible = {
       version = ">= 1.1.0"
       source  = "github.com/hashicorp/ansible"
@@ -33,6 +29,12 @@ source "qemu" "fedora" {
   # Output Configuration
   output_directory = "${var.output_directory}/qemu-${var.variant}"
   vm_name          = "fedora-${var.fedora_version}-${var.variant}"
+  
+  qemuargs = [
+    ["-chardev", "socket,id=serial0,path={{ .OutputDir }}/{{ .Name }}.console,server,nowait"],
+    ["-serial", "chardev:serial0"],
+    ["-device", "virtio-serial"],
+  ]
 
   # Hardware Configuration
   disk_size      = var.disk_size
@@ -44,6 +46,7 @@ source "qemu" "fedora" {
   # QEMU Specific Settings
   accelerator = "kvm"
   format      = "qcow2"
+  disk_compression = true
 
   # HTTP Server for Kickstart
   http_directory = var.http_directory
@@ -60,8 +63,9 @@ source "qemu" "fedora" {
 
   # Boot Configuration
   boot_wait = var.boot_wait
-  boot_command = [
-    "<up>e<down><down><down><left><bs><bs><bs><bs> inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-${var.variant}.cfg<leftCtrlOn>x<leftCtrlOff><wait>"
+  boot_steps = [
+    "<up>e<down><down><down><left><bs><bs><bs><bs><bs>",
+    "inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-base.cfg<leftCtrlOn>x<leftCtrlOff>",
   ]
 
   # Shutdown Configuration
