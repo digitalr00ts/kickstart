@@ -82,7 +82,7 @@ variable "ssh_timeout" {
 
 variable "boot_wait" {
   type        = string
-  default     = "5s"
+  default     = "3s"
   description = "Time to wait before typing boot command"
 }
 
