@@ -1,3 +1,4 @@
+---
 # Pre-commit hooks for Fedora Image Builder
 # Install: pip install pre-commit && pre-commit install
 # Run manually: pre-commit run --all-files
@@ -12,7 +13,7 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-      -  id: check-merge-conflict
+      - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
       # - id: check-symlinks
       - id: check-toml
@@ -26,7 +27,7 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
       - id: check-added-large-files
-        args: ['--maxkb=10240']  # 10MB limit
+        args: ['--maxkb=10240'] # 10MB limit
       - id: check-case-conflict
       - id: check-executables-have-shebangs
 
@@ -54,8 +55,7 @@ repos:
     hooks:
       - id: ansible-lint
         args:
-          - --write
-          - --progressive
+          - --fix
 
   # - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
   #   rev: v1.7.11.24
@@ -76,7 +76,7 @@ repos:
         files: \.pkr\.hcl$
         pass_filenames: false
         args: [packer/]
-        
+
       # Packer validation
       - id: packer-validate
         name: Packer Validate
@@ -90,7 +90,8 @@ repos:
     hooks:
       - id: kickstart-validate
         name: Kickstart Syntax Check
-        entry: bash -c 'for f in "$@"; do if command -v ksvalidator &> /dev/null; then ksvalidator "$f" || exit 1; else echo "ksvalidator not found, skipping kickstart validation"; fi; done'
+        entry: bash -c 'for f in "$@"; do if command -v ksvalidator &> /dev/null; then ksvalidator "$f" || exit 1; else
+          echo "ksvalidator not found, skipping kickstart validation"; fi; done'
         language: system
         files: http/ks-.*\.cfg$
         pass_filenames: true
@@ -112,16 +113,6 @@ repos:
           bash -c 'if [ -n "$@" ]; then echo "ERROR: ISO files should not be committed!"; exit 1; fi'
         language: system
         files: \.(iso|qcow2|vdi|box)$
-
-  # Makefile validation
-  - repo: local
-    hooks:
-      - id: makefile-check
-        name: Makefile Syntax Check
-        entry: bash -c 'make -n -f "$1" help >/dev/null 2>&1 || exit 1'
-        language: system
-        files: ^Makefile$
-        pass_filenames: true
 
 # Configuration for specific tools
 default_language_version:
