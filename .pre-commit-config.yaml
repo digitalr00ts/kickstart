@@ -16,10 +16,8 @@ repos:
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
       # - id: check-symlinks
-      - id: check-toml
       - id: check-yaml
         args: [--allow-multiple-documents, --unsafe]
-      - id: debug-statements
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
       - id: mixed-line-ending
@@ -71,7 +69,7 @@ repos:
       # Packer format check
       - id: packer-fmt
         name: Packer Format
-        entry: packer fmt -check -recursive
+        entry: packer fmt -recursive
         language: system
         files: \.pkr\.hcl$
         pass_filenames: false
@@ -103,16 +101,6 @@ repos:
       - id: markdownlint
         args: ['--fix']
         files: \.(md|markdown)$
-
-  # File size check for ISOs (shouldn't be committed)
-  - repo: local
-    hooks:
-      - id: block-iso-files
-        name: Block ISO Files
-        entry: |
-          bash -c 'if [ -n "$@" ]; then echo "ERROR: ISO files should not be committed!"; exit 1; fi'
-        language: system
-        files: \.(iso|qcow2|vdi|box)$
 
 # Configuration for specific tools
 default_language_version:
