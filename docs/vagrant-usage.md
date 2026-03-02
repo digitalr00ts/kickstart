@@ -320,6 +320,191 @@ vagrant box remove fedora-43-server
 vagrant box add fedora-43-server output/vagrant/fedora-43-server-libvirt.box
 ```
 
+## Running Ansible from Host
+
+You can run Ansible playbooks from your host machine targeting the Vagrant VM, which is useful for testing changes without rebuilding the box.
+
+### Method 1: Using vagrant ssh-config
+
+Generate SSH configuration and use it with Ansible:
+
+```bash
+# Start the VM
+vagrant up
+
+# Generate SSH config
+vagrant ssh-config > vagrant-ssh-config
+
+# Create an Ansible inventory file
+cat > vagrant-inventory.ini << 'EOF'
+[vagrant]
+fedora-dev ansible_host=127.0.0.1 ansible_port=2222 ansible_user=root
+
+[vagrant:vars]
+ansible_ssh_private_key_file=~/.vagrant.d/insecure_private_key
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+EOF
+
+# Run your playbook
+ansible-playbook -i vagrant-inventory.ini ansible/playbook-server.yml \
+  --extra-vars "fedora_version=43"
+```
+
+### Method 2: Using Password Authentication
+
+If using the default password authentication:
+
+```bash
+# Create inventory with password
+cat > vagrant-inventory.ini << 'EOF'
+[vagrant]
+fedora-dev ansible_host=127.0.0.1 ansible_port=2222 ansible_user=root ansible_password=packer
+
+[vagrant:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+EOF
+
+# Run playbook
+ansible-playbook -i vagrant-inventory.ini ansible/playbook-server.yml
+```
+
+### Method 3: Dynamic Inventory Script
+
+Create a dynamic inventory script for easier management:
+
+```bash
+#!/bin/bash
+# vagrant-inventory.sh
+
+cat << 'EOF'
+{
+  "vagrant": {
+    "hosts": ["127.0.0.1"],
+    "vars": {
+      "ansible_port": 2222,
+      "ansible_user": "root",
+      "ansible_password": "packer",
+      "ansible_ssh_common_args": "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    }
+  }
+}
+EOF
+```
+
+Make it executable and use it:
+
+```bash
+chmod +x vagrant-inventory.sh
+ansible-playbook -i vagrant-inventory.sh ansible/playbook-server.yml
+```
+
+### Method 4: Using Vagrant's Ansible Inventory
+
+Leverage Vagrant's built-in inventory:
+
+```bash
+# Get Vagrant's SSH details
+vagrant ssh-config
+
+# Use with Ansible directly
+ansible all -i $(vagrant ssh-config | grep HostName | awk '{print $2}'), \
+  -u root \
+  --ssh-common-args="-p $(vagrant ssh-config | grep Port | awk '{print $2}') -o StrictHostKeyChecking=no" \
+  -m ping
+```
+
+### Testing Ansible Collection Changes
+
+Test local collection changes against the Vagrant VM:
+
+```bash
+# Start the VM
+vagrant up
+
+# Set local collections path and run playbook
+ansible-playbook -i vagrant-inventory.ini \
+  ansible/playbook-server.yml \
+  -e "ansible_collections_path=/path/to/local/ansible-collection" \
+  -e "fedora_version=43"
+```
+
+### Running Ad-Hoc Commands
+
+Execute quick commands without a playbook:
+
+```bash
+# Check connectivity
+ansible -i vagrant-inventory.ini vagrant -m ping
+
+# Get facts
+ansible -i vagrant-inventory.ini vagrant -m setup
+
+# Run shell command
+ansible -i vagrant-inventory.ini vagrant -m shell -a "dnf list installed"
+
+# Install package
+ansible -i vagrant-inventory.ini vagrant -m dnf -a "name=htop state=present"
+```
+
+### Using with Multiple VMs
+
+For multi-machine setup, create a comprehensive inventory:
+
+```ini
+# multi-vagrant-inventory.ini
+[servers]
+fedora-server ansible_host=127.0.0.1 ansible_port=2222
+
+[workstations]
+fedora-workstation ansible_host=127.0.0.1 ansible_port=2223
+
+[all:vars]
+ansible_user=root
+ansible_password=packer
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
+[all:children]
+servers
+workstations
+```
+
+Then target specific groups:
+
+```bash
+# Run on servers only
+ansible-playbook -i multi-vagrant-inventory.ini ansible/playbook-server.yml \
+  --limit servers
+
+# Run on workstations only
+ansible-playbook -i multi-vagrant-inventory.ini ansible/playbook-workstation.yml \
+  --limit workstations
+
+# Run on all
+ansible-playbook -i multi-vagrant-inventory.ini site.yml
+```
+
+### Ansible Configuration
+
+Create an `ansible.cfg` in your project root for Vagrant-specific settings:
+
+```ini
+[defaults]
+inventory = vagrant-inventory.ini
+host_key_checking = False
+retry_files_enabled = False
+stdout_callback = yaml
+
+[ssh_connection]
+ssh_args = -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+pipelining = True
+```
+
+Then simply run:
+
+```bash
+ansible-playbook ansible/playbook-server.yml
+```
+
 ## Security Notes
 
 ⚠️ **Important**: The default SSH credentials are:
