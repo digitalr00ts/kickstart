@@ -1,0 +1,60 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile for Fedora Workstation with GUI support
+# Uses vagrant-qemu provider with display enabled
+
+Vagrant.configure("2") do |config|
+  # Box configuration for workstation variant
+  config.vm.box = "fedora-43-workstation"
+
+  # Hostname
+  config.vm.hostname = "fedora-workstation"
+
+  # Network configuration
+  config.vm.network "private_network", type: "dhcp"
+
+  # Synced folder
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  # QEMU Provider Configuration for Workstation
+  config.vm.provider "qemu" do |qemu, override|
+    # More memory for workstation
+    qemu.memory = 4096
+
+    # More CPUs for better performance
+    qemu.cpus = 4
+
+    # Architecture
+    qemu.arch = "x86_64"
+    qemu.machine = "q35"
+
+    # QEMU binary location
+    qemu.qemu_dir = "/usr/bin"
+
+    # Enable GUI display (remove -nographic)
+    qemu.extra_qemu_args = [
+      "-enable-kvm",
+      "-cpu", "host",
+      "-vga", "virtio",
+      "-display", "gtk,gl=on"
+    ]
+
+    # SSH configuration
+    qemu.ssh_port = 2223
+    override.ssh.username = "root"
+    override.ssh.password = "packer"  # Change this in production!
+
+    # Network device
+    qemu.net_device = "virtio-net-pci"
+  end
+
+  # Provisioning
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "Fedora Workstation VM provisioned successfully!"
+    echo "Hostname: $(hostname)"
+    echo "OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+    echo "Display: $DISPLAY"
+    systemctl status gdm || echo "GDM not running yet"
+  SHELL
+end
