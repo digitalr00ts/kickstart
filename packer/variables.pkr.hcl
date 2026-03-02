@@ -7,14 +7,24 @@ variable "fedora_version" {
   description = "Fedora release version"
 }
 
-variable "iso_url" {
+variable "iso_url_server" {
   type        = string
-  description = "URL to Fedora installation ISO"
+  description = "URL to Fedora Server installation ISO (for server builds)"
 }
 
-variable "iso_checksum" {
+variable "iso_checksum_server" {
   type        = string
-  description = "SHA256 checksum of the ISO file"
+  description = "SHA256 checksum of the Server ISO file"
+}
+
+variable "iso_url_workstation" {
+  type        = string
+  description = "URL to Fedora Workstation installation ISO (for workstation builds)"
+}
+
+variable "iso_checksum_workstation" {
+  type        = string
+  description = "SHA256 checksum of the Workstation ISO file"
 }
 
 variable "variant" {
@@ -80,28 +90,4 @@ variable "http_directory" {
   type        = string
   default     = "http"
   description = "Directory containing kickstart files"
-}
-
-variable "iso_url_server" {
-  type        = string
-  default     = null
-  description = "URL to Fedora Server installation ISO (for server builds)"
-}
-
-variable "iso_checksum_server" {
-  type        = string
-  default     = null
-  description = "SHA256 checksum of the Server ISO file"
-}
-
-variable "iso_url_workstation" {
-  type        = string
-  default     = null
-  description = "URL to Fedora Workstation installation ISO (for workstation builds)"
-}
-
-variable "iso_checksum_workstation" {
-  type        = string
-  default     = null
-  description = "SHA256 checksum of the Workstation ISO file"
 }

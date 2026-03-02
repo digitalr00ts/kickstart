@@ -19,10 +19,6 @@ iso_url_workstation = "https://download.fedoraproject.org/pub/fedora/linux/relea
 # Fedora 43 Workstation ISO SHA256 checksum
 iso_checksum_workstation = "sha256:2a4a16c009244eb5ab2198700eb04103793b62407e8596f30a3e0cc8ac294d77"
 
-# Default to server ISO (override with -var for workstation)
-iso_url      = "https://download.fedoraproject.org/pub/fedora/linux/releases/43/Server/x86_64/iso/Fedora-Server-netinst-x86_64-43-1.1.iso"
-iso_checksum = "sha256:16fd70ddae2c7de13e485637c3da1fb385dd8220389f988279ea3b3d561243cc"
-
 # Fedora version
 fedora_version = "43"
 

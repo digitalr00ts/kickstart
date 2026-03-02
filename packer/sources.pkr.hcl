@@ -26,9 +26,9 @@ packer {
 
 # QEMU/KVM Builder Source
 source "qemu" "fedora" {
-  # ISO Configuration
-  iso_url      = var.iso_url
-  iso_checksum = var.iso_checksum
+  # ISO Configuration - automatically select based on variant
+  iso_url      = var.variant == "server" ? var.iso_url_server : var.iso_url_workstation
+  iso_checksum = var.variant == "server" ? var.iso_checksum_server : var.iso_checksum_workstation
 
   # Output Configuration
   output_directory = "${var.output_directory}/qemu-${var.variant}"
