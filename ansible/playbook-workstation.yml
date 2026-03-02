@@ -9,21 +9,21 @@
   vars:
     # Fedora version passed from Packer
     # fedora_version: "{{ fedora_version }}"
-    image_variant: "workstation"
+    image_variant: workstation
 
   pre_tasks:
     - name: Display provisioning information
       ansible.builtin.debug:
         msg: |
-          Provisioning Fedora {{ fedora_version | default('unknown') }} Workstation
-          Using drts01 collection from: {{ lookup('env', 'ANSIBLE_COLLECTIONS_PATH') | default('default path') }}
+          Provisioning Fedora {{ fedora_version | default("unknown") }} Workstation
+          Using drts01 collection from: {{ lookup("env", "ANSIBLE_COLLECTIONS_PATH") | default("default path") }}
 
     - name: Ensure system is up to date
       ansible.builtin.dnf:
-        name: "*"
-        state: latest
+        name: '*'
+        state: latest # noqa: package-latest
         update_cache: true
-      tags: ['update']
+      tags: [update]
 
     - name: Install common workstation packages
       ansible.builtin.dnf:
@@ -37,7 +37,7 @@
           - gnome-extensions-app
           - dconf-editor
         state: present
-      tags: ['packages']
+      tags: [packages]
 
     - name: Install development tools
       ansible.builtin.dnf:
@@ -47,7 +47,7 @@
           - python3-devel
           - '@development-tools'
         state: present
-      tags: ['packages', 'development']
+      tags: [packages, development]
 
   tasks:
     # Placeholder for drts01 collection roles
@@ -67,7 +67,7 @@
 
     - name: Placeholder - Configure workstation settings
       ansible.builtin.debug:
-        msg: "Workstation provisioning tasks will be configured based on drts01 collection roles"
+        msg: Workstation provisioning tasks will be configured based on drts01 collection roles
 
     - name: Enable and start GDM (GNOME Display Manager)
       ansible.builtin.systemd:
@@ -75,14 +75,14 @@
         enabled: true
         state: started
       when: ansible_service_mgr == "systemd"
-      tags: ['desktop']
+      tags: [desktop]
 
   post_tasks:
     - name: Clean up DNF cache
       ansible.builtin.command: dnf clean all
       changed_when: true
-      tags: ['cleanup']
+      tags: [cleanup]
 
     - name: Display completion message
       ansible.builtin.debug:
-        msg: "Fedora {{ fedora_version | default('unknown') }} Workstation provisioning complete"
+        msg: Fedora {{ fedora_version | default("unknown") }} Workstation provisioning complete
