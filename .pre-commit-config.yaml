@@ -1,0 +1,140 @@
+# Pre-commit hooks for Fedora Image Builder
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+
+  # General file quality checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      -  id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      # - id: check-symlinks
+      - id: check-toml
+      - id: check-yaml
+        args: [--allow-multiple-documents, --unsafe]
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-added-large-files
+        args: ['--maxkb=10240']  # 10MB limit
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+
+  - repo: https://github.com/sirosen/texthooks
+    rev: 0.7.1
+    hooks:
+      - id: fix-smartquotes
+
+  # Shell script validation
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: ['--severity=warning']
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [-s]
+
+  # Ansible validation
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v26.2.0
+    hooks:
+      - id: ansible-lint
+        args:
+          - --write
+          - --progressive
+
+  # - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+  #   rev: v1.7.11.24
+  #   hooks:
+  #     - id: actionlint
+  #       additional_dependencies:
+  #         - pyflakes
+  #         - shellcheck-py
+
+  # Packer validation
+  - repo: local
+    hooks:
+      # Packer format check
+      - id: packer-fmt
+        name: Packer Format
+        entry: packer fmt -check -recursive
+        language: system
+        files: \.pkr\.hcl$
+        pass_filenames: false
+        args: [packer/]
+        
+      # Packer validation
+      - id: packer-validate
+        name: Packer Validate
+        entry: bash -c 'cd packer && packer validate -var-file=fedora-43.pkrvars.hcl .'
+        language: system
+        files: packer/.*\.pkr\.hcl$
+        pass_filenames: false
+
+  # Kickstart validation (if ksvalidator is available)
+  - repo: local
+    hooks:
+      - id: kickstart-validate
+        name: Kickstart Syntax Check
+        entry: bash -c 'for f in "$@"; do if command -v ksvalidator &> /dev/null; then ksvalidator "$f" || exit 1; else echo "ksvalidator not found, skipping kickstart validation"; fi; done'
+        language: system
+        files: http/ks-.*\.cfg$
+        pass_filenames: true
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.47.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        files: \.(md|markdown)$
+
+  # File size check for ISOs (shouldn't be committed)
+  - repo: local
+    hooks:
+      - id: block-iso-files
+        name: Block ISO Files
+        entry: |
+          bash -c 'if [ -n "$@" ]; then echo "ERROR: ISO files should not be committed!"; exit 1; fi'
+        language: system
+        files: \.(iso|qcow2|vdi|box)$
+
+  # Makefile validation
+  - repo: local
+    hooks:
+      - id: makefile-check
+        name: Makefile Syntax Check
+        entry: bash -c 'make -n -f "$1" help >/dev/null 2>&1 || exit 1'
+        language: system
+        files: ^Makefile$
+        pass_filenames: true
+
+# Configuration for specific tools
+default_language_version:
+  python: python3
+
+# Exclude patterns
+exclude: |
+  (?x)^(
+    \.packer_cache/.*|
+    output/.*|
+    .*\.box$|
+    .*\.qcow2$|
+    .*\.iso$|
+    \.cline.*|
+    openspec/.*
+  )$
