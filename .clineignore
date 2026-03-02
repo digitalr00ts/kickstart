@@ -1,0 +1,45 @@
+collections/
+openspec/
+
+# Packer cache and builds
+.packer_cache/
+packer_cache/
+
+# Build output directories
+output/
+*.qcow2
+*.vdi
+*.vmdk
+*.box
+
+# Vagrant
+.vagrant/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.log
+
+# Ansible
+*.retry
+.ansible/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Pre-commit
+.pre-commit-cache/
