@@ -179,14 +179,94 @@ Built images are saved to:
 
 ```text
 output/
-└── qemu-{variant}/
-    └── fedora-{version}-{variant}
+├── qemu-{variant}/
+│   └── fedora-{version}-{variant}      # QEMU qcow2 images
+└── vagrant/
+    └── fedora-{version}-{variant}-libvirt.box  # Vagrant boxes
 ```
 
 Example:
 
 - `output/qemu-server/fedora-43-server` (QEMU qcow2 image)
 - `output/qemu-workstation/fedora-43-workstation` (QEMU qcow2 image)
+- `output/vagrant/fedora-43-server-libvirt.box` (Vagrant box)
+- `output/vagrant/fedora-43-workstation-libvirt.box` (Vagrant box)
+
+## Using Vagrant Boxes
+
+After building, you can use the Vagrant boxes directly:
+
+### Add Box to Vagrant
+
+```bash
+# Add the box with a custom name
+vagrant box add fedora-43-server output/vagrant/fedora-43-server-libvirt.box
+
+# Verify it was added
+vagrant box list
+```
+
+### Create a Vagrantfile
+
+```ruby
+# Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.box = "fedora-43-server"
+  
+  config.vm.provider "libvirt" do |v|
+    v.memory = 2048
+    v.cpus = 2
+  end
+  
+  # Optional: Configure networking
+  config.vm.network "private_network", type: "dhcp"
+  
+  # Optional: Sync folders
+  config.vm.synced_folder ".", "/vagrant", type: "nfs"
+end
+```
+
+### Use the Box
+
+```bash
+# Initialize and start the VM
+vagrant up
+
+# SSH into the VM
+vagrant ssh
+
+# Stop the VM
+vagrant halt
+
+# Destroy the VM
+vagrant destroy
+
+# Remove the box when no longer needed
+vagrant box remove fedora-43-server
+```
+
+### Quick Start with Vagrant
+
+```bash
+# One-command setup
+mkdir my-project && cd my-project
+vagrant box add fedora-43-server ../output/vagrant/fedora-43-server-libvirt.box
+vagrant init fedora-43-server
+vagrant up
+vagrant ssh
+```
+
+### Using with Different Providers
+
+The boxes are built for libvirt (QEMU/KVM). To use them:
+
+```bash
+# Ensure you have the libvirt plugin
+vagrant plugin install vagrant-libvirt
+
+# Start with libvirt provider (default for these boxes)
+vagrant up --provider=libvirt
+```
 
 ## Troubleshooting
 
