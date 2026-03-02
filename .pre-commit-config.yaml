@@ -25,7 +25,7 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
       - id: check-added-large-files
-        args: ['--maxkb=10240'] # 10MB limit
+        args: [--maxkb=10240] # 10MB limit
       - id: check-case-conflict
       - id: check-executables-have-shebangs
 
@@ -39,7 +39,7 @@ repos:
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
-        args: ['--severity=warning']
+        args: [--severity=warning]
 
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.38.0
@@ -78,7 +78,7 @@ repos:
       # Packer validation
       - id: packer-validate
         name: Packer Validate
-        entry: bash -c 'cd packer && packer validate -var-file=fedora-43.pkrvars.hcl .'
+        entry: bash -c 'packer validate -var-file=packer/fedora-43.pkrvars.hcl packer/'
         language: system
         files: packer/.*\.pkr\.hcl$
         pass_filenames: false
@@ -99,7 +99,7 @@ repos:
     rev: v0.47.0
     hooks:
       - id: markdownlint
-        args: ['--fix']
+        args: [--fix]
         files: \.(md|markdown)$
 
 # Configuration for specific tools
