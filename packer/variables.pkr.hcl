@@ -63,13 +63,13 @@ variable "cpus" {
 
 variable "ssh_username" {
   type        = string
-  default     = "root"
+  default     = "vagrant"
   description = "SSH username for provisioning"
 }
 
 variable "ssh_password" {
   type        = string
-  default     = "packer"
+  default     = "vagrant"
   description = "SSH password for provisioning (temporary)"
   sensitive   = true
 }
