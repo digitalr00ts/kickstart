@@ -29,7 +29,7 @@ source "qemu" "fedora" {
   # Output Configuration
   output_directory = "${var.output_directory}/qemu-${var.variant}"
   vm_name          = "fedora-${var.fedora_version}-${var.variant}"
-  
+
   qemuargs = [
     ["-chardev", "socket,id=serial0,path={{ .OutputDir }}/{{ .Name }}.console,server,nowait"],
     ["-serial", "chardev:serial0"],
@@ -44,8 +44,8 @@ source "qemu" "fedora" {
   net_device     = "virtio-net"
 
   # QEMU Specific Settings
-  accelerator = "kvm"
-  format      = "qcow2"
+  accelerator      = "kvm"
+  format           = "qcow2"
   disk_compression = true
 
   # HTTP Server for Kickstart
@@ -58,12 +58,12 @@ source "qemu" "fedora" {
   ssh_password     = var.ssh_password
   ssh_timeout      = var.ssh_timeout
   ssh_wait_timeout = var.ssh_timeout
-  
+
   vnc_use_password = true
 
   # Boot Configuration
   boot_wait = var.boot_wait
-  boot_steps = [
+  boot_command = [
     "<up>e<down><down><down><left><bs><bs><bs><bs><bs>",
     "inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-base.cfg<leftCtrlOn>x<leftCtrlOff>",
   ]
