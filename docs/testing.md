@@ -140,7 +140,7 @@ export ANSIBLE_COLLECTIONS_PATH=/path/to/collections
 qemu-system-x86_64 \
   -m 2048 \
   -smp 2 \
-  -drive file=output/server/fedora-43,format=qcow2 \
+  -drive file=output/server/fedora-44,format=qcow2 \
   -net nic,model=virtio \
   -net user,hostfwd=tcp::2222-:22 \
   -display gtk
@@ -157,10 +157,10 @@ ssh -p 2222 root@localhost
 
 ```bash
 # Import OVF
-VBoxManage import output/server/fedora-43.ovf
+VBoxManage import output/server/fedora-44.ovf
 
 # Start VM
-VBoxManage startvm fedora-43
+VBoxManage startvm fedora-44
 
 # Or use GUI
 virtualbox &
@@ -171,16 +171,16 @@ virtualbox &
 ```bash
 # Import to libvirt
 virt-install \
-  --name fedora-43-test \
+  --name fedora-44-test \
   --memory 2048 \
   --vcpus 2 \
-  --disk path=output/server/fedora-43,format=qcow2 \
+  --disk path=output/server/fedora-44,format=qcow2 \
   --import \
   --network default \
   --graphics vnc
 
 # Access console
-virt-viewer fedora-43-test
+virt-viewer fedora-44-test
 ```bash
 
 ## Ansible Collection Testing Workflow
@@ -260,9 +260,9 @@ All server checks plus:
 
 ```bash
 ========================================
-Testing QEMU Image: Fedora 43 server
+Testing QEMU Image: Fedora 44 server
 ========================================
-ℹ Image found: output/server/fedora-43
+ℹ Image found: output/server/fedora-44
 ℹ Starting QEMU VM...
 ✓ QEMU VM started (PID: 12345)
 ℹ Waiting for SSH on localhost:2222...

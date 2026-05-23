@@ -9,10 +9,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/validation.sh"
 
 # Configuration
-FEDORA_VERSION="${FEDORA_VERSION:-43}"
 VARIANT="${1:-server}"
 OUTPUT_DIR="output"
-IMAGE_PATH="${OUTPUT_DIR}/${VARIANT}/fedora-${FEDORA_VERSION}"
+IMAGE_PATH="${OUTPUT_DIR}/${VARIANT}/fedora-${VARIANT}"
 SSH_PORT="${SSH_PORT:-2222}"
 SSH_USER="root"
 # SSH_PASS is set for documentation but authentication is handled by SSH keys
@@ -20,7 +19,7 @@ SSH_USER="root"
 SSH_PASS="packer"
 
 echo "========================================"
-echo "Testing QEMU Image: Fedora ${FEDORA_VERSION} ${VARIANT}"
+echo "Testing QEMU Image: Fedora ${VARIANT}"
 echo "========================================"
 
 # Check if image exists
@@ -43,7 +42,7 @@ QEMU_PID=""
 
 # Launch QEMU
 qemu-system-x86_64 \
-    -name "test-fedora-${FEDORA_VERSION}-${VARIANT}" \
+    -name "test-fedora-${VARIANT}" \
     -m 2048 \
     -smp 2 \
     -drive file="${IMAGE_PATH}",if=virtio,format=qcow2 \

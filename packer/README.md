@@ -11,6 +11,7 @@ packer/
 ├── sources.pkr.hcl        # Builder sources (QEMU, VirtualBox)
 ├── build.pkr.hcl          # Build configuration and provisioners
 ├── fedora-43.pkrvars.hcl  # Fedora 43 specific values
+├── fedora-44.pkrvars.hcl  # Fedora 44 specific values
 └── versions/              # Future version-specific configs
 ```
 
@@ -48,9 +49,9 @@ Defines the build process including provisioners:
 2. Supports both local development (ANSIBLE_COLLECTIONS_PATH) and GitHub collections
 3. Passes Fedora version to Ansible playbooks
 
-### fedora-43.pkrvars.hcl
+### fedora-44.pkrvars.hcl
 
-Version-specific variable values for Fedora 43:
+Version-specific variable values for Fedora 44:
 
 - ISO URLs for Server and Workstation variants
 - SHA256 checksums for verification
@@ -74,14 +75,14 @@ make build-workstation-qemu
 # Build server for QEMU
 packer build \
   -only=qemu.fedora \
-  -var-file=packer/fedora-43.pkrvars.hcl \
+  -var-file=packer/fedora-44.pkrvars.hcl \
   -var variant=server \
   packer/
 
 # Build workstation for QEMU
 packer build \
   -only=qemu.fedora \
-  -var-file=packer/fedora-43.pkrvars.hcl \
+  -var-file=packer/fedora-44.pkrvars.hcl \
   -var variant=workstation \
   packer/
 ```
@@ -127,13 +128,9 @@ fedora_version = "44"
 Before building, verify and update ISO checksums:
 
 ```bash
-# Download checksum file
-wget https://download.fedoraproject.org/pub/fedora/linux/releases/43/Server/x86_64/iso/Fedora-Server-43-1.1-x86_64-CHECKSUM
-
-# Verify checksum
-sha256sum Fedora-Server-netinst-x86_64-43-1.1.iso
-
-# Update packer/fedora-43.pkrvars.hcl with actual checksum
+# Fedora 44.1.7 checksums are already included in packer/fedora-44.pkrvars.hcl
+# Refresh the file if Fedora publishes a newer point release
+vim packer/fedora-44.pkrvars.hcl
 ```
 
 ## Validation
@@ -142,7 +139,7 @@ Validate the configuration before building:
 
 ```bash
 # Validate all templates
-packer validate -var-file=packer/fedora-43.pkrvars.hcl packer/
+packer validate packer/
 
 # Format templates
 packer fmt -recursive packer/
@@ -187,10 +184,10 @@ output/
 
 Example:
 
-- `output/qemu-server/fedora-43-server` (QEMU qcow2 image)
-- `output/qemu-workstation/fedora-43-workstation` (QEMU qcow2 image)
-- `output/vagrant/fedora-43-server-libvirt.box` (Vagrant box)
-- `output/vagrant/fedora-43-workstation-libvirt.box` (Vagrant box)
+- `output/qemu-server/fedora-44-server` (QEMU qcow2 image)
+- `output/qemu-workstation/fedora-44-workstation` (QEMU qcow2 image)
+- `output/vagrant/fedora-44-server-libvirt.box` (Vagrant box)
+- `output/vagrant/fedora-44-workstation-libvirt.box` (Vagrant box)
 
 ## Using Vagrant Boxes
 
@@ -200,7 +197,7 @@ After building, you can use the Vagrant boxes directly:
 
 ```bash
 # Add the box with a custom name
-vagrant box add fedora-43-server output/vagrant/fedora-43-server-libvirt.box
+vagrant box add fedora-44-server output/vagrant/fedora-44-server-libvirt.box
 
 # Verify it was added
 vagrant box list
@@ -211,7 +208,7 @@ vagrant box list
 ```ruby
 # Vagrantfile
 Vagrant.configure("2") do |config|
-  config.vm.box = "fedora-43-server"
+  config.vm.box = "fedora-44-server"
 
   config.vm.provider "libvirt" do |v|
     v.memory = 2048
@@ -242,7 +239,7 @@ vagrant halt
 vagrant destroy
 
 # Remove the box when no longer needed
-vagrant box remove fedora-43-server
+vagrant box remove fedora-44-server
 ```
 
 ### Quick Start with Vagrant
@@ -250,8 +247,8 @@ vagrant box remove fedora-43-server
 ```bash
 # One-command setup
 mkdir my-project && cd my-project
-vagrant box add fedora-43-server ../output/vagrant/fedora-43-server-libvirt.box
-vagrant init fedora-43-server
+vagrant box add fedora-44-server ../output/vagrant/fedora-44-server-libvirt.box
+vagrant init fedora-44-server
 vagrant up
 vagrant ssh
 ```

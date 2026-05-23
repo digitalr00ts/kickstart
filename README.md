@@ -40,27 +40,20 @@ This project provides a Packer-based infrastructure to build Fedora images with:
 git clone https://github.com/digitalr00ts/kickstart.git
 cd kickstart
 
-# IMPORTANT: Update ISO checksums first!
-# Edit packer/fedora-43.pkrvars.hcl and replace placeholder checksums
-# Get actual checksums from: https://getfedora.org/
-#
-# Example:
-# wget https://download.fedoraproject.org/pub/fedora/linux/releases/43/Server/x86_64/iso/Fedora-Server-43-1.1-x86_64-CHECKSUM
-# cat Fedora-Server-43-1.1-x86_64-CHECKSUM
-#
-# Then update the iso_checksum_server value in packer/fedora-43.pkrvars.hcl
+# Fedora 44.1.7 ISO metadata is included in packer/fedora-44.pkrvars.hcl.
+# Refresh that file if Fedora publishes a newer point release.
 
 # Initialize Packer plugins
 make init
 
-# Validate templates (will fail until checksums are updated)
+# Validate templates
 make validate
 ```text
 
 ### Build Your First Image
 
 ```bash
-# Build Fedora 43 server image for QEMU
+# Build Fedora 44 server image for QEMU
 make build-server-qemu
 
 # Or build for VirtualBox
@@ -104,7 +97,8 @@ kickstart/
 │   ├── variables.pkr.hcl   # Variable definitions
 │   ├── sources.pkr.hcl     # Builder sources (QEMU, VirtualBox)
 │   ├── build.pkr.hcl       # Build configuration and provisioners
-│   └── fedora-43.pkrvars.hcl  # Fedora 43 specific values
+│   ├── fedora-43.pkrvars.hcl  # Fedora 43 specific values
+│   └── fedora-44.pkrvars.hcl  # Fedora 44 specific values
 ├── ansible/                 # Ansible provisioning
 │   ├── requirements.yml    # Collection requirements
 │   ├── ansible.cfg         # Ansible configuration
@@ -239,7 +233,7 @@ See [docs/kickstart-reference.md](docs/kickstart-reference.md#security-considera
 
 - ✅ QEMU/KVM builds (fully tested)
 - ⚠️ VirtualBox builds (templates ready, requires VirtualBox installation)
-- ⚠️ Requires ISO checksum updates in `packer/fedora-43.pkrvars.hcl`
+- ✅ Fedora 44.1.7 ISO URLs and checksums are included in `packer/fedora-44.pkrvars.hcl`
 
 ### Optional (Not Yet Implemented)
 

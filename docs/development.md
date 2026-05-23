@@ -306,11 +306,11 @@ If a hook fails:
 **Packer validation fails:**
 
 ```bash
-# Ensure checksums are updated
-vim packer/fedora-43.pkrvars.hcl
+# Review the active Fedora vars file
+vim packer/fedora-44.pkrvars.hcl
 
 # Run validation manually
-cd packer && packer validate -var-file=fedora-43.pkrvars.hcl .
+cd packer && packer validate -var-file=fedora-44.pkrvars.hcl .
 ```
 
 **Ansible-lint fails:**

@@ -6,8 +6,8 @@
 
 Vagrant.configure("2") do |config|
   # Box configuration - update with your built box
-  # Example: vagrant box add fedora-43-server output/vagrant/fedora-43-server-libvirt.box
-  config.vm.box = "fedora-43-server"
+  # Example: vagrant box add fedora-44-server output/vagrant/fedora-44-server-libvirt.box
+  config.vm.box = "fedora-44-server"
 
   # Hostname
   config.vm.hostname = "fedora-dev"
@@ -71,7 +71,7 @@ Vagrant.configure("2") do |config|
   # config.vm.provision "ansible" do |ansible|
   #   ansible.playbook = "ansible/playbook-server.yml"
   #   ansible.extra_vars = {
-  #     fedora_version: "43"
+  #     fedora_version: "44"
   #   }
   # end
 end

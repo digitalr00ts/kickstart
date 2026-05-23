@@ -60,17 +60,17 @@ make build-workstation-qemu
 
 This creates:
 
-- `output/vagrant/fedora-43-server-libvirt.box`
-- `output/vagrant/fedora-43-workstation-libvirt.box`
+- `output/vagrant/fedora-44-server-libvirt.box`
+- `output/vagrant/fedora-44-workstation-libvirt.box`
 
 ### 2. Add Boxes to Vagrant
 
 ```bash
 # Add server box
-vagrant box add fedora-43-server output/vagrant/fedora-43-server-libvirt.box
+vagrant box add fedora-44-server output/vagrant/fedora-44-server-libvirt.box
 
 # Add workstation box
-vagrant box add fedora-43-workstation output/vagrant/fedora-43-workstation-libvirt.box
+vagrant box add fedora-44-workstation output/vagrant/fedora-44-workstation-libvirt.box
 
 # Verify boxes are added
 vagrant box list
@@ -181,7 +181,7 @@ SHELL
 config.vm.provision "ansible" do |ansible|
   ansible.playbook = "ansible/playbook-server.yml"
   ansible.extra_vars = {
-    fedora_version: "43"
+    fedora_version: "44"
   }
 end
 ```
@@ -213,7 +213,7 @@ Create a custom Vagrantfile:
 Vagrant.configure("2") do |config|
   # Server VM
   config.vm.define "server" do |server|
-    server.vm.box = "fedora-43-server"
+    server.vm.box = "fedora-44-server"
     server.vm.hostname = "fedora-server"
 
     server.vm.provider "qemu" do |qemu|
@@ -225,7 +225,7 @@ Vagrant.configure("2") do |config|
 
   # Workstation VM
   config.vm.define "workstation" do |ws|
-    ws.vm.box = "fedora-43-workstation"
+    ws.vm.box = "fedora-44-workstation"
     ws.vm.hostname = "fedora-workstation"
 
     ws.vm.provider "qemu" do |qemu|
@@ -314,10 +314,10 @@ qemu.extra_qemu_args = [
 
 ```bash
 # Remove existing box
-vagrant box remove fedora-43-server
+vagrant box remove fedora-44-server
 
 # Re-add with new box
-vagrant box add fedora-43-server output/vagrant/fedora-43-server-libvirt.box
+vagrant box add fedora-44-server output/vagrant/fedora-44-server-libvirt.box
 ```
 
 ## Running Ansible from Host
@@ -348,7 +348,7 @@ EOF
 
 # Run your playbook
 ansible-playbook -i vagrant-inventory.ini ansible/playbook-server.yml \
-  --extra-vars "fedora_version=43"
+  --extra-vars "fedora_version=44"
 ```
 
 ### Method 2: Using Password Authentication
@@ -426,7 +426,7 @@ vagrant up
 ansible-playbook -i vagrant-inventory.ini \
   ansible/playbook-server.yml \
   -e "ansible_collections_path=/path/to/local/ansible-collection" \
-  -e "fedora_version=43"
+  -e "fedora_version=44"
 ```
 
 ### Running Ad-Hoc Commands

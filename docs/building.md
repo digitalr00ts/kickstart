@@ -20,16 +20,12 @@ make init  # This will verify Packer and initialize plugins
 
 ## Quick Start
 
-1. **Update ISO checksums** in `packer/fedora-43.pkrvars.hcl`:
+1. **Review the active Fedora vars file** in `packer/fedora-44.pkrvars.hcl`:
 
    ```bash
-   # Download the checksums from Fedora
-   wget https://download.fedoraproject.org/pub/fedora/linux/releases/43/Server/x86_64/iso/Fedora-Server-43-1.1-x86_64-CHECKSUM
-
-   # View the checksum
-   cat Fedora-Server-43-1.1-x86_64-CHECKSUM
-
-   # Update packer/fedora-43.pkrvars.hcl with actual checksums
+   # Fedora 44.1.7 URLs and checksums are already included.
+   # Refresh this file if Fedora publishes a newer point release.
+   vim packer/fedora-44.pkrvars.hcl
    ```
 
 2. **Initialize Packer plugins**:
@@ -79,21 +75,21 @@ For more control, use Packer commands directly:
 # Build server variant for QEMU
 packer build \
   -only=qemu.fedora \
-  -var-file=packer/fedora-43.pkrvars.hcl \
+   -var-file=packer/fedora-44.pkrvars.hcl \
   -var variant=server \
   packer/
 
 # Build workstation variant for QEMU
 packer build \
   -only=qemu.fedora \
-  -var-file=packer/fedora-43.pkrvars.hcl \
+   -var-file=packer/fedora-44.pkrvars.hcl \
   -var variant=workstation \
   packer/
 
 # Build for VirtualBox
 packer build \
   -only=virtualbox-iso.fedora \
-  -var-file=packer/fedora-43.pkrvars.hcl \
+   -var-file=packer/fedora-44.pkrvars.hcl \
   -var variant=server \
   packer/
 ```
@@ -248,14 +244,14 @@ After successful build:
 output/
 ├── qemu/
 │   ├── server/
-│   │   └── fedora-43       # QEMU image (qcow2)
+│   │   └── fedora-44       # QEMU image (qcow2)
 │   └── workstation/
-│       └── fedora-43
+│       └── fedora-44
 └── virtualbox/
     ├── server/
-    │   └── fedora-43.ovf   # VirtualBox VM
+   │   └── fedora-44.ovf   # VirtualBox VM
     └── workstation/
-        └── fedora-43.ovf
+      └── fedora-44.ovf
 ```
 
 ## Troubleshooting Builds
@@ -264,7 +260,8 @@ output/
 
 **Problem**: `invalid checksum` error
 
-**Solution**: Update checksums in `packer/fedora-43.pkrvars.hcl` with actual values from <https://getfedora.org/>
+**Solution**: Verify `packer/fedora-44.pkrvars.hcl` matches the current Fedora release metadata,
+then update it if Fedora publishes a newer point release.
 
 ### SSH Timeout
 

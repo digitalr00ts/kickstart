@@ -3,7 +3,6 @@
 
 variable "fedora_version" {
   type        = string
-  default     = "43"
   description = "Fedora release version"
 }
 

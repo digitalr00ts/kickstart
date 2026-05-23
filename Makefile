@@ -7,12 +7,12 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Environment variables:"
-	@echo "  FEDORA_VERSION           Fedora version to build (default: 43)"
+	@echo "  FEDORA_VERSION           Fedora version to build (default: 44)"
 	@echo "  ANSIBLE_COLLECTIONS_PATH Path to local Ansible collections for development"
 	@echo ""
 
 # Variables
-FEDORA_VERSION ?= 43
+FEDORA_VERSION ?= 44
 PACKER_DIR = packer
 VAR_FILE = $(PACKER_DIR)/fedora-$(FEDORA_VERSION).pkrvars.hcl
 OUTPUT_DIR = output

@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/validation.sh"
 
 # Configuration
-FEDORA_VERSION="${FEDORA_VERSION:-43}"
+FEDORA_VERSION="${FEDORA_VERSION:-44}"
 VARIANT="${1:-server}"
 OUTPUT_DIR="output"
 VM_NAME="test-fedora-${FEDORA_VERSION}-${VARIANT}"

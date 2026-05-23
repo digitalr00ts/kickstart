@@ -13,13 +13,13 @@ Error: invalid checksum: encoding/hex: invalid byte: U+0052 'R'
 in sha256:REPLACE_WITH_ACTUAL_FEDORA_43_SERVER_CHECKSUM
 ```bash
 
-**Cause:** Placeholder checksums in `packer/fedora-43.pkrvars.hcl` haven't been replaced with actual values.
+**Cause:** The active Fedora vars file doesn't match the current release metadata.
 
 **Solution:**
 
 1. Visit <https://getfedora.org/> and download checksum file
 2. Extract SHA256 checksum for your ISO
-3. Update `packer/fedora-43.pkrvars.hcl`:
+3. Update `packer/fedora-44.pkrvars.hcl`:
 
    ```hcl
    iso_checksum_server = "sha256:abc123..."  # Real checksum
@@ -125,10 +125,10 @@ Timeout waiting for SSH
 
 ```bash
 # In kickstart, specify faster mirror
-url --url=https://mirrors.fedoraproject.org/metalink?repo=fedora-43&arch=x86_64
+url --url=https://mirrors.fedoraproject.org/metalink?repo=fedora-44&arch=x86_64
 
 # Or use local mirror
-url --url=http://your-local-mirror/fedora/43/
+url --url=http://your-local-mirror/fedora/44/
 ```bash
 
 ### Disk Partitioning Errors
@@ -449,7 +449,7 @@ sudo swapon -a
 
 ```bash
 # Verify image integrity
-qemu-img check output/server/fedora-43
+qemu-img check output/server/fedora-44
 
 # Rebuild image
 make clean

@@ -6,7 +6,7 @@
 
 Vagrant.configure("2") do |config|
   # Box configuration for workstation variant
-  config.vm.box = "fedora-43-workstation"
+  config.vm.box = "fedora-44-workstation"
 
   # Hostname
   config.vm.hostname = "fedora-workstation"
