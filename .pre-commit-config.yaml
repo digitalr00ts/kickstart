@@ -49,19 +49,19 @@ repos:
 
   # Ansible validation
   - repo: https://github.com/ansible/ansible-lint
-    rev: v26.2.0
+    rev: v26.4.0
     hooks:
       - id: ansible-lint
         args:
           - --fix
 
-  # - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-  #   rev: v1.7.11.24
-  #   hooks:
-  #     - id: actionlint
-  #       additional_dependencies:
-  #         - pyflakes
-  #         - shellcheck-py
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: v1.7.12.24
+    hooks:
+      - id: actionlint
+        additional_dependencies:
+          - pyflakes
+          - shellcheck-py
 
   # Packer validation
   - repo: local
@@ -78,7 +78,7 @@ repos:
       # Packer validation
       - id: packer-validate
         name: Packer Validate
-        entry: bash -c 'packer validate -var-file=packer/fedora-43.pkrvars.hcl packer/'
+        entry: bash -c 'packer validate packer/'
         language: system
         files: packer/.*\.pkr\.hcl$
         pass_filenames: false
@@ -96,7 +96,7 @@ repos:
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.47.0
+    rev: v0.48.0
     hooks:
       - id: markdownlint
         args: [--fix]
