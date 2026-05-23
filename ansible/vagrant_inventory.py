@@ -139,4 +139,3 @@ def get_a_ssh_config(box_id,box_name):
 
 if __name__ == "__main__":
     main()
-    

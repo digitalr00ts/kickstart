@@ -24,10 +24,10 @@ timezone America/Los_Angeles --utc
 
 # Network configuration
 network --bootproto=dhcp --device=link --activate --onboot=yes --hostname=scale.local
-	
-# Services enabled	
+
+# Services enabled
 services --enabled=sshd,NetworkManager,chronyd
-	
+
 # Setup users
 rootpw --lock --iscrypted locked
 user --iscrypted --name admin --password $6$rounds=123456$kickstart$8BDRblt8lkOOA..4iCG/xJZR6L4nl2ZJxsZ9pkoK1ECbfqkZs60Gew6j2jvVCYSi9.e.hYGK2.S1v4ZG6zpBT/ --gecos Administrator --groups wheel

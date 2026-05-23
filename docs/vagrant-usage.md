@@ -215,7 +215,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "server" do |server|
     server.vm.box = "fedora-43-server"
     server.vm.hostname = "fedora-server"
-    
+
     server.vm.provider "qemu" do |qemu|
       qemu.memory = 2048
       qemu.cpus = 2
@@ -227,7 +227,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "workstation" do |ws|
     ws.vm.box = "fedora-43-workstation"
     ws.vm.hostname = "fedora-workstation"
-    
+
     ws.vm.provider "qemu" do |qemu|
       qemu.memory = 4096
       qemu.cpus = 4
@@ -322,7 +322,8 @@ vagrant box add fedora-43-server output/vagrant/fedora-43-server-libvirt.box
 
 ## Running Ansible from Host
 
-You can run Ansible playbooks from your host machine targeting the Vagrant VM, which is useful for testing changes without rebuilding the box.
+You can run Ansible playbooks from your host machine targeting the Vagrant VM,
+which is useful for testing changes without rebuilding the box.
 
 ### Method 1: Using vagrant ssh-config
 

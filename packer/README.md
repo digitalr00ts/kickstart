@@ -212,15 +212,15 @@ vagrant box list
 # Vagrantfile
 Vagrant.configure("2") do |config|
   config.vm.box = "fedora-43-server"
-  
+
   config.vm.provider "libvirt" do |v|
     v.memory = 2048
     v.cpus = 2
   end
-  
+
   # Optional: Configure networking
   config.vm.network "private_network", type: "dhcp"
-  
+
   # Optional: Sync folders
   config.vm.synced_folder ".", "/vagrant", type: "nfs"
 end
