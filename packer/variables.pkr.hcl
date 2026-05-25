@@ -50,38 +50,50 @@ variable "cpus" {
 
 variable "guest_arch" {
   type        = string
-  default     = "x86_64"
-  description = "Guest architecture to build (x86_64 or aarch64)"
+  default     = ""
+  description = "Optional guest architecture override. Empty derives from host_uname_m."
   validation {
-    condition     = contains(["x86_64", "aarch64"], var.guest_arch)
-    error_message = "Guest architecture must be one of: x86_64, aarch64."
+    condition     = trimspace(var.guest_arch) == "" || contains(["x86_64", "aarch64"], var.guest_arch)
+    error_message = "Guest architecture must be empty or one of: x86_64, aarch64."
   }
 }
 
 variable "qemu_accelerator" {
   type        = string
-  default     = "kvm"
-  description = "QEMU accelerator to use (kvm, hvf, tcg, or none)"
+  default     = ""
+  description = "Optional QEMU accelerator override. Empty uses host-aware defaults (kvm, hvf, tcg, or none when explicitly set)."
   validation {
-    condition     = contains(["kvm", "hvf", "tcg", "none"], var.qemu_accelerator)
-    error_message = "Qemu accelerator must be one of: kvm, hvf, tcg, none."
+    condition     = trimspace(var.qemu_accelerator) == "" || contains(["kvm", "hvf", "tcg", "none"], var.qemu_accelerator)
+    error_message = "QEMU accelerator must be empty or one of: kvm, hvf, tcg, none."
   }
 }
 
 variable "qemu_binary" {
   type        = string
-  default     = "qemu-system-x86_64"
-  description = "QEMU system binary used by the builder"
+  default     = ""
+  description = "Optional QEMU system binary override. Empty derives from guest architecture."
 }
 
 variable "host_os_hint" {
   type        = string
-  default     = "auto"
-  description = "Optional host OS hint for build orchestration (auto, linux, macos)"
+  default     = ""
+  description = "Optional host OS hint override. Empty derives from host_uname_s."
   validation {
-    condition     = contains(["auto", "linux", "macos"], var.host_os_hint)
-    error_message = "Host OS hint must be one of: auto, linux, macos."
+    condition     = trimspace(var.host_os_hint) == "" || contains(["auto", "linux", "macos"], var.host_os_hint)
+    error_message = "Host OS hint must be empty or one of: auto, linux, macos."
   }
+}
+
+variable "host_uname_m" {
+  type        = string
+  default     = ""
+  description = "Raw host architecture string from uname -m."
+}
+
+variable "host_uname_s" {
+  type        = string
+  default     = ""
+  description = "Raw host OS string from uname -s."
 }
 
 variable "aarch64_efi_firmware_code" {

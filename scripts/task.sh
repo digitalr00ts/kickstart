@@ -120,7 +120,7 @@ run_build() {
 
   if platform_selected "${platform}" "qemu"; then
     setup_build_context
-    require_cmd "${QEMU_BINARY}"
+    require_cmd "$(effective_qemu_binary)"
     print_build_context
     run_for_variants "${variant}" build_qemu
   fi
@@ -159,7 +159,7 @@ run_test() {
 
   if platform_selected "${platform}" "qemu"; then
     setup_build_context
-    require_cmd "${QEMU_BINARY}"
+    require_cmd "$(effective_qemu_binary)"
     run_for_variants "${variant}" test_qemu
   fi
 
