@@ -21,47 +21,54 @@ packer {
 }
 
 locals {
-  host_arch_from_uname_m = lookup({
+  host_arch = lookup({
     aarch64 = "aarch64"
     arm64   = "aarch64"
     x86_64  = "x86_64"
     amd64   = "x86_64"
-  }, lower(trimspace(var.host_uname_m)), "x86_64")
-  host_os_hint_from_uname_s = lookup({
-    linux  = "linux"
-    darwin = "macos"
-  }, lower(trimspace(var.host_uname_s)), "auto")
-  effective_guest_arch   = trimspace(var.guest_arch) != "" ? var.guest_arch : local.host_arch_from_uname_m
-  effective_host_os_hint = trimspace(var.host_os_hint) != "" ? var.host_os_hint : local.host_os_hint_from_uname_s
-  qemu_accelerator_default_by_host = {
-    linux = "kvm"
-    macos = "hvf"
-    auto  = "tcg"
+  }, lower(trimspace(var.host_arch)), "x86_64")
+  host_os      = lower(trimspace(var.host_os))
+  guest_arch   = trimspace(var.guest_arch) != "" ? var.guest_arch : local.host_arch
+  host_os_hint = can(regex("^linux", local.host_os)) ? "linux" : can(regex("^darwin", local.host_os)) ? "macos" : "auto"
+  host_defaults = {
+    linux = {
+      accelerator     = "kvm"
+      aarch64_code_fd = "/usr/share/AAVMF/AAVMF_CODE.fd"
+      aarch64_vars_fd = "/usr/share/AAVMF/AAVMF_VARS.fd"
+    }
+    macos = {
+      accelerator     = "hvf"
+      aarch64_code_fd = "/opt/homebrew/share/qemu/edk2-aarch64-code.fd"
+      aarch64_vars_fd = "/opt/homebrew/share/qemu/edk2-arm-vars.fd"
+    }
+    auto = {
+      accelerator     = "tcg"
+      aarch64_code_fd = "/usr/share/AAVMF/AAVMF_CODE.fd"
+      aarch64_vars_fd = "/usr/share/AAVMF/AAVMF_VARS.fd"
+    }
   }
-  effective_qemu_binary             = trimspace(var.qemu_binary) != "" ? var.qemu_binary : "qemu-system-${local.effective_guest_arch}"
-  effective_qemu_accelerator        = trimspace(var.qemu_accelerator) != "" ? var.qemu_accelerator : lookup(local.qemu_accelerator_default_by_host, local.effective_host_os_hint, "tcg")
-  aarch64_efi_firmware_code_default = local.effective_host_os_hint == "macos" ? "/opt/homebrew/share/qemu/edk2-aarch64-code.fd" : "/usr/share/AAVMF/AAVMF_CODE.fd"
-  aarch64_efi_firmware_vars_default = local.effective_host_os_hint == "macos" ? "/opt/homebrew/share/qemu/edk2-arm-vars.fd" : "/usr/share/AAVMF/AAVMF_VARS.fd"
-  aarch64_efi_firmware_code         = trimspace(var.aarch64_efi_firmware_code) != "" ? var.aarch64_efi_firmware_code : local.aarch64_efi_firmware_code_default
-  aarch64_efi_firmware_vars         = trimspace(var.aarch64_efi_firmware_vars) != "" ? var.aarch64_efi_firmware_vars : local.aarch64_efi_firmware_vars_default
+  host_defaults_for_hint = local.host_defaults[local.host_os_hint]
+  qemu_binary            = "qemu-system-${local.guest_arch}"
+  qemu_accelerator       = local.host_defaults_for_hint.accelerator
+  aarch64_efi_code       = trimspace(var.aarch64_efi_firmware_code) != "" ? var.aarch64_efi_firmware_code : local.host_defaults_for_hint.aarch64_code_fd
+  aarch64_efi_vars       = trimspace(var.aarch64_efi_firmware_vars) != "" ? var.aarch64_efi_firmware_vars : local.host_defaults_for_hint.aarch64_vars_fd
 }
 
 source "qemu" "fedora" {
-  # ISO Configuration - automatically select based on variant
-  iso_url      = var.fedora_iso_metadata[local.effective_guest_arch][var.variant].url
-  iso_checksum = var.fedora_iso_metadata[local.effective_guest_arch][var.variant].checksum
+  iso_url      = var.fedora_iso_metadata[local.guest_arch][var.variant].url
+  iso_checksum = var.fedora_iso_metadata[local.guest_arch][var.variant].checksum
 
   # aarch64/virt does not support BIOS-style boot device list handling.
-  efi_boot          = local.effective_guest_arch == "aarch64"
-  efi_firmware_code = local.effective_guest_arch == "aarch64" ? local.aarch64_efi_firmware_code : null
-  efi_firmware_vars = local.effective_guest_arch == "aarch64" ? local.aarch64_efi_firmware_vars : null
+  efi_boot          = local.guest_arch == "aarch64"
+  efi_firmware_code = local.guest_arch == "aarch64" ? local.aarch64_efi_code : null
+  efi_firmware_vars = local.guest_arch == "aarch64" ? local.aarch64_efi_vars : null
 
   # Output Configuration
-  output_directory = "${var.output_directory}/qemu-${local.effective_guest_arch}-${var.variant}"
-  vm_name          = "fedora-${var.fedora_version}-${local.effective_guest_arch}-${var.variant}"
+  output_directory = "${var.output_directory}/qemu-${local.guest_arch}-${var.variant}"
+  vm_name          = "fedora-${var.fedora_version}-${local.guest_arch}-${var.variant}"
 
   qemuargs = concat(
-    local.effective_guest_arch == "aarch64" ? [
+    local.guest_arch == "aarch64" ? [
       ["-machine", "virt"],
       ["-cpu", "max"],
       ] : [
@@ -83,8 +90,8 @@ source "qemu" "fedora" {
   net_device     = "virtio-net"
 
   # QEMU Specific Settings
-  qemu_binary      = local.effective_qemu_binary
-  accelerator      = local.effective_qemu_accelerator
+  qemu_binary      = local.qemu_binary
+  accelerator      = local.qemu_accelerator
   format           = "qcow2"
   disk_compression = true
 
@@ -108,9 +115,7 @@ source "qemu" "fedora" {
     "inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-base.cfg<leftCtrlOn>x<leftCtrlOff>",
   ]
 
-  # Shutdown Configuration
   shutdown_command = "sudo systemctl poweroff"
 
-  # Headless mode (no GUI)
   headless = var.headless
 }

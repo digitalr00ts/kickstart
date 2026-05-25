@@ -51,49 +51,23 @@ variable "cpus" {
 variable "guest_arch" {
   type        = string
   default     = ""
-  description = "Optional guest architecture override. Empty derives from host_uname_m."
+  description = "Guest architecture override. Empty derives from host_arch."
   validation {
     condition     = trimspace(var.guest_arch) == "" || contains(["x86_64", "aarch64"], var.guest_arch)
     error_message = "Guest architecture must be empty or one of: x86_64, aarch64."
   }
 }
 
-variable "qemu_accelerator" {
+variable "host_arch" {
   type        = string
-  default     = ""
-  description = "Optional QEMU accelerator override. Empty uses host-aware defaults (kvm, hvf, tcg, or none when explicitly set)."
-  validation {
-    condition     = trimspace(var.qemu_accelerator) == "" || contains(["kvm", "hvf", "tcg", "none"], var.qemu_accelerator)
-    error_message = "QEMU accelerator must be empty or one of: kvm, hvf, tcg, none."
-  }
+  default     = env("HOST_ARCH")
+  description = "Host architecture hint. Pass `uname -m`. Defaults from HOST_ARCH when available."
 }
 
-variable "qemu_binary" {
+variable "host_os" {
   type        = string
-  default     = ""
-  description = "Optional QEMU system binary override. Empty derives from guest architecture."
-}
-
-variable "host_os_hint" {
-  type        = string
-  default     = ""
-  description = "Optional host OS hint override. Empty derives from host_uname_s."
-  validation {
-    condition     = trimspace(var.host_os_hint) == "" || contains(["auto", "linux", "macos"], var.host_os_hint)
-    error_message = "Host OS hint must be empty or one of: auto, linux, macos."
-  }
-}
-
-variable "host_uname_m" {
-  type        = string
-  default     = ""
-  description = "Raw host architecture string from uname -m."
-}
-
-variable "host_uname_s" {
-  type        = string
-  default     = ""
-  description = "Raw host OS string from uname -s."
+  default     = env("HOST_OS")
+  description = "Host OS. Pass `uname -s`. Defaults from HOST_OS when available."
 }
 
 variable "aarch64_efi_firmware_code" {

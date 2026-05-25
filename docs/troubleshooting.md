@@ -259,8 +259,13 @@ sudo modprobe kvm_intel
 # Load KVM module (AMD)
 sudo modprobe kvm_amd
 
-# Or build without KVM (slower)
-QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
+# Or build with software acceleration (slower) by forcing the generic host hint path
+packer build \
+   -only=qemu.fedora \
+   -var-file=packer/fedora-44.auto.pkrvars.hcl \
+   -var host_uname_s=Unknown \
+   -var variant=server \
+   packer/
 ```bash
 
 ### HVF Not Available on macOS
@@ -276,8 +281,13 @@ failed to initialize HVF
 **Solution:**
 
 ```bash
-# Fall back to software acceleration
-QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
+# Fall back to software acceleration by forcing the generic host hint path
+packer build \
+   -only=qemu.fedora \
+   -var-file=packer/fedora-44.auto.pkrvars.hcl \
+   -var host_uname_s=Unknown \
+   -var variant=server \
+   packer/
 
 # Verify QEMU is installed
 which qemu-system-x86_64

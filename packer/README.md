@@ -23,7 +23,7 @@ Declares all input variables used across the templates:
 
 - **ISO metadata**: `fedora_iso_metadata` map keyed by architecture and variant
 - **Build parameters**: `variant`, `fedora_version`, `disk_size`, `memory`, `cpus`
-- **Architecture parameters**: `guest_arch`, `qemu_binary`, `qemu_accelerator`
+- **Architecture parameters**: `guest_arch` (override), host uname detection (`host_uname_m`, `host_uname_s`)
 - **EFI parameters (ARM64)**: `aarch64_efi_firmware_code`, `aarch64_efi_firmware_vars`
 - **SSH settings**: `ssh_username`, `ssh_password`, `ssh_timeout`
 - **Other settings**: `output_directory`, `http_directory`, `boot_wait`
@@ -42,9 +42,25 @@ Defines builder sources for different virtualization platforms:
 - Uses architecture + variant map lookups from `fedora_iso_metadata`
 - Server builds automatically use Server ISO
 - Workstation builds automatically use Workstation ISO
-- Host-aware accelerator selection via `qemu_accelerator` (`kvm` on Linux, `hvf` on macOS, `tcg` fallback)
+- Host-aware accelerator selection derived from host OS (`kvm` on Linux, `hvf` on macOS, `tcg` fallback)
 - Host-aware guest architecture selection via `guest_arch` (`x86_64` or `aarch64`)
 - ARM64 builds use EFI boot by default to avoid BIOS boot-device-list errors on `qemu-system-aarch64`
+
+### Variable Precedence and Defaults
+
+The QEMU source applies a consistent precedence model for host/arch-dependent values:
+
+1. `guest_arch` override when set
+2. Host-derived defaults from `host_uname_m` and `host_uname_s`
+
+Defaults resolved from host hint:
+
+- `linux`: accelerator `kvm`, EFI paths under `/usr/share/AAVMF/`
+- `macos`: accelerator `hvf`, EFI paths under `/opt/homebrew/share/qemu/`
+- `auto`: accelerator `tcg`, EFI paths under `/usr/share/AAVMF/`
+
+`qemu_binary` is derived as `qemu-system-${guest_arch}`.
+EFI firmware paths can still be overridden via `aarch64_efi_firmware_code` and `aarch64_efi_firmware_vars`.
 
 ### build.pkr.hcl
 
@@ -106,8 +122,8 @@ The configuration automatically selects the correct ISO based on the `variant` v
 This is implemented in `sources.pkr.hcl`:
 
 ```hcl
-iso_url      = var.fedora_iso_metadata[var.guest_arch][var.variant].url
-iso_checksum = var.fedora_iso_metadata[var.guest_arch][var.variant].checksum
+iso_url      = var.fedora_iso_metadata[local.guest_arch][var.variant].url
+iso_checksum = var.fedora_iso_metadata[local.guest_arch][var.variant].checksum
 ```
 
 ## ARM64 EFI Boot Notes
@@ -195,10 +211,7 @@ packer build -var memory=4096 ...
 packer build -var cpus=4 ...
 
 # Override guest architecture explicitly
-packer build -var guest_arch=aarch64 -var qemu_binary=qemu-system-aarch64 ...
-
-# Override accelerator explicitly
-packer build -var qemu_accelerator=tcg ...
+packer build -var guest_arch=aarch64 ...
 ```
 
 ### Debug Mode

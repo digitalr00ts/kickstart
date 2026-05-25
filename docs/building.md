@@ -26,12 +26,6 @@ Build scripts automatically select a sensible accelerator for the host OS:
 - macOS: `hvf`
 - Fallback for unsupported hosts: `tcg`
 
-Override at runtime when needed:
-
-```bash
-QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
-```
-
 ### Host-aware guest architecture defaults
 
 Build scripts also select a default guest architecture from the host CPU:
@@ -47,7 +41,8 @@ GUEST_ARCH=x86_64 ./scripts/task.sh build qemu server
 
 ### ARM64 boot behavior
 
-When `GUEST_ARCH=aarch64`, the QEMU builder uses EFI boot to avoid BIOS-style boot-device-list handling that can fail on ARM with:
+When `GUEST_ARCH=aarch64`,
+the QEMU builder uses EFI boot to avoid BIOS-style boot-device-list handling that can fail on ARM with:
 
 ```text
 qemu-system-aarch64: no function defined to set boot device list for this architecture
@@ -65,8 +60,6 @@ packer build \
    -only=qemu.fedora \
    -var-file=packer/fedora-44.auto.pkrvars.hcl \
    -var guest_arch=aarch64 \
-   -var qemu_binary=qemu-system-aarch64 \
-   -var qemu_accelerator=hvf \
    -var aarch64_efi_firmware_code=/custom/path/CODE.fd \
    -var aarch64_efi_firmware_vars=/custom/path/VARS.fd \
    -var variant=server \
@@ -132,8 +125,6 @@ packer build \
   -only=qemu.fedora \
    -var-file=packer/fedora-44.auto.pkrvars.hcl \
    -var guest_arch=x86_64 \
-   -var qemu_binary=qemu-system-x86_64 \
-   -var qemu_accelerator=kvm \
   -var variant=server \
   packer/
 
@@ -142,8 +133,6 @@ packer build \
   -only=qemu.fedora \
    -var-file=packer/fedora-44.auto.pkrvars.hcl \
    -var guest_arch=aarch64 \
-   -var qemu_binary=qemu-system-aarch64 \
-   -var qemu_accelerator=hvf \
   -var variant=workstation \
   packer/
 

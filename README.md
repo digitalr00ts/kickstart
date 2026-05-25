@@ -64,10 +64,6 @@ cd kickstart
 # Optional: override guest architecture (x86_64, aarch64)
 GUEST_ARCH=aarch64 ./scripts/task.sh build qemu server
 
-# Optional: override accelerator (kvm, hvf, tcg, none)
-# Example fallback when hardware acceleration is unavailable:
-QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
-
 # Or build for VirtualBox
 ./scripts/task.sh build virtualbox server
 

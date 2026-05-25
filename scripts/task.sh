@@ -10,6 +10,14 @@ die() {
   exit 1
 }
 
+validate_in() {
+  local value="$1" allowed="$2" message="$3"
+  case "|${allowed}|" in
+    *"|${value}|"*) ;;
+    *) die "${message}" ;;
+  esac
+}
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -27,21 +35,7 @@ Examples:
 EOF
 }
 
-validate_variant() {
-  case "$1" in
-    server|workstation|all) ;;
-    *) die "variant must be server, workstation, or all" ;;
-  esac
-}
-
-validate_platform() {
-  case "$1" in
-    qemu|virtualbox|all) ;;
-    *) die "platform must be qemu, virtualbox, or all" ;;
-  esac
-}
-
-platform_selected() {
+is_selected() {
   local selected="$1"
   local candidate="$2"
   [[ "${selected}" == "all" || "${selected}" == "${candidate}" ]]
@@ -50,16 +44,15 @@ platform_selected() {
 run_for_variants() {
   local selected="$1"
   shift
+  local variants
 
-  case "${selected}" in
-    all)
-      "$@" server
-      "$@" workstation
-      ;;
-    *)
-      "$@" "${selected}"
-      ;;
-  esac
+  variants=("${selected}")
+  [[ "${selected}" == "all" ]] && variants=(server workstation)
+
+  local variant
+  for variant in "${variants[@]}"; do
+    "$@" "${variant}"
+  done
 }
 
 ensure_vbox() {
@@ -113,23 +106,22 @@ run_build() {
   local platform="${1:-qemu}"
   local variant="${2:-all}"
 
-  validate_platform "${platform}"
-  validate_variant "${variant}"
+  validate_in "${platform}" "qemu|virtualbox|all" "platform must be qemu, virtualbox, or all"
+  validate_in "${variant}" "server|workstation|all" "variant must be server, workstation, or all"
   require_cmd packer
   require_cmd ansible-playbook
 
-  if platform_selected "${platform}" "qemu"; then
+  is_selected "${platform}" qemu && {
     setup_build_context
-    require_cmd "$(effective_qemu_binary)"
     print_build_context
     run_for_variants "${variant}" build_qemu
-  fi
+  }
 
-  if platform_selected "${platform}" "virtualbox"; then
+  is_selected "${platform}" virtualbox && {
     ensure_vbox "${platform}" || return
     setup_build_context
     run_for_variants "${variant}" build_virtualbox
-  fi
+  }
 }
 
 test_qemu() {
@@ -154,19 +146,18 @@ run_test() {
   local platform="${1:-qemu}"
   local variant="${2:-server}"
 
-  validate_platform "${platform}"
-  validate_variant "${variant}"
+  validate_in "${platform}" "qemu|virtualbox|all" "platform must be qemu, virtualbox, or all"
+  validate_in "${variant}" "server|workstation|all" "variant must be server, workstation, or all"
 
-  if platform_selected "${platform}" "qemu"; then
+  is_selected "${platform}" qemu && {
     setup_build_context
-    require_cmd "$(effective_qemu_binary)"
     run_for_variants "${variant}" test_qemu
-  fi
+  }
 
-  if platform_selected "${platform}" "virtualbox"; then
+  is_selected "${platform}" virtualbox && {
     ensure_vbox "${platform}" || return
     run_for_variants "${variant}" test_virtualbox
-  fi
+  }
 }
 
 run_clean() {
