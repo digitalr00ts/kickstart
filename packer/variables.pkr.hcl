@@ -6,24 +6,12 @@ variable "fedora_version" {
   description = "Fedora release version"
 }
 
-variable "iso_url_server" {
-  type        = string
-  description = "URL to Fedora Server installation ISO (for server builds)"
-}
-
-variable "iso_checksum_server" {
-  type        = string
-  description = "SHA256 checksum of the Server ISO file"
-}
-
-variable "iso_url_workstation" {
-  type        = string
-  description = "URL to Fedora Workstation installation ISO (for workstation builds)"
-}
-
-variable "iso_checksum_workstation" {
-  type        = string
-  description = "SHA256 checksum of the Workstation ISO file"
+variable "fedora_iso_metadata" {
+  type = map(map(object({
+    url      = string
+    checksum = string
+  })))
+  description = "ISO metadata indexed by guest architecture and variant"
 }
 
 variable "variant" {
@@ -58,6 +46,42 @@ variable "cpus" {
   type        = string
   default     = "2"
   description = "Number of CPU cores"
+}
+
+variable "guest_arch" {
+  type        = string
+  default     = "x86_64"
+  description = "Guest architecture to build (x86_64 or aarch64)"
+  validation {
+    condition     = contains(["x86_64", "aarch64"], var.guest_arch)
+    error_message = "Guest architecture must be one of: x86_64, aarch64."
+  }
+}
+
+variable "qemu_accelerator" {
+  type        = string
+  default     = "kvm"
+  description = "QEMU accelerator to use (kvm, hvf, tcg, or none)"
+  validation {
+    condition     = contains(["kvm", "hvf", "tcg", "none"], var.qemu_accelerator)
+    error_message = "Qemu accelerator must be one of: kvm, hvf, tcg, none."
+  }
+}
+
+variable "qemu_binary" {
+  type        = string
+  default     = "qemu-system-x86_64"
+  description = "QEMU system binary used by the builder"
+}
+
+variable "host_os_hint" {
+  type        = string
+  default     = "auto"
+  description = "Optional host OS hint for build orchestration (auto, linux, macos)"
+  validation {
+    condition     = contains(["auto", "linux", "macos"], var.host_os_hint)
+    error_message = "Host OS hint must be one of: auto, linux, macos."
+  }
 }
 
 variable "ssh_username" {

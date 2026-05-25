@@ -23,18 +23,27 @@ packer {
 # QEMU/KVM Builder Source
 source "qemu" "fedora" {
   # ISO Configuration - automatically select based on variant
-  iso_url      = var.variant == "server" ? var.iso_url_server : var.iso_url_workstation
-  iso_checksum = var.variant == "server" ? var.iso_checksum_server : var.iso_checksum_workstation
+  iso_url      = var.fedora_iso_metadata[var.guest_arch][var.variant].url
+  iso_checksum = var.fedora_iso_metadata[var.guest_arch][var.variant].checksum
 
   # Output Configuration
-  output_directory = "${var.output_directory}/qemu-${var.variant}"
-  vm_name          = "fedora-${var.fedora_version}-${var.variant}"
+  output_directory = "${var.output_directory}/qemu-${var.guest_arch}-${var.variant}"
+  vm_name          = "fedora-${var.fedora_version}-${var.guest_arch}-${var.variant}"
 
-  qemuargs = [
-    ["-chardev", "socket,id=serial0,path={{ .OutputDir }}/{{ .Name }}.console,server,nowait"],
-    ["-serial", "chardev:serial0"],
-    ["-device", "virtio-serial"],
-  ]
+  qemuargs = concat(
+    var.guest_arch == "aarch64" ? [
+      ["-machine", "virt"],
+      ["-cpu", "max"],
+      ] : [
+      ["-machine", "q35"],
+      ["-cpu", "host"],
+    ],
+    [
+      ["-chardev", "socket,id=serial0,path={{ .OutputDir }}/{{ .Name }}.console,server,nowait"],
+      ["-serial", "chardev:serial0"],
+      ["-device", "virtio-serial"],
+    ]
+  )
 
   # Hardware Configuration
   disk_size      = var.disk_size
@@ -44,7 +53,8 @@ source "qemu" "fedora" {
   net_device     = "virtio-net"
 
   # QEMU Specific Settings
-  accelerator      = "kvm"
+  qemu_binary      = var.qemu_binary
+  accelerator      = var.qemu_accelerator
   format           = "qcow2"
   disk_compression = true
 
@@ -72,5 +82,5 @@ source "qemu" "fedora" {
   shutdown_command = "sudo systemctl poweroff"
 
   # Headless mode (no GUI)
-  headless = false
+  headless = var.headless
 }

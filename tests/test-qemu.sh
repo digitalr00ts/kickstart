@@ -11,7 +11,19 @@ source "${SCRIPT_DIR}/validation.sh"
 # Configuration
 VARIANT="${1:-server}"
 OUTPUT_DIR="output"
-IMAGE_PATH="${OUTPUT_DIR}/${VARIANT}/fedora-${VARIANT}"
+FEDORA_VERSION="${FEDORA_VERSION:-44}"
+HOST_ARCH_RAW="$(uname -m)"
+if [ "${HOST_ARCH_RAW}" = "arm64" ] || [ "${HOST_ARCH_RAW}" = "aarch64" ]; then
+    DEFAULT_GUEST_ARCH="aarch64"
+else
+    DEFAULT_GUEST_ARCH="x86_64"
+fi
+GUEST_ARCH="${GUEST_ARCH:-${DEFAULT_GUEST_ARCH}}"
+QEMU_BINARY="${QEMU_BINARY:-qemu-system-${GUEST_ARCH}}"
+
+IMAGE_PATH="${OUTPUT_DIR}/qemu-${GUEST_ARCH}-${VARIANT}/fedora-${FEDORA_VERSION}-${GUEST_ARCH}-${VARIANT}"
+LEGACY_IMAGE_PATH="${OUTPUT_DIR}/${VARIANT}/fedora-${VARIANT}"
+LEGACY_IMAGE_PATH_V2="${OUTPUT_DIR}/qemu-${VARIANT}/fedora-${FEDORA_VERSION}-${VARIANT}"
 SSH_PORT="${SSH_PORT:-2222}"
 SSH_USER="root"
 # SSH_PASS is set for documentation but authentication is handled by SSH keys
@@ -23,6 +35,14 @@ echo "Testing QEMU Image: Fedora ${VARIANT}"
 echo "========================================"
 
 # Check if image exists
+if [ ! -f "${IMAGE_PATH}" ]; then
+    if [ -f "${LEGACY_IMAGE_PATH_V2}" ]; then
+        IMAGE_PATH="${LEGACY_IMAGE_PATH_V2}"
+    elif [ -f "${LEGACY_IMAGE_PATH}" ]; then
+        IMAGE_PATH="${LEGACY_IMAGE_PATH}"
+    fi
+fi
+
 if [ ! -f "${IMAGE_PATH}" ]; then
     print_failure "Image not found: ${IMAGE_PATH}"
     echo "Available images:"
@@ -41,10 +61,19 @@ print_info "Starting QEMU VM..."
 QEMU_PID=""
 
 # Launch QEMU
-qemu-system-x86_64 \
+QEMU_EXTRA_ARGS=()
+if [ "${GUEST_ARCH}" = "aarch64" ]; then
+    QEMU_EXTRA_ARGS=(
+        -machine virt
+        -cpu max
+    )
+fi
+
+"${QEMU_BINARY}" \
     -name "test-fedora-${VARIANT}" \
     -m 2048 \
     -smp 2 \
+    "${QEMU_EXTRA_ARGS[@]}" \
     -drive file="${IMAGE_PATH}",if=virtio,format=qcow2 \
     -net nic,model=virtio \
     -net user,hostfwd=tcp::${SSH_PORT}-:22 \

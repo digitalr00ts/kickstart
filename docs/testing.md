@@ -19,10 +19,10 @@ The testing infrastructure validates that built images:
 
 ```bash
 # Test server image
-make test-qemu VARIANT=server
+just test-qemu VARIANT=server
 
 # Test workstation image
-make test-qemu VARIANT=workstation
+just test-qemu VARIANT=workstation
 
 # Or use the test script directly
 ./tests/test-qemu.sh server
@@ -33,10 +33,10 @@ make test-qemu VARIANT=workstation
 
 ```bash
 # Test server image
-make test-virtualbox VARIANT=server
+just test-virtualbox VARIANT=server
 
 # Test workstation image
-make test-virtualbox VARIANT=workstation
+just test-virtualbox VARIANT=workstation
 
 # Or use the test script directly
 ./tests/test-virtualbox.sh server
@@ -46,7 +46,7 @@ make test-virtualbox VARIANT=workstation
 ### Test All Platforms
 
 ```bash
-make test-all
+just test-all
 ```bash
 
 ## Test Scripts
@@ -189,7 +189,7 @@ virt-viewer fedora-44-test
 
 ```bash
 # 1. Build image (installs from GitHub)
-make build-server-qemu
+just build-server-qemu
 
 # 2. Test the build
 ./tests/test-qemu.sh server
@@ -208,7 +208,7 @@ export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
 ./tests/test-ansible-collection.sh
 
 # 3. Build with local collection
-make build-server-qemu
+just build-server-qemu
 
 # 4. Test the build
 ./tests/test-qemu.sh server
@@ -220,12 +220,12 @@ ssh -p 2222 root@localhost "check your changes here"
 ### Test Collection Changes Iteratively
 
 ```bash
-# 1. Make changes to local collection
+# 1. Update your local collection
 vim /path/to/local/ansible-collection/roles/myrol/tasks/main.yml
 
 # 2. Quick rebuild (assumes ISO already cached)
-make clean
-make build-server-qemu
+just clean
+just build-server-qemu
 
 # 3. Test changes
 ./tests/test-qemu.sh server
@@ -353,10 +353,10 @@ Failed: 2
 # .gitlab-ci.yml or .github/workflows/build.yml
 test-images:
   script:
-    - make init
-    - make validate
-    - make build-server-qemu
-    - make test-qemu
+    - just init
+    - just validate
+    - just build-server-qemu
+    - just test-qemu
   artifacts:
     paths:
       - output/
@@ -372,16 +372,16 @@ test-images:
 set -e
 
 echo "==> Initializing"
-make init
+just init
 
 echo "==> Validating"
-make validate
+just validate
 
 echo "==> Building"
-make build-server-qemu
+just build-server-qemu
 
 echo "==> Testing"
-make test-qemu
+just test-qemu
 
 echo "==> All tests passed!"
 ```bash
@@ -414,7 +414,7 @@ du -sh output/
 
 ## Best Practices
 
-1. **Clean Environment**: Run `make clean` before important tests
+1. **Clean Environment**: Run `just clean` before important tests
 2. **Test Both Variants**: Always test both server and workstation
 3. **Test All Platforms**: If supporting multiple platforms, test all
 4. **Automated Tests**: Integrate tests into CI/CD

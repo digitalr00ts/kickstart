@@ -7,64 +7,91 @@ This document provides detailed instructions for building Fedora images with Pac
 Ensure the following tools are installed:
 
 - **Packer** (>= 1.15.0): `packer version`
-- **QEMU/KVM** (>= 10.1.0): `qemu-system-x86_64 --version`
+- **QEMU** (>= 10.1.0): `qemu-system-x86_64 --version`
 - **Ansible** (>= 2.20.0): `ansible --version`
 - **VirtualBox** (optional): `VBoxManage --version`
-- **Make**: `make --version`
+- **just**: `just --version`
 
 Check all prerequisites:
 
 ```bash
-make init  # This will verify Packer and initialize plugins
+just init  # This will verify Packer and initialize plugins
+```
+
+### Host-aware QEMU accelerator defaults
+
+Build scripts automatically select a sensible accelerator for the host OS:
+
+- Linux: `kvm`
+- macOS: `hvf`
+- Fallback for unsupported hosts: `tcg`
+
+Override at runtime when needed:
+
+```bash
+QEMU_ACCELERATOR=tcg just build-server-qemu
+```
+
+### Host-aware guest architecture defaults
+
+Build scripts also select a default guest architecture from the host CPU:
+
+- x86_64 host: `x86_64` guest
+- arm64/aarch64 host: `aarch64` guest
+
+Override at runtime when needed:
+
+```bash
+GUEST_ARCH=x86_64 just build-server-qemu
 ```
 
 ## Quick Start
 
-1. **Review the active Fedora vars file** in `packer/fedora-44.pkrvars.hcl`:
+1. **Review the active Fedora vars file** in `packer/fedora-44.auto.pkrvars.hcl`:
 
    ```bash
    # Fedora 44.1.7 URLs and checksums are already included.
    # Refresh this file if Fedora publishes a newer point release.
-   vim packer/fedora-44.pkrvars.hcl
+   vim packer/fedora-44.auto.pkrvars.hcl
    ```
 
 2. **Initialize Packer plugins**:
 
    ```bash
-   make init
+   just init
    ```
 
 3. **Validate configuration**:
 
    ```bash
-   make validate
+   just validate
    ```
 
 4. **Build a server image**:
 
    ```bash
-   make build-server-qemu
+   just build-server-qemu
    ```
 
 ## Building Images
 
-### Using Make (Recommended)
+### Using just (Recommended)
 
-The Makefile provides convenient targets for all build operations:
+The just recipes provide convenient targets for all build operations:
 
 ```bash
 # Build specific variants
-make build-server-qemu          # Server for QEMU
-make build-workstation-qemu     # Workstation for QEMU
-make build-server-virtualbox    # Server for VirtualBox
-make build-workstation-virtualbox  # Workstation for VirtualBox
+just build-server-qemu          # Server for QEMU
+just build-workstation-qemu     # Workstation for QEMU
+just build-server-virtualbox    # Server for VirtualBox
+just build-workstation-virtualbox  # Workstation for VirtualBox
 
 # Build all variants
-make build-all
+just build-all
 
 # Clean and rebuild
-make clean
-make build-server-qemu
+just clean
+just build-server-qemu
 ```
 
 ### Using Packer Directly
@@ -75,21 +102,27 @@ For more control, use Packer commands directly:
 # Build server variant for QEMU
 packer build \
   -only=qemu.fedora \
-   -var-file=packer/fedora-44.pkrvars.hcl \
+   -var-file=packer/fedora-44.auto.pkrvars.hcl \
+   -var guest_arch=x86_64 \
+   -var qemu_binary=qemu-system-x86_64 \
+   -var qemu_accelerator=kvm \
   -var variant=server \
   packer/
 
 # Build workstation variant for QEMU
 packer build \
   -only=qemu.fedora \
-   -var-file=packer/fedora-44.pkrvars.hcl \
+   -var-file=packer/fedora-44.auto.pkrvars.hcl \
+   -var guest_arch=aarch64 \
+   -var qemu_binary=qemu-system-aarch64 \
+   -var qemu_accelerator=hvf \
   -var variant=workstation \
   packer/
 
 # Build for VirtualBox
 packer build \
   -only=virtualbox-iso.fedora \
-   -var-file=packer/fedora-44.pkrvars.hcl \
+   -var-file=packer/fedora-44.auto.pkrvars.hcl \
   -var variant=server \
   packer/
 ```
@@ -106,7 +139,7 @@ packer build -var disk_size=80000 ...
 packer build -var memory=4096 ...
 
 # Different Fedora version (if vars file exists)
-packer build -var-file=packer/fedora-44.pkrvars.hcl ...
+packer build -var-file=packer/fedora-44.auto.pkrvars.hcl ...
 ```
 
 #### Debug Mode
@@ -128,7 +161,7 @@ The build process supports both local development and production workflows for A
 Default behavior - uses collection from GitHub:
 
 ```bash
-make build-server-qemu
+just build-server-qemu
 ```
 
 This will:
@@ -146,7 +179,7 @@ For local collection development:
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collections
 
 # Build with local collection
-make build-server-qemu
+just build-server-qemu
 ```
 
 The build will use your local collection instead of downloading from GitHub.
@@ -163,7 +196,7 @@ The build will use your local collection instead of downloading from GitHub.
 3. **Build and test**:
 
    ```bash
-   make build-server-qemu
+   just build-server-qemu
    ./tests/test-qemu.sh server
    ```
 
@@ -260,7 +293,7 @@ output/
 
 **Problem**: `invalid checksum` error
 
-**Solution**: Verify `packer/fedora-44.pkrvars.hcl` matches the current Fedora release metadata,
+**Solution**: Verify `packer/fedora-44.auto.pkrvars.hcl` matches the current Fedora release metadata,
 then update it if Fedora publishes a newer point release.
 
 ### SSH Timeout
@@ -291,7 +324,7 @@ then update it if Fedora publishes a newer point release.
 
 **Solutions**:
 
-- Clean previous builds: `make clean`
+- Clean previous builds: `just clean`
 - Remove Packer cache: `rm -rf .packer_cache/`
 - Free up host disk space
 - Reduce image disk size with `-var disk_size=20000`
@@ -316,9 +349,9 @@ To modify kickstart behavior:
 
 To support multiple Fedora versions:
 
-1. Create new vars file: `packer/fedora-44.pkrvars.hcl`
+1. Create new vars file: `packer/fedora-44.auto.pkrvars.hcl`
 2. Update ISO URLs and checksums
-3. Build with: `packer build -var-file=packer/fedora-44.pkrvars.hcl ...`
+3. Build with: `packer build -var-file=packer/fedora-44.auto.pkrvars.hcl ...`
 
 ### Headless vs. GUI Builds
 
@@ -335,8 +368,8 @@ headless = false  # Shows VM window during build
 Build multiple variants simultaneously:
 
 ```bash
-make build-server-qemu &
-make build-workstation-qemu &
+just build-server-qemu &
+just build-workstation-qemu &
 wait
 ```
 

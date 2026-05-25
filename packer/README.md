@@ -11,7 +11,7 @@ packer/
 ├── sources.pkr.hcl        # Builder sources (QEMU, VirtualBox)
 ├── build.pkr.hcl          # Build configuration and provisioners
 ├── fedora-43.pkrvars.hcl  # Fedora 43 specific values
-├── fedora-44.pkrvars.hcl  # Fedora 44 specific values
+├── fedora-44.auto.pkrvars.hcl  # Fedora 44 specific values
 └── versions/              # Future version-specific configs
 ```
 
@@ -21,8 +21,9 @@ packer/
 
 Declares all input variables used across the templates:
 
-- **ISO variables**: `iso_url_server`, `iso_checksum_server`, `iso_url_workstation`, `iso_checksum_workstation`
+- **ISO metadata**: `fedora_iso_metadata` map keyed by architecture and variant
 - **Build parameters**: `variant`, `fedora_version`, `disk_size`, `memory`, `cpus`
+- **Architecture parameters**: `guest_arch`, `qemu_binary`, `qemu_accelerator`
 - **SSH settings**: `ssh_username`, `ssh_password`, `ssh_timeout`
 - **Other settings**: `output_directory`, `http_directory`, `boot_wait`
 
@@ -30,16 +31,18 @@ Declares all input variables used across the templates:
 
 Defines builder sources for different virtualization platforms:
 
-- **QEMU/KVM Builder**: Primary builder with KVM acceleration
+- **QEMU Builder**: Primary builder with configurable acceleration
 - **VirtualBox Builder**: Alternative builder (when added)
 - **Plugin Requirements**: Specifies required Packer plugins and versions
 
 **Key Features:**
 
 - Automatic ISO selection based on `variant` variable
-- Uses ternary expressions: `var.variant == "server" ? var.iso_url_server : var.iso_url_workstation`
+- Uses architecture + variant map lookups from `fedora_iso_metadata`
 - Server builds automatically use Server ISO
 - Workstation builds automatically use Workstation ISO
+- Host-aware accelerator selection via `qemu_accelerator` (`kvm` on Linux, `hvf` on macOS, `tcg` fallback)
+- Host-aware guest architecture selection via `guest_arch` (`x86_64` or `aarch64`)
 
 ### build.pkr.hcl
 
@@ -49,7 +52,7 @@ Defines the build process including provisioners:
 2. Supports both local development (ANSIBLE_COLLECTIONS_PATH) and GitHub collections
 3. Passes Fedora version to Ansible playbooks
 
-### fedora-44.pkrvars.hcl
+### fedora-44.auto.pkrvars.hcl
 
 Version-specific variable values for Fedora 44:
 
@@ -59,30 +62,32 @@ Version-specific variable values for Fedora 44:
 
 ## Building Images
 
-### Using Make (Recommended)
+### Using just (Recommended)
 
 ```bash
 # Build server variant
-make build-server-qemu
+just build-server-qemu
 
 # Build workstation variant
-make build-workstation-qemu
+just build-workstation-qemu
 ```
 
 ### Using Packer Directly
 
 ```bash
-# Build server for QEMU
+# Build server for QEMU (x86_64)
 packer build \
   -only=qemu.fedora \
-  -var-file=packer/fedora-44.pkrvars.hcl \
+  -var-file=packer/fedora-44.auto.pkrvars.hcl \
+  -var guest_arch=x86_64 \
   -var variant=server \
   packer/
 
-# Build workstation for QEMU
+# Build workstation for QEMU (aarch64)
 packer build \
   -only=qemu.fedora \
-  -var-file=packer/fedora-44.pkrvars.hcl \
+  -var-file=packer/fedora-44.auto.pkrvars.hcl \
+  -var guest_arch=aarch64 \
   -var variant=workstation \
   packer/
 ```
@@ -99,27 +104,29 @@ The configuration automatically selects the correct ISO based on the `variant` v
 This is implemented in `sources.pkr.hcl`:
 
 ```hcl
-iso_url      = var.variant == "server" ? var.iso_url_server : var.iso_url_workstation
-iso_checksum = var.variant == "server" ? var.iso_checksum_server : var.iso_checksum_workstation
+iso_url      = var.fedora_iso_metadata[var.guest_arch][var.variant].url
+iso_checksum = var.fedora_iso_metadata[var.guest_arch][var.variant].checksum
 ```
 
 ## Adding New Fedora Versions
 
 To support a new Fedora version (e.g., Fedora 44):
 
-1. Create `packer/fedora-44.pkrvars.hcl`
-2. Update ISO URLs and checksums
+1. Create `packer/fedora-44.auto.pkrvars.hcl`
+2. Update `fedora_iso_metadata` entries for each architecture and variant
 3. Set `fedora_version = "44"`
-4. Build with `-var-file=packer/fedora-44.pkrvars.hcl`
+4. Build with `-var-file=packer/fedora-44.auto.pkrvars.hcl`
 
 Example:
 
 ```hcl
-# fedora-44.pkrvars.hcl
-iso_url_server = "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Server/..."
-iso_checksum_server = "sha256:..."
-iso_url_workstation = "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Workstation/..."
-iso_checksum_workstation = "sha256:..."
+# fedora-44.auto.pkrvars.hcl
+fedora_iso_metadata = {
+  x86_64 = {
+    server = { url = "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Server/...", checksum = "sha256:..." }
+    workstation = { url = "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Workstation/...", checksum = "sha256:..." }
+  }
+}
 fedora_version = "44"
 ```
 
@@ -128,9 +135,9 @@ fedora_version = "44"
 Before building, verify and update ISO checksums:
 
 ```bash
-# Fedora 44.1.7 checksums are already included in packer/fedora-44.pkrvars.hcl
+# Fedora 44.1.7 checksums are already included in packer/fedora-44.auto.pkrvars.hcl
 # Refresh the file if Fedora publishes a newer point release
-vim packer/fedora-44.pkrvars.hcl
+vim packer/fedora-44.auto.pkrvars.hcl
 ```
 
 ## Validation
@@ -158,6 +165,12 @@ packer build -var memory=4096 ...
 
 # More CPUs
 packer build -var cpus=4 ...
+
+# Override guest architecture explicitly
+packer build -var guest_arch=aarch64 -var qemu_binary=qemu-system-aarch64 ...
+
+# Override accelerator explicitly
+packer build -var qemu_accelerator=tcg ...
 ```
 
 ### Debug Mode
@@ -176,16 +189,16 @@ Built images are saved to:
 
 ```text
 output/
-├── qemu-{variant}/
-│   └── fedora-{version}-{variant}      # QEMU qcow2 images
+├── qemu-{arch}-{variant}/
+│   └── fedora-{version}-{arch}-{variant}      # QEMU qcow2 images
 └── vagrant/
     └── fedora-{version}-{variant}-libvirt.box  # Vagrant boxes
 ```
 
 Example:
 
-- `output/qemu-server/fedora-44-server` (QEMU qcow2 image)
-- `output/qemu-workstation/fedora-44-workstation` (QEMU qcow2 image)
+- `output/qemu-x86_64-server/fedora-44-x86_64-server` (QEMU qcow2 image)
+- `output/qemu-aarch64-workstation/fedora-44-aarch64-workstation` (QEMU qcow2 image)
 - `output/vagrant/fedora-44-server-libvirt.box` (Vagrant box)
 - `output/vagrant/fedora-44-workstation-libvirt.box` (Vagrant box)
 

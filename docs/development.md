@@ -144,13 +144,16 @@ pip install ansible-lint black isort detect-secrets
    pre-commit run --all-files
 
    # Validate Packer
-   make validate
 
-   # Test Ansible
+  just validate
+
+## Test Ansible
+
+  ```sh
    ./tests/test-ansible-collection.sh
    ```
 
-4. **Commit changes**:
+1. **Commit changes**:
 
    ```bash
    git add .
@@ -158,7 +161,7 @@ pip install ansible-lint black isort detect-secrets
    # Pre-commit hooks run automatically
    ```
 
-5. **Push and create PR**:
+1. **Push and create PR**:
 
    ```bash
    git push origin feature/my-feature
@@ -173,14 +176,14 @@ pip install ansible-lint black isort detect-secrets
 ksvalidator http/ks-server.cfg
 
 # Test with a build (recommended)
-make build-server-qemu
+just build-server-qemu
 ```
 
 #### Test Packer Changes
 
 ```bash
 # Validate templates
-make validate
+just validate
 
 # Format check
 packer fmt -check packer/
@@ -189,7 +192,7 @@ packer fmt -check packer/
 packer fmt -recursive packer/
 
 # Test build
-make build-server-qemu
+just build-server-qemu
 ```
 
 #### Test Ansible Changes
@@ -203,7 +206,7 @@ ansible-lint ansible/playbook-server.yml
 
 # Test with local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collection
-make build-server-qemu
+just build-server-qemu
 ```
 
 #### Test Scripts
@@ -307,10 +310,10 @@ If a hook fails:
 
 ```bash
 # Review the active Fedora vars file
-vim packer/fedora-44.pkrvars.hcl
+vim packer/fedora-44.auto.pkrvars.hcl
 
 # Run validation manually
-cd packer && packer validate -var-file=fedora-44.pkrvars.hcl .
+cd packer && packer validate -var-file=fedora-44.auto.pkrvars.hcl .
 ```
 
 **Ansible-lint fails:**

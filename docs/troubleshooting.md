@@ -19,10 +19,15 @@ in sha256:REPLACE_WITH_ACTUAL_FEDORA_43_SERVER_CHECKSUM
 
 1. Visit <https://getfedora.org/> and download checksum file
 2. Extract SHA256 checksum for your ISO
-3. Update `packer/fedora-44.pkrvars.hcl`:
+3. Update `packer/fedora-44.auto.pkrvars.hcl`:
 
    ```hcl
-   iso_checksum_server = "sha256:abc123..."  # Real checksum
+    fedora_iso_metadata = {
+       x86_64 = {
+          server = { url = "...", checksum = "sha256:abc123..." }
+          workstation = { url = "...", checksum = "sha256:def456..." }
+       }
+    }
    ```
 
 ### Undefined Variables Warning
@@ -30,25 +35,22 @@ in sha256:REPLACE_WITH_ACTUAL_FEDORA_43_SERVER_CHECKSUM
 **Error:**
 
 ```bash
-Warning: Undefined variable: iso_url_server
-Warning: Undefined variable: iso_checksum_server
+Warning: Undefined variable: fedora_iso_metadata
 ```bash
 
 **Cause:** Variables used in `.pkrvars.hcl` but not declared in `variables.pkr.hcl`.
 
 **Solution:**
-Add variable declarations to `packer/variables.pkr.hcl`:
+Use the map-based schema expected by `packer/variables.pkr.hcl`:
 
 ```hcl
-variable "iso_url_server" {
-  type = string
-}
-variable "iso_checksum_server" {
-  type = string
+fedora_iso_metadata = {
+   x86_64 = {
+      server = { url = "...", checksum = "sha256:..." }
+      workstation = { url = "...", checksum = "sha256:..." }
+   }
 }
 ```bash
-
-Or ignore if using `iso_url` and `iso_checksum` directly.
 
 ### Packer Plugins Not Found
 
@@ -65,7 +67,7 @@ Error: Failed to load plugin: terraform-plugin-sdk/v2/plugin.Serve
 ```bash
 packer init packer/
 # or
-make init
+just init
 ```bash
 
 ### HTTP Server Port Already in Use
@@ -258,7 +260,27 @@ sudo modprobe kvm_intel
 sudo modprobe kvm_amd
 
 # Or build without KVM (slower)
-# Edit sources.pkr.hcl: accelerator = "none"
+QEMU_ACCELERATOR=tcg just build-server-qemu
+```bash
+
+### HVF Not Available on macOS
+
+**Error:**
+
+```bash
+failed to initialize HVF
+```bash
+
+**Cause:** HVF is unavailable or blocked on the host.
+
+**Solution:**
+
+```bash
+# Fall back to software acceleration
+QEMU_ACCELERATOR=tcg just build-server-qemu
+
+# Verify QEMU is installed
+which qemu-system-x86_64
 ```bash
 
 ### Permission Denied on /dev/kvm
@@ -329,7 +351,7 @@ exec: "VBoxManage": executable file not found in $PATH
 export PATH=$PATH:/usr/local/bin
 
 # Or skip VirtualBox builds
-make build-server-qemu  # Use QEMU only
+just build-server-qemu  # Use QEMU only
 ```bash
 
 ### VirtualBox Kernel Modules Not Loaded
@@ -404,7 +426,7 @@ No space left on device
 
 ```bash
 # Clean old builds
-make clean
+just clean
 
 # Remove Packer cache
 rm -rf .packer_cache/
@@ -452,8 +474,8 @@ sudo swapon -a
 qemu-img check output/server/fedora-44
 
 # Rebuild image
-make clean
-make build-server-qemu
+just clean
+just build-server-qemu
 ```bash
 
 ### SSH Port Conflict in Tests

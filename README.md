@@ -9,7 +9,7 @@ This project provides a Packer-based infrastructure to build Fedora images with:
 
 - **Minimal kickstart configurations** for base OS installation
 - **Ansible provisioning** using the drts01 collection
-- **Multi-platform support** for QEMU/KVM and VirtualBox
+- **Multi-platform support** for QEMU builds on Linux and macOS
 - **Dual image variants**: minimal server and workstation (with GUI)
 - **Version-aware structure** extensible to future Fedora releases
 - **Optional Vagrant boxes** for development environments
@@ -31,7 +31,12 @@ This project provides a Packer-based infrastructure to build Fedora images with:
 - QEMU >= 10.0 (for QEMU builds)
 - VirtualBox >= 7.0 (for VirtualBox builds)
 - Ansible >= 2.15
-- Make
+- just (recommended local task runner)
+
+### Task Runner
+
+- `just` recipes delegate to scripts in `scripts/`
+- Scripts can also be run directly from `scripts/`
 
 ### Initial Setup
 
@@ -40,27 +45,34 @@ This project provides a Packer-based infrastructure to build Fedora images with:
 git clone https://github.com/digitalr00ts/kickstart.git
 cd kickstart
 
-# Fedora 44.1.7 ISO metadata is included in packer/fedora-44.pkrvars.hcl.
+# Fedora 44.1.7 ISO metadata is included in packer/fedora-44.auto.pkrvars.hcl.
 # Refresh that file if Fedora publishes a newer point release.
 
 # Initialize Packer plugins
-make init
+just init
 
 # Validate templates
-make validate
+just validate
 ```text
 
 ### Build Your First Image
 
 ```bash
 # Build Fedora 44 server image for QEMU
-make build-server-qemu
+just build-server-qemu
+
+# Optional: override guest architecture (x86_64, aarch64)
+GUEST_ARCH=aarch64 just build-server-qemu
+
+# Optional: override accelerator (kvm, hvf, tcg, none)
+# Example fallback when hardware acceleration is unavailable:
+QEMU_ACCELERATOR=tcg just build-server-qemu
 
 # Or build for VirtualBox
-make build-server-virtualbox
+just build-server-virtualbox
 
 # Build workstation variant
-make build-workstation-qemu
+just build-workstation-qemu
 ```text
 
 Images are output to the `output/` directory organized by platform and variant.
@@ -69,20 +81,20 @@ Images are output to the `output/` directory organized by platform and variant.
 
 ```bash
 # Build all combinations (server/workstation × QEMU/VirtualBox)
-make build-all
+just build-all
 ```text
 
 ### Testing Images
 
 ```bash
 # Test QEMU images
-make test-qemu
+just test-qemu
 
 # Test VirtualBox images
-make test-virtualbox
+just test-virtualbox
 
 # Test all platforms
-make test-all
+just test-all
 ```text
 
 ## Project Structure
@@ -98,7 +110,7 @@ kickstart/
 │   ├── sources.pkr.hcl     # Builder sources (QEMU, VirtualBox)
 │   ├── build.pkr.hcl       # Build configuration and provisioners
 │   ├── fedora-43.pkrvars.hcl  # Fedora 43 specific values
-│   └── fedora-44.pkrvars.hcl  # Fedora 44 specific values
+│   └── fedora-44.auto.pkrvars.hcl  # Fedora 44 specific values
 ├── ansible/                 # Ansible provisioning
 │   ├── requirements.yml    # Collection requirements
 │   ├── ansible.cfg         # Ansible configuration
@@ -116,7 +128,7 @@ kickstart/
 ```bash
 # Set environment variable to use local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
-make build-server-qemu
+just build-server-qemu
 ```text
 
 ### Using GitHub Collection (Production)
@@ -124,7 +136,7 @@ make build-server-qemu
 ```bash
 # Unset local path to use GitHub collection
 unset ANSIBLE_COLLECTIONS_PATH
-make build-server-qemu
+just build-server-qemu
 ```text
 
 ### Testing Collection Changes
@@ -139,34 +151,37 @@ ansible-playbook -i <vm-ip>, playbook-server.yml \
   --user root
 ```text
 
-## Available Make Targets
+## Available Just Recipes
 
 ```bash
-make help              # Show all available targets
-make init              # Initialize Packer plugins
-make validate          # Validate Packer templates
-make build-server-qemu        # Build server for QEMU
-make build-server-virtualbox  # Build server for VirtualBox
-make build-workstation-qemu   # Build workstation for QEMU
-make build-workstation-virtualbox  # Build workstation for VirtualBox
-make build-all         # Build all variants and platforms
-make test-qemu         # Test QEMU images
-make test-virtualbox   # Test VirtualBox images
-make test-all          # Test all images
-make clean             # Remove build artifacts
-make status            # Show build status and artifacts
-make quick             # Quick build - server on QEMU only
+just --list                    # Show all available recipes
+just init                      # Initialize Packer plugins
+just validate                  # Validate Packer templates
+just build-server-qemu         # Build server for QEMU
+just build-server-virtualbox   # Build server for VirtualBox
+just build-workstation-qemu    # Build workstation for QEMU
+just build-workstation-virtualbox  # Build workstation for VirtualBox
+just build-all                 # Build all variants and platforms
+just test-qemu                 # Test QEMU images
+just test-virtualbox           # Test VirtualBox images
+just test-all                  # Test all images
+just clean                     # Remove build artifacts
+just status                    # Show build status and artifacts
+just quick                     # Quick build - server on QEMU only
 ```text
 
-Run `make help` to see descriptions of all targets.
+Run `just --list` to see descriptions of all recipes.
 
 ## System Requirements
 
 ### Host System
 
-- Linux host (Fedora, RHEL, Ubuntu, Debian)
+- Linux host (Fedora, RHEL, Ubuntu, Debian) or macOS host
 - CPU with virtualization support (Intel VT-x or AMD-V)
-- KVM enabled for QEMU builds
+- QEMU accelerator support:
+  - Linux default: `kvm`
+  - macOS default: `hvf`
+  - Fallback: `tcg` (portable, slower)
 
 ### Disk Space
 
@@ -182,8 +197,8 @@ Run `make help` to see descriptions of all targets.
 
 ### Build Time
 
-- Server variant: 15-25 minutes (QEMU with KVM)
-- Workstation variant: 25-40 minutes (QEMU with KVM)
+- Server variant: 15-25 minutes (QEMU with hardware acceleration)
+- Workstation variant: 25-40 minutes (QEMU with hardware acceleration)
 - Times vary based on:
   - Network speed (first build downloads ~2GB ISO)
   - CPU cores available
@@ -225,15 +240,15 @@ See [docs/kickstart-reference.md](docs/kickstart-reference.md#security-considera
 - ✅ Kickstart configurations (server and workstation)
 - ✅ Packer templates (QEMU ready, VirtualBox prepared)
 - ✅ Ansible integration (local + GitHub collection support)
-- ✅ Build automation (Makefile with all targets)
+- ✅ Build automation (just recipes with script entrypoints)
 - ✅ Testing infrastructure (validation scripts)
 - ✅ Complete documentation
 
 ### Ready for Use
 
-- ✅ QEMU/KVM builds (fully tested)
+- ✅ QEMU builds with host-aware acceleration (kvm on Linux, hvf on macOS)
 - ⚠️ VirtualBox builds (templates ready, requires VirtualBox installation)
-- ✅ Fedora 44.1.7 ISO URLs and checksums are included in `packer/fedora-44.pkrvars.hcl`
+- ✅ Fedora 44.1.7 ISO URLs and checksums are included in `packer/fedora-44.auto.pkrvars.hcl`
 
 ### Optional (Not Yet Implemented)
 
