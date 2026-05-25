@@ -1,5 +1,4 @@
-# Fedora 44 Specific Variables
-# ISO URLs and checksums for Fedora 44 by architecture and variant
+fedora_version = "44"
 
 fedora_iso_metadata = {
   x86_64 = {
@@ -24,6 +23,3 @@ fedora_iso_metadata = {
     }
   }
 }
-
-# Fedora version
-fedora_version = "44"

@@ -24,6 +24,7 @@ Declares all input variables used across the templates:
 - **ISO metadata**: `fedora_iso_metadata` map keyed by architecture and variant
 - **Build parameters**: `variant`, `fedora_version`, `disk_size`, `memory`, `cpus`
 - **Architecture parameters**: `guest_arch`, `qemu_binary`, `qemu_accelerator`
+- **EFI parameters (ARM64)**: `aarch64_efi_firmware_code`, `aarch64_efi_firmware_vars`
 - **SSH settings**: `ssh_username`, `ssh_password`, `ssh_timeout`
 - **Other settings**: `output_directory`, `http_directory`, `boot_wait`
 
@@ -43,6 +44,7 @@ Defines builder sources for different virtualization platforms:
 - Workstation builds automatically use Workstation ISO
 - Host-aware accelerator selection via `qemu_accelerator` (`kvm` on Linux, `hvf` on macOS, `tcg` fallback)
 - Host-aware guest architecture selection via `guest_arch` (`x86_64` or `aarch64`)
+- ARM64 builds use EFI boot by default to avoid BIOS boot-device-list errors on `qemu-system-aarch64`
 
 ### build.pkr.hcl
 
@@ -106,6 +108,32 @@ This is implemented in `sources.pkr.hcl`:
 ```hcl
 iso_url      = var.fedora_iso_metadata[var.guest_arch][var.variant].url
 iso_checksum = var.fedora_iso_metadata[var.guest_arch][var.variant].checksum
+```
+
+## ARM64 EFI Boot Notes
+
+`aarch64` builds are configured to use EFI boot so Packer does not pass BIOS-style `-boot` arguments that can fail with:
+
+```text
+qemu-system-aarch64: no function defined to set boot device list for this architecture
+```
+
+Host-aware defaults for EFI firmware are applied automatically:
+
+- macOS: `/opt/homebrew/share/qemu/edk2-aarch64-code.fd` and `/opt/homebrew/share/qemu/edk2-arm-vars.fd`
+- Linux: `/usr/share/AAVMF/AAVMF_CODE.fd` and `/usr/share/AAVMF/AAVMF_VARS.fd`
+
+Override when needed:
+
+```bash
+packer build \
+  -only=qemu.fedora \
+  -var-file=packer/fedora-44.auto.pkrvars.hcl \
+  -var guest_arch=aarch64 \
+  -var aarch64_efi_firmware_code=/custom/path/CODE.fd \
+  -var aarch64_efi_firmware_vars=/custom/path/VARS.fd \
+  -var variant=server \
+  packer/
 ```
 
 ## Adding New Fedora Versions

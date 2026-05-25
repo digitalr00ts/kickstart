@@ -84,6 +84,18 @@ variable "host_os_hint" {
   }
 }
 
+variable "aarch64_efi_firmware_code" {
+  type        = string
+  default     = ""
+  description = "Optional path to ARM64 EFI firmware CODE file. Empty uses host-aware defaults."
+}
+
+variable "aarch64_efi_firmware_vars" {
+  type        = string
+  default     = ""
+  description = "Optional path to ARM64 EFI firmware VARS file. Empty uses host-aware defaults."
+}
+
 variable "ssh_username" {
   type        = string
   default     = "vagrant"

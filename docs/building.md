@@ -45,6 +45,34 @@ Override at runtime when needed:
 GUEST_ARCH=x86_64 ./scripts/task.sh build qemu server
 ```
 
+### ARM64 boot behavior
+
+When `GUEST_ARCH=aarch64`, the QEMU builder uses EFI boot to avoid BIOS-style boot-device-list handling that can fail on ARM with:
+
+```text
+qemu-system-aarch64: no function defined to set boot device list for this architecture
+```
+
+Default EFI firmware paths are host-aware:
+
+- macOS: `/opt/homebrew/share/qemu/edk2-aarch64-code.fd` and `/opt/homebrew/share/qemu/edk2-arm-vars.fd`
+- Linux: `/usr/share/AAVMF/AAVMF_CODE.fd` and `/usr/share/AAVMF/AAVMF_VARS.fd`
+
+Override at runtime when needed:
+
+```bash
+packer build \
+   -only=qemu.fedora \
+   -var-file=packer/fedora-44.auto.pkrvars.hcl \
+   -var guest_arch=aarch64 \
+   -var qemu_binary=qemu-system-aarch64 \
+   -var qemu_accelerator=hvf \
+   -var aarch64_efi_firmware_code=/custom/path/CODE.fd \
+   -var aarch64_efi_firmware_vars=/custom/path/VARS.fd \
+   -var variant=server \
+   packer/
+```
+
 ## Quick Start
 
 1. **Review the active Fedora vars file** in `packer/fedora-44.auto.pkrvars.hcl`:

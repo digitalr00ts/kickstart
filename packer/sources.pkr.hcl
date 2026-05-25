@@ -20,11 +20,22 @@ packer {
   }
 }
 
-# QEMU/KVM Builder Source
+locals {
+  aarch64_efi_firmware_code_default = var.host_os_hint == "macos" ? "/opt/homebrew/share/qemu/edk2-aarch64-code.fd" : "/usr/share/AAVMF/AAVMF_CODE.fd"
+  aarch64_efi_firmware_vars_default = var.host_os_hint == "macos" ? "/opt/homebrew/share/qemu/edk2-arm-vars.fd" : "/usr/share/AAVMF/AAVMF_VARS.fd"
+  aarch64_efi_firmware_code         = trimspace(var.aarch64_efi_firmware_code) != "" ? var.aarch64_efi_firmware_code : local.aarch64_efi_firmware_code_default
+  aarch64_efi_firmware_vars         = trimspace(var.aarch64_efi_firmware_vars) != "" ? var.aarch64_efi_firmware_vars : local.aarch64_efi_firmware_vars_default
+}
+
 source "qemu" "fedora" {
   # ISO Configuration - automatically select based on variant
   iso_url      = var.fedora_iso_metadata[var.guest_arch][var.variant].url
   iso_checksum = var.fedora_iso_metadata[var.guest_arch][var.variant].checksum
+
+  # aarch64/virt does not support BIOS-style boot device list handling.
+  efi_boot          = var.guest_arch == "aarch64"
+  efi_firmware_code = var.guest_arch == "aarch64" ? local.aarch64_efi_firmware_code : null
+  efi_firmware_vars = var.guest_arch == "aarch64" ? local.aarch64_efi_firmware_vars : null
 
   # Output Configuration
   output_directory = "${var.output_directory}/qemu-${var.guest_arch}-${var.variant}"
