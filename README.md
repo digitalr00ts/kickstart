@@ -31,11 +31,11 @@ This project provides a Packer-based infrastructure to build Fedora images with:
 - QEMU >= 10.0 (for QEMU builds)
 - VirtualBox >= 7.0 (for VirtualBox builds)
 - Ansible >= 2.15
-- just (recommended local task runner)
+- task script (scripts/task.sh)
 
 ### Task Runner
 
-- `just` recipes delegate to scripts in `scripts/`
+- `scripts/task.sh` delegates to shared helpers in `scripts/lib/`
 - Scripts can also be run directly from `scripts/`
 
 ### Initial Setup
@@ -49,30 +49,30 @@ cd kickstart
 # Refresh that file if Fedora publishes a newer point release.
 
 # Initialize Packer plugins
-just init
+./scripts/task.sh init
 
 # Validate templates
-just validate
+./scripts/task.sh validate
 ```text
 
 ### Build Your First Image
 
 ```bash
 # Build Fedora 44 server image for QEMU
-just build-server-qemu
+./scripts/task.sh build qemu server
 
 # Optional: override guest architecture (x86_64, aarch64)
-GUEST_ARCH=aarch64 just build-server-qemu
+GUEST_ARCH=aarch64 ./scripts/task.sh build qemu server
 
 # Optional: override accelerator (kvm, hvf, tcg, none)
 # Example fallback when hardware acceleration is unavailable:
-QEMU_ACCELERATOR=tcg just build-server-qemu
+QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
 
 # Or build for VirtualBox
-just build-server-virtualbox
+./scripts/task.sh build virtualbox server
 
 # Build workstation variant
-just build-workstation-qemu
+./scripts/task.sh build qemu workstation
 ```text
 
 Images are output to the `output/` directory organized by platform and variant.
@@ -81,20 +81,20 @@ Images are output to the `output/` directory organized by platform and variant.
 
 ```bash
 # Build all combinations (server/workstation × QEMU/VirtualBox)
-just build-all
+./scripts/task.sh build all
 ```text
 
 ### Testing Images
 
 ```bash
 # Test QEMU images
-just test-qemu
+./scripts/task.sh test qemu server
 
 # Test VirtualBox images
-just test-virtualbox
+./scripts/task.sh test virtualbox server
 
 # Test all platforms
-just test-all
+./scripts/task.sh test all server
 ```text
 
 ## Project Structure
@@ -128,7 +128,7 @@ kickstart/
 ```bash
 # Set environment variable to use local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
-just build-server-qemu
+./scripts/task.sh build qemu server
 ```text
 
 ### Using GitHub Collection (Production)
@@ -136,7 +136,7 @@ just build-server-qemu
 ```bash
 # Unset local path to use GitHub collection
 unset ANSIBLE_COLLECTIONS_PATH
-just build-server-qemu
+./scripts/task.sh build qemu server
 ```text
 
 ### Testing Collection Changes
@@ -151,26 +151,26 @@ ansible-playbook -i <vm-ip>, playbook-server.yml \
   --user root
 ```text
 
-## Available Just Recipes
+## Available Task Commands
 
 ```bash
-just --list                    # Show all available recipes
-just init                      # Initialize Packer plugins
-just validate                  # Validate Packer templates
-just build-server-qemu         # Build server for QEMU
-just build-server-virtualbox   # Build server for VirtualBox
-just build-workstation-qemu    # Build workstation for QEMU
-just build-workstation-virtualbox  # Build workstation for VirtualBox
-just build-all                 # Build all variants and platforms
-just test-qemu                 # Test QEMU images
-just test-virtualbox           # Test VirtualBox images
-just test-all                  # Test all images
-just clean                     # Remove build artifacts
-just status                    # Show build status and artifacts
-just quick                     # Quick build - server on QEMU only
+./scripts/task.sh help                         # Show usage
+./scripts/task.sh init                         # Initialize Packer plugins
+./scripts/task.sh validate                     # Validate Packer templates
+./scripts/task.sh build qemu server            # Build server for QEMU
+./scripts/task.sh build virtualbox server      # Build server for VirtualBox
+./scripts/task.sh build qemu workstation       # Build workstation for QEMU
+./scripts/task.sh build virtualbox workstation # Build workstation for VirtualBox
+./scripts/task.sh build all                    # Build all variants and platforms
+./scripts/task.sh test qemu server             # Test QEMU images
+./scripts/task.sh test virtualbox server       # Test VirtualBox images
+./scripts/task.sh test all server              # Test all images
+./scripts/task.sh clean                        # Remove build artifacts
+./scripts/task.sh status                       # Show build status and artifacts
+./scripts/task.sh build qemu server            # Quick build - server on QEMU only
 ```text
 
-Run `just --list` to see descriptions of all recipes.
+Run `./scripts/task.sh help` to see command usage.
 
 ## System Requirements
 
@@ -240,7 +240,7 @@ See [docs/kickstart-reference.md](docs/kickstart-reference.md#security-considera
 - ✅ Kickstart configurations (server and workstation)
 - ✅ Packer templates (QEMU ready, VirtualBox prepared)
 - ✅ Ansible integration (local + GitHub collection support)
-- ✅ Build automation (just recipes with script entrypoints)
+- ✅ Build automation (scripts/task.sh dispatcher with shared helpers)
 - ✅ Testing infrastructure (validation scripts)
 - ✅ Complete documentation
 

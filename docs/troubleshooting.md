@@ -67,7 +67,7 @@ Error: Failed to load plugin: terraform-plugin-sdk/v2/plugin.Serve
 ```bash
 packer init packer/
 # or
-just init
+./scripts/task.sh init
 ```bash
 
 ### HTTP Server Port Already in Use
@@ -260,7 +260,7 @@ sudo modprobe kvm_intel
 sudo modprobe kvm_amd
 
 # Or build without KVM (slower)
-QEMU_ACCELERATOR=tcg just build-server-qemu
+QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
 ```bash
 
 ### HVF Not Available on macOS
@@ -277,7 +277,7 @@ failed to initialize HVF
 
 ```bash
 # Fall back to software acceleration
-QEMU_ACCELERATOR=tcg just build-server-qemu
+QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
 
 # Verify QEMU is installed
 which qemu-system-x86_64
@@ -351,7 +351,7 @@ exec: "VBoxManage": executable file not found in $PATH
 export PATH=$PATH:/usr/local/bin
 
 # Or skip VirtualBox builds
-just build-server-qemu  # Use QEMU only
+./scripts/task.sh build qemu server  # Use QEMU only
 ```bash
 
 ### VirtualBox Kernel Modules Not Loaded
@@ -426,7 +426,7 @@ No space left on device
 
 ```bash
 # Clean old builds
-just clean
+./scripts/task.sh clean
 
 # Remove Packer cache
 rm -rf .packer_cache/
@@ -474,8 +474,8 @@ sudo swapon -a
 qemu-img check output/server/fedora-44
 
 # Rebuild image
-just clean
-just build-server-qemu
+./scripts/task.sh clean
+./scripts/task.sh build qemu server
 ```bash
 
 ### SSH Port Conflict in Tests

@@ -10,12 +10,12 @@ Ensure the following tools are installed:
 - **QEMU** (>= 10.1.0): `qemu-system-x86_64 --version`
 - **Ansible** (>= 2.20.0): `ansible --version`
 - **VirtualBox** (optional): `VBoxManage --version`
-- **just**: `just --version`
+- **Bash**: `bash --version`
 
 Check all prerequisites:
 
 ```bash
-just init  # This will verify Packer and initialize plugins
+./scripts/task.sh init  # This will verify Packer and initialize plugins
 ```
 
 ### Host-aware QEMU accelerator defaults
@@ -29,7 +29,7 @@ Build scripts automatically select a sensible accelerator for the host OS:
 Override at runtime when needed:
 
 ```bash
-QEMU_ACCELERATOR=tcg just build-server-qemu
+QEMU_ACCELERATOR=tcg ./scripts/task.sh build qemu server
 ```
 
 ### Host-aware guest architecture defaults
@@ -42,7 +42,7 @@ Build scripts also select a default guest architecture from the host CPU:
 Override at runtime when needed:
 
 ```bash
-GUEST_ARCH=x86_64 just build-server-qemu
+GUEST_ARCH=x86_64 ./scripts/task.sh build qemu server
 ```
 
 ## Quick Start
@@ -58,40 +58,40 @@ GUEST_ARCH=x86_64 just build-server-qemu
 2. **Initialize Packer plugins**:
 
    ```bash
-   just init
+   ./scripts/task.sh init
    ```
 
 3. **Validate configuration**:
 
    ```bash
-   just validate
+   ./scripts/task.sh validate
    ```
 
 4. **Build a server image**:
 
    ```bash
-   just build-server-qemu
+   ./scripts/task.sh build qemu server
    ```
 
 ## Building Images
 
-### Using just (Recommended)
+### Using task.sh (Recommended)
 
-The just recipes provide convenient targets for all build operations:
+The task script provides convenient commands for all build operations:
 
 ```bash
 # Build specific variants
-just build-server-qemu          # Server for QEMU
-just build-workstation-qemu     # Workstation for QEMU
-just build-server-virtualbox    # Server for VirtualBox
-just build-workstation-virtualbox  # Workstation for VirtualBox
+./scripts/task.sh build qemu server            # Server for QEMU
+./scripts/task.sh build qemu workstation       # Workstation for QEMU
+./scripts/task.sh build virtualbox server      # Server for VirtualBox
+./scripts/task.sh build virtualbox workstation # Workstation for VirtualBox
 
 # Build all variants
-just build-all
+./scripts/task.sh build all
 
 # Clean and rebuild
-just clean
-just build-server-qemu
+./scripts/task.sh clean
+./scripts/task.sh build qemu server
 ```
 
 ### Using Packer Directly
@@ -161,7 +161,7 @@ The build process supports both local development and production workflows for A
 Default behavior - uses collection from GitHub:
 
 ```bash
-just build-server-qemu
+./scripts/task.sh build qemu server
 ```
 
 This will:
@@ -179,7 +179,7 @@ For local collection development:
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collections
 
 # Build with local collection
-just build-server-qemu
+./scripts/task.sh build qemu server
 ```
 
 The build will use your local collection instead of downloading from GitHub.
@@ -196,7 +196,7 @@ The build will use your local collection instead of downloading from GitHub.
 3. **Build and test**:
 
    ```bash
-   just build-server-qemu
+   ./scripts/task.sh build qemu server
    ./tests/test-qemu.sh server
    ```
 
@@ -324,7 +324,7 @@ then update it if Fedora publishes a newer point release.
 
 **Solutions**:
 
-- Clean previous builds: `just clean`
+- Clean previous builds: `./scripts/task.sh clean`
 - Remove Packer cache: `rm -rf .packer_cache/`
 - Free up host disk space
 - Reduce image disk size with `-var disk_size=20000`
@@ -368,8 +368,8 @@ headless = false  # Shows VM window during build
 Build multiple variants simultaneously:
 
 ```bash
-just build-server-qemu &
-just build-workstation-qemu &
+./scripts/task.sh build qemu server &
+./scripts/task.sh build qemu workstation &
 wait
 ```
 

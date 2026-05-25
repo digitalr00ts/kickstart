@@ -62,14 +62,14 @@ Version-specific variable values for Fedora 44:
 
 ## Building Images
 
-### Using just (Recommended)
+### Using task.sh (Recommended)
 
 ```bash
 # Build server variant
-just build-server-qemu
+./scripts/task.sh build qemu server
 
 # Build workstation variant
-just build-workstation-qemu
+./scripts/task.sh build qemu workstation
 ```
 
 ### Using Packer Directly

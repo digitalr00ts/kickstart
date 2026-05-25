@@ -52,10 +52,10 @@ First, build the Fedora images with Packer:
 
 ```bash
 # Build server variant
-just build-server-qemu
+./scripts/task.sh build qemu server
 
 # Build workstation variant
-just build-workstation-qemu
+./scripts/task.sh build qemu workstation
 ```
 
 This creates:

@@ -145,7 +145,7 @@ pip install ansible-lint black isort detect-secrets
 
    # Validate Packer
 
-  just validate
+  ./scripts/task.sh validate
 
 ## Test Ansible
 
@@ -176,14 +176,14 @@ pip install ansible-lint black isort detect-secrets
 ksvalidator http/ks-server.cfg
 
 # Test with a build (recommended)
-just build-server-qemu
+./scripts/task.sh build qemu server
 ```
 
 #### Test Packer Changes
 
 ```bash
 # Validate templates
-just validate
+./scripts/task.sh validate
 
 # Format check
 packer fmt -check packer/
@@ -192,7 +192,7 @@ packer fmt -check packer/
 packer fmt -recursive packer/
 
 # Test build
-just build-server-qemu
+./scripts/task.sh build qemu server
 ```
 
 #### Test Ansible Changes
@@ -206,7 +206,7 @@ ansible-lint ansible/playbook-server.yml
 
 # Test with local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collection
-just build-server-qemu
+./scripts/task.sh build qemu server
 ```
 
 #### Test Scripts

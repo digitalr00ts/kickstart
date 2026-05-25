@@ -19,10 +19,10 @@ The testing infrastructure validates that built images:
 
 ```bash
 # Test server image
-just test-qemu VARIANT=server
+./scripts/task.sh test qemu server
 
 # Test workstation image
-just test-qemu VARIANT=workstation
+./scripts/task.sh test qemu workstation
 
 # Or use the test script directly
 ./tests/test-qemu.sh server
@@ -33,10 +33,10 @@ just test-qemu VARIANT=workstation
 
 ```bash
 # Test server image
-just test-virtualbox VARIANT=server
+./scripts/task.sh test virtualbox server
 
 # Test workstation image
-just test-virtualbox VARIANT=workstation
+./scripts/task.sh test virtualbox workstation
 
 # Or use the test script directly
 ./tests/test-virtualbox.sh server
@@ -46,7 +46,7 @@ just test-virtualbox VARIANT=workstation
 ### Test All Platforms
 
 ```bash
-just test-all
+./scripts/task.sh test all server
 ```bash
 
 ## Test Scripts
@@ -189,7 +189,7 @@ virt-viewer fedora-44-test
 
 ```bash
 # 1. Build image (installs from GitHub)
-just build-server-qemu
+./scripts/task.sh build qemu server
 
 # 2. Test the build
 ./tests/test-qemu.sh server
@@ -208,7 +208,7 @@ export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
 ./tests/test-ansible-collection.sh
 
 # 3. Build with local collection
-just build-server-qemu
+./scripts/task.sh build qemu server
 
 # 4. Test the build
 ./tests/test-qemu.sh server
@@ -224,8 +224,8 @@ ssh -p 2222 root@localhost "check your changes here"
 vim /path/to/local/ansible-collection/roles/myrol/tasks/main.yml
 
 # 2. Quick rebuild (assumes ISO already cached)
-just clean
-just build-server-qemu
+./scripts/task.sh clean
+./scripts/task.sh build qemu server
 
 # 3. Test changes
 ./tests/test-qemu.sh server
@@ -353,10 +353,10 @@ Failed: 2
 # .gitlab-ci.yml or .github/workflows/build.yml
 test-images:
   script:
-    - just init
-    - just validate
-    - just build-server-qemu
-    - just test-qemu
+    - ./scripts/task.sh init
+    - ./scripts/task.sh validate
+    - ./scripts/task.sh build qemu server
+    - ./scripts/task.sh test qemu server
   artifacts:
     paths:
       - output/
@@ -372,16 +372,16 @@ test-images:
 set -e
 
 echo "==> Initializing"
-just init
+./scripts/task.sh init
 
 echo "==> Validating"
-just validate
+./scripts/task.sh validate
 
 echo "==> Building"
-just build-server-qemu
+./scripts/task.sh build qemu server
 
 echo "==> Testing"
-just test-qemu
+./scripts/task.sh test qemu server
 
 echo "==> All tests passed!"
 ```bash
@@ -414,7 +414,7 @@ du -sh output/
 
 ## Best Practices
 
-1. **Clean Environment**: Run `just clean` before important tests
+1. **Clean Environment**: Run `./scripts/task.sh clean` before important tests
 2. **Test Both Variants**: Always test both server and workstation
 3. **Test All Platforms**: If supporting multiple platforms, test all
 4. **Automated Tests**: Integrate tests into CI/CD
