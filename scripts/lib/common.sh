@@ -34,9 +34,14 @@ resolve_var_file() {
 
 setup_build_context() {
   GUEST_ARCH_OVERRIDE="${GUEST_ARCH:-}"
+  QEMU_DISPLAY_MODE_OVERRIDE="${QEMU_DISPLAY_MODE:-}"
   VAR_FILE="$(resolve_var_file)"
   [[ -z "${GUEST_ARCH_OVERRIDE}" || "${GUEST_ARCH_OVERRIDE}" == "x86_64" || "${GUEST_ARCH_OVERRIDE}" == "aarch64" ]] || {
     echo "Error: GUEST_ARCH must be x86_64 or aarch64."
+    exit 1
+  }
+  [[ -z "${QEMU_DISPLAY_MODE_OVERRIDE}" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "auto" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "none" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "gtk" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "cocoa" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "sdl" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "vnc" ]] || {
+    echo "Error: QEMU_DISPLAY_MODE must be auto, none, gtk, cocoa, sdl, or vnc."
     exit 1
   }
 }
@@ -44,6 +49,7 @@ setup_build_context() {
 print_build_context() {
   echo "==> Guest architecture${GUEST_ARCH_OVERRIDE:+ override}: ${GUEST_ARCH_OVERRIDE:-auto (HCL resolves from host hints/defaults)}"
   echo "==> Host hints: auto (HCL resolves from HOSTTYPE/OSTYPE or safe defaults)"
+  echo "==> QEMU display mode${QEMU_DISPLAY_MODE_OVERRIDE:+ override}: ${QEMU_DISPLAY_MODE_OVERRIDE:-auto}"
   echo "==> Vars file: ${VAR_FILE}"
 }
 
@@ -53,4 +59,5 @@ packer_common_args() {
     "-var=host_arch=$(uname -m)" \
     "-var=host_os=$(uname -s)"
   [[ -n "${GUEST_ARCH_OVERRIDE}" ]] && printf '%s ' "-var=guest_arch=${GUEST_ARCH_OVERRIDE}"
+  [[ -n "${QEMU_DISPLAY_MODE_OVERRIDE}" ]] && printf '%s ' "-var=qemu_display_mode=${QEMU_DISPLAY_MODE_OVERRIDE}"
 }

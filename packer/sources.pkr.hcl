@@ -52,6 +52,21 @@ locals {
   qemu_accelerator       = local.host_defaults_for_hint.accelerator
   aarch64_efi_code       = trimspace(var.aarch64_efi_firmware_code) != "" ? var.aarch64_efi_firmware_code : local.host_defaults_for_hint.aarch64_code_fd
   aarch64_efi_vars       = trimspace(var.aarch64_efi_firmware_vars) != "" ? var.aarch64_efi_firmware_vars : local.host_defaults_for_hint.aarch64_vars_fd
+  qemu_display_mode      = lower(trimspace(var.qemu_display_mode))
+  qemu_display_backend = local.qemu_display_mode != "auto" ? local.qemu_display_mode : (
+    local.host_os_hint == "macos" ? "cocoa" :
+    (local.host_os_hint == "linux" && local.guest_arch == "x86_64") ? "gtk" :
+    (local.host_os_hint == "linux" && local.guest_arch == "aarch64") ? "vnc" :
+    "none"
+  )
+  qemu_display_arg = lookup({
+    none  = "none"
+    gtk   = "gtk,gl=on"
+    cocoa = "cocoa"
+    sdl   = "sdl"
+    vnc   = "vnc=:0"
+  }, local.qemu_display_backend, "none")
+  qemu_display_args = var.headless ? [] : [["-display", local.qemu_display_arg]]
 }
 
 source "qemu" "fedora" {
@@ -76,10 +91,11 @@ source "qemu" "fedora" {
       ["-cpu", "host"],
     ],
     [
-      ["-chardev", "socket,id=serial0,path={{ .OutputDir }}/{{ .Name }}.console,server,nowait"],
-      ["-serial", "chardev:serial0"],
-      ["-device", "virtio-serial"],
-    ]
+      # ["-chardev", "socket,id=serial0,path={{ .OutputDir }}/{{ .Name }}.console,server,nowait"],
+      # ["-serial", "chardev:serial0"],
+      # ["-device", "virtio-serial"],
+    ],
+    local.qemu_display_args,
   )
 
   # Hardware Configuration
@@ -111,8 +127,10 @@ source "qemu" "fedora" {
   # Boot Configuration
   boot_wait = var.boot_wait
   boot_command = [
-    "<up>e<down><down><down><left><bs><bs><bs><bs><bs>",
-    "inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-base.cfg<leftCtrlOn>x<leftCtrlOff>",
+    "<up>e",
+    "<down><down><down><left><spacebar>",
+    # "<bs><bs><bs><bs><bs>",
+    "inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/${var.kickstart_file}<leftCtrlOn>x<leftCtrlOff>",
   ]
 
   shutdown_command = "sudo systemctl poweroff"

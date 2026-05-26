@@ -103,7 +103,7 @@ variable "ssh_timeout" {
 
 variable "boot_wait" {
   type        = string
-  default     = "3s"
+  default     = "5s"
   description = "Time to wait before typing boot command"
 }
 
@@ -113,8 +113,31 @@ variable "http_directory" {
   description = "Directory containing kickstart files"
 }
 
+variable "kickstart_file" {
+  type        = string
+  default     = "ks-base.cfg"
+  description = "Kickstart file"
+}
+
 variable "headless" {
   type        = bool
   default     = true
   description = "Whether to run the build in headless mode (default: true)"
+}
+
+variable "qemu_display_mode" {
+  type        = string
+  default     = "auto"
+  description = "QEMU display backend when headless is false: auto, none, gtk, cocoa, sdl, or vnc."
+  validation {
+    condition = contains([
+      "auto",
+      "none",
+      "gtk",
+      "cocoa",
+      "sdl",
+      "vnc",
+    ], lower(trimspace(var.qemu_display_mode)))
+    error_message = "QEMU display mode must be one of: auto, none, gtk, cocoa, sdl, or vnc."
+  }
 }

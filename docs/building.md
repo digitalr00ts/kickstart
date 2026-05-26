@@ -378,13 +378,19 @@ To support multiple Fedora versions:
 
 ### Headless vs. GUI Builds
 
-By default, builds run headless. To watch the installation:
+By default, builds run headless.
 
-Edit `packer/sources.pkr.hcl` and change:
+To watch installation output locally, keep templates unchanged and pass runtime variables:
 
-```hcl
-headless = false  # Shows VM window during build
+```bash
+# Preferred: host/arch-aware display backend
+packer build -var headless=false -var qemu_display_mode=auto ...
+
+# Explicit fallback for hosts where GTK is unavailable (common on qemu-system-aarch64)
+packer build -var headless=false -var qemu_display_mode=vnc ...
 ```
+
+Supported display values are `auto`, `none`, `gtk`, `cocoa`, `sdl`, and `vnc`.
 
 ### Parallel Builds
 

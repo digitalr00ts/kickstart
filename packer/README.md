@@ -23,10 +23,10 @@ Declares all input variables used across the templates:
 
 - **ISO metadata**: `fedora_iso_metadata` map keyed by architecture and variant
 - **Build parameters**: `variant`, `fedora_version`, `disk_size`, `memory`, `cpus`
-- **Architecture parameters**: `guest_arch` (override), host uname detection (`host_uname_m`, `host_uname_s`)
+- **Architecture parameters**: `guest_arch` (override), host hint detection (`host_arch`, `host_os`)
 - **EFI parameters (ARM64)**: `aarch64_efi_firmware_code`, `aarch64_efi_firmware_vars`
 - **SSH settings**: `ssh_username`, `ssh_password`, `ssh_timeout`
-- **Other settings**: `output_directory`, `http_directory`, `boot_wait`
+- **Other settings**: `output_directory`, `http_directory`, `boot_wait`, `headless`, `qemu_display_mode`
 
 ### sources.pkr.hcl
 
@@ -51,7 +51,7 @@ Defines builder sources for different virtualization platforms:
 The QEMU source applies a consistent precedence model for host/arch-dependent values:
 
 1. `guest_arch` override when set
-2. Host-derived defaults from `host_uname_m` and `host_uname_s`
+2. Host-derived defaults from `host_arch` and `host_os`
 
 Defaults resolved from host hint:
 
@@ -61,6 +61,13 @@ Defaults resolved from host hint:
 
 `qemu_binary` is derived as `qemu-system-${guest_arch}`.
 EFI firmware paths can still be overridden via `aarch64_efi_firmware_code` and `aarch64_efi_firmware_vars`.
+
+Display backend selection when `headless=false` is controlled by `qemu_display_mode`:
+
+- `auto`: host/arch-aware default (`cocoa` on macOS, `gtk` on Linux x86_64, `vnc` on Linux aarch64)
+- `none`, `gtk`, `cocoa`, `sdl`, `vnc`: explicit backend override
+
+For `qemu-system-aarch64`, `gtk` may not be available depending on the host package build.
 
 ### build.pkr.hcl
 
@@ -212,6 +219,12 @@ packer build -var cpus=4 ...
 
 # Override guest architecture explicitly
 packer build -var guest_arch=aarch64 ...
+
+# Enable GUI with host-aware backend selection
+packer build -var headless=false -var qemu_display_mode=auto ...
+
+# Force a portable GUI fallback when GTK/Cocoa is unavailable
+packer build -var headless=false -var qemu_display_mode=vnc ...
 ```
 
 ### Debug Mode

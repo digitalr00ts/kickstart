@@ -104,7 +104,8 @@ Timeout waiting for SSH
 **Causes & Solutions:**
 
 1. **Kickstart failed to complete**
-   - Check QEMU console output (set `headless = false`)
+   - Check QEMU console output with `-var headless=false -var qemu_display_mode=auto`
+   - If auto selects an unsupported backend, retry with `-var qemu_display_mode=vnc`
    - Review kickstart syntax errors
    - Verify network configuration in kickstart
 
@@ -579,7 +580,7 @@ If you can't resolve an issue:
 
 1. **Check Logs:**
    - Packer output
-   - VM console (set `headless = false`)
+   - VM console (`-var headless=false -var qemu_display_mode=auto`)
    - System logs in VM: `/var/log/anaconda/`
 
 2. **Search Issues:**

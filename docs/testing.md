@@ -145,8 +145,18 @@ qemu-system-x86_64 \
   -drive file=output/server/fedora-44,format=qcow2 \
   -net nic,model=virtio \
   -net user,hostfwd=tcp::2222-:22 \
-  -display gtk
+  -display none
 ```bash
+
+For GUI debugging, use a backend supported by your host QEMU build:
+
+```bash
+# macOS
+qemu-system-aarch64 ... -display cocoa
+
+# Portable fallback
+qemu-system-aarch64 ... -display vnc=:0
+```
 
 Access via SSH:
 

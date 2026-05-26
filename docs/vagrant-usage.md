@@ -40,7 +40,7 @@ Optimized for desktop environments:
 
 - **Memory**: 4GB RAM
 - **CPUs**: 4 cores
-- **Display**: GTK with OpenGL acceleration
+- **Display**: GUI enabled (backend depends on host QEMU support)
 - **SSH Port**: 2223
 - **Use Case**: GUI applications, desktop testing
 
@@ -232,7 +232,7 @@ Vagrant.configure("2") do |config|
       qemu.memory = 4096
       qemu.cpus = 4
       qemu.ssh_port = 2223
-      qemu.extra_qemu_args = ["-display", "gtk,gl=on"]
+      qemu.extra_qemu_args = ["-display", "vnc=:0"]
     end
   end
 end
@@ -300,11 +300,12 @@ qemu.extra_qemu_args = [
   "-enable-kvm",
   "-cpu", "host",
   "-vga", "virtio",
-  "-display", "gtk,gl=on"
+  "-display", "vnc=:0"
 ]
 ```
 
-- Try alternative displays: `sdl`, `gtk`, `vnc`
+- If `vnc=:0` is not suitable for your environment, try: `cocoa`, `sdl`, or `none`
+- `gtk` may be unavailable on some `qemu-system-aarch64` builds
 
 ### Box Already Exists
 
