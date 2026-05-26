@@ -1,0 +1,20 @@
+---
+- name: Verify image behavior
+  hosts: molecule
+  gather_facts: true
+  become: true
+  vars:
+    molecule_policy_mode: "{{ lookup('env', 'MOLECULE_POLICY_MODE') | default('strict', true) }}"
+    lvm_expected: "{{ (lookup('env', 'MOLECULE_LVM_EXPECTED') | default('false', true)) | bool }}"
+    network_required: "{{ (lookup('env', 'MOLECULE_NETWORK_REQUIRED') | default('false', true)) | bool }}"
+  pre_tasks:
+    - name: Compute strict policy toggles
+      ansible.builtin.set_fact:
+        strict_services: "{{ molecule_policy_mode == 'strict' }}"
+        strict_lvm: >-
+          {{ molecule_policy_mode == 'strict' or (molecule_policy_mode == 'mixed' and lvm_expected | bool) }}
+        strict_network: >-
+          {{ molecule_policy_mode == 'strict' or (molecule_policy_mode == 'mixed' and network_required | bool) }}
+  tasks:
+    - name: Include common verify tasks
+      ansible.builtin.include_tasks: ../shared/verify-common.yml

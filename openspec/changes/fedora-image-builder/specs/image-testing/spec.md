@@ -1,34 +1,34 @@
 ## ADDED Requirements
 
-### Requirement: Provide common validation functions
-The system SHALL provide a shared library of validation functions usable by all platform-specific tests.
+### Requirement: Provide Molecule verification tasks
+The system SHALL provide shared Molecule verify tasks usable by all platform-specific scenarios.
 
-#### Scenario: Validation library is sourceable
-- **WHEN** test scripts source tests/validation.sh
-- **THEN** common validation functions are available
+#### Scenario: Shared verify tasks are included
+- **WHEN** Molecule verify executes for a platform scenario
+- **THEN** shared verification tasks are included and run on the test instance
 
-#### Scenario: Boot validation function
-- **WHEN** check_boot function is called
-- **THEN** it verifies VM successfully boots and reaches login prompt
+#### Scenario: Boot validation task
+- **WHEN** verify boot task runs
+- **THEN** it verifies VM successfully boots and reaches command execution
 
-#### Scenario: SSH connectivity validation
-- **WHEN** check_ssh function is called
+#### Scenario: SSH connectivity validation task
+- **WHEN** verify SSH task runs
 - **THEN** it verifies SSH access to VM is functional
 
-#### Scenario: Package installation validation
-- **WHEN** check_packages function is called with package list
+#### Scenario: Package installation validation task
+- **WHEN** verify package assertion task runs with variant-specific package list
 - **THEN** it verifies specified packages are installed
 
 ### Requirement: Test QEMU images
 The system SHALL provide automated testing for QEMU-built images.
 
-#### Scenario: QEMU test script launches VM
-- **WHEN** tests/test-qemu.sh is executed with image path
-- **THEN** VM is launched using qemu-system-x86_64
+#### Scenario: QEMU Molecule create launches VM
+- **WHEN** molecule scenario `qemu-server` or `qemu-workstation` runs create
+- **THEN** VM is launched using the host-selected qemu-system binary
 
-#### Scenario: QEMU test waits for boot
+#### Scenario: QEMU scenario waits for boot
 - **WHEN** QEMU VM is started
-- **THEN** test script waits for SSH to become available
+- **THEN** Molecule converge or verify waits for SSH availability
 
 #### Scenario: QEMU test validates image format
 - **WHEN** QEMU tests run
@@ -37,11 +37,11 @@ The system SHALL provide automated testing for QEMU-built images.
 ### Requirement: Test VirtualBox images
 The system SHALL provide automated testing for VirtualBox-built images.
 
-#### Scenario: VirtualBox test script imports image
-- **WHEN** tests/test-virtualbox.sh is executed with image path
+#### Scenario: VirtualBox Molecule create imports image
+- **WHEN** molecule scenario `virtualbox-server` or `virtualbox-workstation` runs create
 - **THEN** image is imported into VirtualBox using VBoxManage
 
-#### Scenario: VirtualBox test starts VM
+#### Scenario: VirtualBox Molecule create starts VM
 - **WHEN** VirtualBox image is imported
 - **THEN** VM is started using VBoxManage startvm
 
@@ -75,7 +75,7 @@ The system SHALL verify that Ansible provisioning completed successfully.
 The system SHALL produce test result reports for each validation run.
 
 #### Scenario: Test report includes pass/fail status
-- **WHEN** test script completes
+- **WHEN** Molecule scenario completes
 - **THEN** report shows which checks passed and which failed
 
 #### Scenario: Test report includes VM details
@@ -86,18 +86,18 @@ The system SHALL produce test result reports for each validation run.
 The system SHALL cleanly shutdown test VMs after validation.
 
 #### Scenario: QEMU VM shutdown
-- **WHEN** QEMU tests complete
-- **THEN** VM is shutdown gracefully via ACPI
+- **WHEN** QEMU scenario destroy runs
+- **THEN** VM is shutdown and cleanup steps remove runtime PID artifacts
 
 #### Scenario: VirtualBox VM shutdown and cleanup
-- **WHEN** VirtualBox tests complete
+- **WHEN** VirtualBox scenario destroy runs
 - **THEN** VM is stopped and unregistered from VirtualBox
 
 ### Requirement: Provide Ansible collection testing workflow
 The system SHALL enable testing Ansible collection changes without full image rebuild.
 
 #### Scenario: Test script spins up existing image
-- **WHEN** tests/test-ansible-collection.sh runs
+- **WHEN** scripts/task.sh test ansible-collection runs
 - **THEN** existing image is booted without rebuild
 
 #### Scenario: Test script applies playbook with local collection

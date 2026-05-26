@@ -1,6 +1,6 @@
 ## 1. Project Structure and Foundation
 
-- [x] 1.1 Create directory structure (http/, packer/, ansible/, scripts/, tests/, docs/)
+- [x] 1.1 Create directory structure (http/, packer/, ansible/, scripts/, molecule/, docs/)
 - [x] 1.2 Create .gitignore to exclude build artifacts (.packer_cache, output/, *.box, *.qcow2, *.vdi)
 - [x] 1.3 Create README.md with project overview and quick start guide
 - [x] 1.4 Verify system dependencies (Packer, QEMU, VirtualBox, Ansible, Make)
@@ -90,19 +90,19 @@
 
 ## 10. Testing Infrastructure
 
-- [x] 10.1 Create tests/validation.sh with common validation functions (check_boot, check_ssh, check_packages, check_partitions)
-- [x] 10.2 Create tests/test-qemu.sh for QEMU image testing
-- [x] 10.3 Add QEMU VM launch and SSH wait logic to test-qemu.sh
-- [x] 10.4 Add validation function calls to test-qemu.sh
-- [x] 10.5 Add graceful shutdown logic to test-qemu.sh
-- [x] 10.6 Create tests/test-virtualbox.sh for VirtualBox image testing
-- [x] 10.7 Add VBoxManage import and start logic to test-virtualbox.sh
-- [x] 10.8 Add validation function calls to test-virtualbox.sh
-- [x] 10.9 Add graceful shutdown and cleanup to test-virtualbox.sh
-- [x] 10.10 Create tests/test-ansible-collection.sh for collection testing workflow
-- [x] 10.11 Add make test-qemu target to Makefile
-- [x] 10.12 Add make test-virtualbox target to Makefile
-- [x] 10.13 Add make test-all target to Makefile
+- [x] 10.1 Create Molecule scenarios for qemu-server and qemu-workstation
+- [x] 10.2 Create Molecule scenarios for virtualbox-server and virtualbox-workstation
+- [x] 10.3 Implement shared Molecule create tasks for QEMU and VirtualBox lifecycle
+- [x] 10.4 Implement shared Molecule verify tasks for boot, SSH, packages, services, filesystem, network, and package manager checks
+- [x] 10.5 Implement shared Molecule destroy tasks for VM cleanup
+- [x] 10.6 Remove standalone QEMU wrapper script
+- [x] 10.7 Remove standalone VirtualBox wrapper script
+- [x] 10.8 Route scripts/task.sh test commands to Molecule scenarios
+- [x] 10.9 Retire legacy shell validation path
+- [x] 10.10 Add task runner ansible-collection test command path
+- [x] 10.11 Add task runner test-qemu command path
+- [x] 10.12 Add task runner test-virtualbox command path
+- [x] 10.13 Add task runner test-all command path
 - [x] 10.14 Make all test scripts executable
 - [ ] 10.15 Run tests against existing builds to validate test scripts (blocked by ISO checksums)
 

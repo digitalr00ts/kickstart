@@ -7,8 +7,8 @@ There is currently no automated infrastructure for building and testing Fedora w
 - Minimal kickstart configurations for Fedora 43 installation (server and workstation variants)
 - Packer templates supporting QEMU and VirtualBox builders
 - Ansible provisioning integration using the drts01 collection (supports both local development and GitHub sources)
-- Automated testing infrastructure for image validation
-- Build automation via Makefile for common operations
+- Molecule-based VM lifecycle and image validation for QEMU and VirtualBox
+- Build automation via scripts/task.sh for common operations
 - Optional Vagrant box post-processing for development environments
 - Comprehensive documentation for building, testing, and troubleshooting
 - Version-aware structure to support future Fedora releases
@@ -19,8 +19,8 @@ There is currently no automated infrastructure for building and testing Fedora w
 - `kickstart-generation`: Minimal kickstart file templates for Fedora installation with base configuration (network, auth, packages)
 - `packer-builds`: Multi-platform image building orchestration for QEMU and VirtualBox
 - `ansible-provisioning`: Post-installation configuration using Ansible collections with dual-source support
-- `image-testing`: Automated validation of built images including boot, SSH, and configuration checks
-- `build-automation`: Makefile-based workflow for building and testing all variants
+- `image-testing`: Molecule-managed lifecycle and automated validation of built images including boot, SSH, and configuration checks
+- `build-automation`: task.sh-based workflow for building and testing all variants
 - `vagrant-packaging`: Optional post-processing to create Vagrant boxes from built images
 
 ### Modified Capabilities
@@ -29,7 +29,7 @@ There is currently no automated infrastructure for building and testing Fedora w
 ## Impact
 
 **New Components:**
-- Directory structure: http/, packer/, ansible/, scripts/, tests/, docs/
+- Directory structure: http/, packer/, ansible/, scripts/, molecule/, docs/
 - 30+ new files including kickstart configs, Packer templates, Ansible playbooks, test scripts
 - Build artifacts: QEMU qcow2 images, VirtualBox images, optional Vagrant boxes
 

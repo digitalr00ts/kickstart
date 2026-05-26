@@ -214,7 +214,7 @@ The build will use your local collection instead of downloading from GitHub.
 
    ```bash
    ./scripts/task.sh build qemu server
-   ./tests/test-qemu.sh server
+   ./scripts/task.sh test qemu server
    ```
 
 ### Collection Requirements

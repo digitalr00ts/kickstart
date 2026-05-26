@@ -24,9 +24,9 @@ The testing infrastructure validates that built images:
 # Test workstation image
 ./scripts/task.sh test qemu workstation
 
-# Or use the test script directly
-./tests/test-qemu.sh server
-./tests/test-qemu.sh workstation
+# Or run Molecule scenarios directly
+molecule test -s qemu-server
+molecule test -s qemu-workstation
 ```bash
 
 ### Test VirtualBox Images
@@ -38,9 +38,9 @@ The testing infrastructure validates that built images:
 # Test workstation image
 ./scripts/task.sh test virtualbox workstation
 
-# Or use the test script directly
-./tests/test-virtualbox.sh server
-./tests/test-virtualbox.sh workstation
+# Or run Molecule scenarios directly
+molecule test -s virtualbox-server
+molecule test -s virtualbox-workstation
 ```bash
 
 ### Test All Platforms
@@ -49,70 +49,72 @@ The testing infrastructure validates that built images:
 ./scripts/task.sh test all server
 ```bash
 
-## Test Scripts
+## Molecule Test Scenarios
 
-### validation.sh
+Image lifecycle and validation are now managed by Molecule delegated scenarios.
 
-Common validation functions used by all test scripts:
+### Scenario map
 
-**Functions:**
+- `qemu-server` - boots a server qcow2 image in QEMU and verifies baseline checks
+- `qemu-workstation` - boots a workstation qcow2 image in QEMU and verifies desktop checks
+- `virtualbox-server` - imports server OVF into VirtualBox and verifies baseline checks
+- `virtualbox-workstation` - imports workstation OVF into VirtualBox and verifies desktop checks
 
-- `wait_for_ssh()` - Wait for SSH to become available
-- `check_boot()` - Verify system booted successfully
-- `check_ssh()` - Test SSH connectivity
-- `check_packages()` - Verify required packages installed
-- `check_partitions()` - Check disk partitioning
-- `check_lvm()` - Verify LVM configuration
-- `check_python()` - Ensure Python is available
-- `check_services()` - Check systemd services
-- `check_network()` - Test network connectivity
-- `check_dnf()` - Verify package manager works
-- `get_system_info()` - Display system information
+### Strict policy modes
 
-### test-qemu.sh
+Set `MOLECULE_POLICY_MODE` before running tests:
 
-Tests QEMU-built images by:
+- `strict` - fail on all checks (default)
+- `mixed` - enforce core checks; gate LVM/network conditionally
+- `parity` - keep warning-style checks non-fatal
 
-1. Launching VM with QEMU
-2. Forwarding SSH port (default: 2222)
-3. Waiting for SSH availability
-4. Running validation checks
-5. Cleaning up VM on exit
+### task.sh test qemu
+
+Runs the QEMU Molecule scenario by:
+
+1. Running `molecule test -s qemu-<variant>`
+2. Creating and destroying VM lifecycle in scenario `create`/`destroy`
+3. Executing checks in scenario `verify`
 
 **Usage:**
 
 ```bash
-./tests/test-qemu.sh [variant]
+./scripts/task.sh test qemu [variant]
 
 # Examples
-./tests/test-qemu.sh server
-./tests/test-qemu.sh workstation
+./scripts/task.sh test qemu server
+./scripts/task.sh test qemu workstation
 
-# With custom SSH port
-SSH_PORT=3333 ./tests/test-qemu.sh server
+# With strict checks
+MOLECULE_POLICY_MODE=strict ./scripts/task.sh test qemu server
+
+# Downgrade to mixed checks
+MOLECULE_POLICY_MODE=mixed ./scripts/task.sh test qemu server
+
+# Downgrade to parity checks
+MOLECULE_POLICY_MODE=parity ./scripts/task.sh test qemu server
 ```bash
 
-### test-virtualbox.sh
+### task.sh test virtualbox
 
-Tests VirtualBox-built images by:
+Runs the VirtualBox Molecule scenario by:
 
-1. Importing OVF into VirtualBox
-2. Configuring port forwarding (default: 2223)
-3. Starting VM headless
-4. Running validation checks
-5. Removing test VM on exit
+1. Running `molecule test -s virtualbox-<variant>`
+2. Importing and starting VM in scenario `create`
+3. Executing checks in scenario `verify`
+4. Powering off and unregistering VM in scenario `destroy`
 
 **Usage:**
 
 ```bash
-./tests/test-virtualbox.sh [variant]
+./scripts/task.sh test virtualbox [variant]
 
 # Examples
-./tests/test-virtualbox.sh server
-./tests/test-virtualbox.sh workstation
+./scripts/task.sh test virtualbox server
+./scripts/task.sh test virtualbox workstation
 ```bash
 
-### test-ansible-collection.sh
+### task.sh test ansible-collection
 
 Tests Ansible collection integration:
 
@@ -125,11 +127,11 @@ Tests Ansible collection integration:
 **Usage:**
 
 ```bash
-./tests/test-ansible-collection.sh
+./scripts/task.sh test ansible-collection
 
 # With local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/collections
-./tests/test-ansible-collection.sh
+./scripts/task.sh test ansible-collection
 ```bash
 
 ## Manual Testing
@@ -192,7 +194,7 @@ virt-viewer fedora-44-test
 ./scripts/task.sh build qemu server
 
 # 2. Test the build
-./tests/test-qemu.sh server
+./scripts/task.sh test qemu server
 
 # 3. Verify Ansible provisioning worked
 ssh -p 2222 root@localhost "rpm -qa | grep -i <expected-package>"
@@ -205,13 +207,13 @@ ssh -p 2222 root@localhost "rpm -qa | grep -i <expected-package>"
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
 
 # 2. Verify collection structure
-./tests/test-ansible-collection.sh
+./scripts/task.sh test ansible-collection
 
 # 3. Build with local collection
 ./scripts/task.sh build qemu server
 
 # 4. Test the build
-./tests/test-qemu.sh server
+./scripts/task.sh test qemu server
 
 # 5. Verify your local changes were applied
 ssh -p 2222 root@localhost "check your changes here"
@@ -228,7 +230,7 @@ vim /path/to/local/ansible-collection/roles/myrol/tasks/main.yml
 ./scripts/task.sh build qemu server
 
 # 3. Test changes
-./tests/test-qemu.sh server
+./scripts/task.sh test qemu server
 ```bash
 
 ## Validation Checks
@@ -259,43 +261,43 @@ All server checks plus:
 ### Successful Test Output
 
 ```bash
-========================================
-Testing QEMU Image: Fedora 44 server
-========================================
-ℹ Image found: output/server/fedora-44
-ℹ Starting QEMU VM...
-✓ QEMU VM started (PID: 12345)
-ℹ Waiting for SSH on localhost:2222...
-✓ SSH is available
-✓ System is running
-✓ SSH access working
-✓ Python is installed: Python 3.11.5
-✓ DNF is working
-✓ Root partition is mounted
-✓ LVM is configured
-✓ Network connectivity is working
-✓ Package sudo is installed
-✓ Package curl is installed
+INFO     qemu-server scenario test matrix: dependency, create, converge, verify, destroy
+INFO     Performing prerun with role_name_check=0...
+INFO     Running qemu-server > create
+PLAY [Prepare molecule test instance] ****************************************
 ...
-========================================
-Test Summary
-========================================
-Passed: 15
-Failed: 0
-========================================
+PLAY RECAP *******************************************************************
+localhost                  : ok=12   changed=4    unreachable=0    failed=0
+
+INFO     Running qemu-server > verify
+PLAY [Verify image behavior] *************************************************
+TASK [Assert required packages are installed] ********************************
+ok: [instance] => (item=sudo)
+ok: [instance] => (item=curl)
+...
+PLAY RECAP *******************************************************************
+instance                   : ok=24   changed=0    unreachable=0    failed=0
+
+INFO     Running qemu-server > destroy
+INFO     Scenario completed successfully
 ```bash
 
 ### Failed Test Output
 
 ```bash
-✗ Package firefox is not installed
-✗ SSH access failed
-========================================
-Test Summary
-========================================
-Passed: 13
-Failed: 2
-========================================
+INFO     Running qemu-workstation > verify
+TASK [Assert required packages are installed] ********************************
+failed: [instance] (item=firefox) =>
+  msg: Required package missing: firefox
+
+TASK [Assert external network in strict mode] ********************************
+fatal: [instance]: FAILED! =>
+  msg: External network probe failed in strict mode
+
+PLAY RECAP *******************************************************************
+instance                   : ok=18   changed=0    unreachable=0    failed=2
+
+ERROR    Scenario 'qemu-workstation' failed
 ```bash
 
 ## Troubleshooting Tests
@@ -309,7 +311,7 @@ Failed: 2
 - Verify VM actually booted (check QEMU process is running)
 - Check SSH port is not already in use: `lsof -i :2222`
 - Verify root password is still "packer" in kickstart
-- Increase wait time in test script
+- Increase wait time in `molecule/shared/verify-common.yml`
 - Try connecting manually: `ssh -p 2222 root@localhost`
 
 ### VM Won't Start
@@ -322,7 +324,7 @@ Failed: 2
 - Verify sufficient RAM available on host
 - For QEMU: Check KVM is available: `lsmod | grep kvm`
 - For VirtualBox: Check VBoxManage is in PATH
-- Review test script output for specific errors
+- Review Molecule output for create/verify step errors
 
 ### Package Checks Fail
 
@@ -341,7 +343,7 @@ Failed: 2
 
 **Solutions:**
 
-- Use different port: `SSH_PORT=3333 ./tests/test-qemu.sh server`
+- Change `VM_SSH_PORT` in scenario config, for example `molecule/qemu-server/molecule.yml`
 - Find and kill process using port: `lsof -ti :2222 | xargs kill`
 - Wait for previous test cleanup to complete
 
@@ -392,7 +394,7 @@ echo "==> All tests passed!"
 
 ```bash
 # Time from VM start to SSH available
-time ./tests/test-qemu.sh server | grep "SSH is available"
+time ./scripts/task.sh test qemu server
 ```bash
 
 ### Resource Usage Test
@@ -400,7 +402,7 @@ time ./tests/test-qemu.sh server | grep "SSH is available"
 ```bash
 # Monitor resource usage during test
 vmstat 1 &
-./tests/test-qemu.sh server
+./scripts/task.sh test qemu server
 killall vmstat
 ```bash
 

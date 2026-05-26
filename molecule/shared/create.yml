@@ -1,0 +1,31 @@
+---
+- name: Prepare molecule test instance
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars:
+    fedora_version: '{{ lookup(''env'', ''FEDORA_VERSION'') | default(''44'', true) }}'
+    molecule_policy_mode: '{{ lookup(''env'', ''MOLECULE_POLICY_MODE'') | default(''strict'', true) }}'
+    lvm_expected: '{{ (lookup(''env'', ''MOLECULE_LVM_EXPECTED'') | default(''false'', true)) | bool }}'
+    network_required: '{{ (lookup(''env'', ''MOLECULE_NETWORK_REQUIRED'') | default(''false'', true)) | bool }}'
+    verify_retries: '{{ lookup(''env'', ''MOLECULE_VERIFY_RETRIES'') | default(''1'', true) | int }}'
+    vm_platform: '{{ lookup(''env'', ''VM_PLATFORM'') }}'
+    variant: '{{ lookup(''env'', ''VM_VARIANT'') }}'
+    ssh_port: '{{ lookup(''env'', ''VM_SSH_PORT'') | int }}'
+  tasks:
+    - name: Validate strict policy mode
+      ansible.builtin.assert:
+        that:
+          - molecule_policy_mode in ['parity', 'mixed', 'strict']
+        fail_msg: 'Invalid MOLECULE_POLICY_MODE: {{ molecule_policy_mode }}'
+
+    - name: Validate platform and variant values
+      ansible.builtin.assert:
+        that:
+          - vm_platform in ['qemu', 'virtualbox']
+          - variant in ['server', 'workstation']
+          - ssh_port > 0
+        fail_msg: Scenario VM vars are invalid
+
+    - name: Include shared create tasks
+      ansible.builtin.include_tasks: ../shared/instance-create.yml

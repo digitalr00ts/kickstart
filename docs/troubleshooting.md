@@ -499,8 +499,9 @@ Address already in use
 **Solution:**
 
 ```bash
-# Use different port
-SSH_PORT=3333 ./tests/test-qemu.sh server
+# Change VM_SSH_PORT in the scenario (for example molecule/qemu-server/molecule.yml)
+# then rerun test
+./scripts/task.sh test qemu server
 
 # Or find and kill process
 lsof -ti :2222 | xargs kill -9
@@ -511,10 +512,11 @@ lsof -ti :2222 | xargs kill -9
 **Cause:** VM taking too long to boot.
 
 **Solution:**
-Edit test script and increase timeout:
+Adjust wait and retries in Molecule verify tasks and rerun:
 
 ```bash
-wait_for_ssh "localhost" "${SSH_PORT}" "${SSH_USER}" 120  # 120 attempts
+# Edit molecule/shared/verify-common.yml and increase wait_for_connection timeout
+./scripts/task.sh test qemu server
 ```bash
 
 ## Network Issues

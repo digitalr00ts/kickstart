@@ -113,7 +113,7 @@ kickstart/
 │   ├── playbook-server.yml # Server provisioning playbook
 │   └── playbook-workstation.yml  # Workstation provisioning playbook
 ├── scripts/                 # Utility scripts
-├── tests/                   # Testing infrastructure
+├── molecule/                # Molecule scenarios and shared verify tasks
 └── docs/                    # Documentation
 ```text
 
@@ -237,7 +237,7 @@ See [docs/kickstart-reference.md](docs/kickstart-reference.md#security-considera
 - ✅ Packer templates (QEMU ready, VirtualBox prepared)
 - ✅ Ansible integration (local + GitHub collection support)
 - ✅ Build automation (scripts/task.sh dispatcher with shared helpers)
-- ✅ Testing infrastructure (validation scripts)
+- ✅ Testing infrastructure (Molecule scenarios and verify tasks)
 - ✅ Complete documentation
 
 ### Ready for Use

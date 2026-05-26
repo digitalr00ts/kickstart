@@ -1,0 +1,164 @@
+---
+- name: Wait for SSH access
+  ansible.builtin.wait_for_connection:
+    timeout: 180
+    delay: 5
+    sleep: 3
+
+- name: Verify system booted
+  ansible.builtin.command: uptime
+  register: uptime_check
+  changed_when: false
+
+- name: Assert uptime command succeeded
+  ansible.builtin.assert:
+    that:
+      - uptime_check.rc == 0
+    fail_msg: System did not boot correctly
+
+- name: Verify SSH identity
+  ansible.builtin.command: whoami
+  register: whoami_check
+  changed_when: false
+
+- name: Assert expected SSH user
+  ansible.builtin.assert:
+    that:
+      - whoami_check.stdout | trim == 'root'
+    fail_msg: SSH user is not root
+
+- name: Verify python3 is installed
+  ansible.builtin.command: python3 --version
+  register: python_check
+  changed_when: false
+
+- name: Assert python3 output
+  ansible.builtin.assert:
+    that:
+      - "'Python 3' in (python_check.stdout + python_check.stderr)"
+    fail_msg: python3 not found
+
+- name: Verify dnf is functional
+  ansible.builtin.command: dnf --version
+  register: dnf_check
+  changed_when: false
+
+- name: Assert dnf command succeeded
+  ansible.builtin.assert:
+    that:
+      - dnf_check.rc == 0
+    fail_msg: dnf command failed
+
+- name: Gather mount facts
+  ansible.builtin.setup:
+    gather_subset:
+      - mounts
+
+- name: Assert root filesystem mount exists
+  ansible.builtin.assert:
+    that:
+      - ansible_mounts | selectattr('mount', 'equalto', '/') | list | length > 0
+    fail_msg: Root filesystem mount not found
+
+- name: Probe LVM layout
+  ansible.builtin.command: lvs
+  register: lvm_probe
+  changed_when: false
+  failed_when: false
+
+- name: Assert LVM root volume in strict mode
+  ansible.builtin.assert:
+    that:
+      - lvm_probe.rc == 0
+      - "'root' in lvm_probe.stdout"
+    fail_msg: LVM validation failed in strict mode
+  when: strict_lvm | bool
+
+- name: Warn about LVM in non-strict mode
+  ansible.builtin.debug:
+    msg: LVM validation is advisory in current policy mode
+  when:
+    - not (strict_lvm | bool)
+    - lvm_probe.rc != 0 or 'root' not in lvm_probe.stdout
+
+- name: Probe external network
+  ansible.builtin.command: ping -c 1 8.8.8.8
+  register: network_probe
+  changed_when: false
+  failed_when: false
+
+- name: Assert external network in strict mode
+  ansible.builtin.assert:
+    that:
+      - network_probe.rc == 0
+    fail_msg: External network probe failed in strict mode
+  when: strict_network | bool
+
+- name: Warn about network in non-strict mode
+  ansible.builtin.debug:
+    msg: External network probe is advisory in current policy mode
+  when:
+    - not (strict_network | bool)
+    - network_probe.rc != 0
+
+- name: Gather service facts
+  ansible.builtin.service_facts: {}
+
+- name: Assert sshd service is active
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.services.get('sshd.service', {}).get('state', '') == 'running'
+    fail_msg: sshd service is not active
+
+- name: Assert chronyd service in strict mode
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.services.get('chronyd.service', {}).get('state', '') == 'running'
+    fail_msg: chronyd service is not active
+  when: strict_services | bool
+
+- name: Warn about chronyd in non-strict mode
+  ansible.builtin.debug:
+    msg: chronyd service check is advisory in current policy mode
+  when:
+    - not (strict_services | bool)
+    - ansible_facts.services.get('chronyd.service', {}).get('state', '') != 'running'
+
+- name: Gather package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Determine required package set
+  ansible.builtin.set_fact:
+    required_packages: >-
+      {{
+        ['sudo', 'curl', 'wget', 'git', 'vim', 'python3']
+        + (['firefox'] if variant == 'workstation' else [])
+      }}
+
+- name: Assert required packages are installed
+  ansible.builtin.assert:
+    that:
+      - item in ansible_facts.packages
+    fail_msg: 'Required package missing: {{ item }}'
+  loop: '{{ required_packages }}'
+
+- name: Collect system profile output
+  ansible.builtin.shell: |
+    echo 'OS Release:'
+    grep '^PRETTY_NAME=' /etc/os-release || true
+    echo
+    echo 'Kernel:'
+    uname -r
+    echo
+    echo 'Memory:'
+    free -h | grep '^Mem' || true
+    echo
+    echo 'Disk:'
+    df -h /
+  register: system_profile
+  changed_when: false
+
+- name: Show system profile
+  ansible.builtin.debug:
+    msg: '{{ system_profile.stdout_lines }}'

@@ -94,14 +94,14 @@ Current environment:
 - Provisioning logic shared across all builds
 - Easier to review and maintain
 
-### D5: Separate Testing Script per Platform
-**Decision:** Create platform-specific test scripts (test-qemu.sh, test-virtualbox.sh) with shared validation library.
+### D5: Molecule Delegated Scenarios for VM Testing
+**Decision:** Use platform-specific Molecule delegated scenarios with shared verify task includes.
 
 **Rationale:**
 - VM lifecycle management differs between QEMU and VirtualBox
-- Platform-specific features need different validation approaches
-- Shared validation.sh provides common test functions
-- Enables running platform tests independently
+- Molecule provides consistent create/converge/verify/destroy orchestration
+- Shared Ansible verify tasks replace shell validation functions
+- Enables running platform tests independently with strictness policy controls
 
 ### D6: Makefile for Build Automation
 **Decision:** Use GNU Make as the build automation interface.

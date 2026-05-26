@@ -1,0 +1,12 @@
+---
+- name: Destroy molecule test instance
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars:
+    fedora_version: "{{ lookup('env', 'FEDORA_VERSION') | default('44', true) }}"
+    vm_platform: "{{ lookup('env', 'VM_PLATFORM') }}"
+    variant: "{{ lookup('env', 'VM_VARIANT') }}"
+  tasks:
+    - name: Include shared destroy tasks
+      ansible.builtin.include_tasks: ../shared/instance-destroy.yml

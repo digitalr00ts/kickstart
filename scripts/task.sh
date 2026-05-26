@@ -24,7 +24,7 @@ Usage:
   scripts/task.sh init
   scripts/task.sh validate
   scripts/task.sh build <qemu|virtualbox|all> [server|workstation|all]
-  scripts/task.sh test <qemu|virtualbox|all> [server|workstation|all]
+  scripts/task.sh test <qemu|virtualbox|all|ansible-collection> [server|workstation|all]
   scripts/task.sh clean
   scripts/task.sh status
 
@@ -32,6 +32,7 @@ Examples:
   scripts/task.sh build qemu server
   scripts/task.sh build all
   scripts/task.sh test qemu workstation
+  scripts/task.sh test ansible-collection
 EOF
 }
 
@@ -126,27 +127,75 @@ run_build() {
 
 test_qemu() {
   local variant="$1"
+  local policy_mode="${MOLECULE_POLICY_MODE:-strict}"
 
-  [[ -x "tests/test-qemu.sh" ]] || die "tests/test-qemu.sh not found or not executable"
-
-  echo "==> Testing QEMU images..."
-  ./tests/test-qemu.sh "${variant}"
+  require_cmd molecule
+  echo "==> Testing QEMU image with Molecule scenario: qemu-${variant} (policy=${policy_mode})"
+  MOLECULE_POLICY_MODE="${policy_mode}" molecule test -s "qemu-${variant}"
 }
 
 test_virtualbox() {
   local variant="$1"
+  local policy_mode="${MOLECULE_POLICY_MODE:-strict}"
 
-  [[ -x "tests/test-virtualbox.sh" ]] || die "tests/test-virtualbox.sh not found or not executable"
+  require_cmd molecule
+  ensure_vbox "virtualbox"
+  echo "==> Testing VirtualBox image with Molecule scenario: virtualbox-${variant} (policy=${policy_mode})"
+  MOLECULE_POLICY_MODE="${policy_mode}" molecule test -s "virtualbox-${variant}"
+}
 
-  echo "==> Testing VirtualBox images..."
-  ./tests/test-virtualbox.sh "${variant}"
+test_ansible_collection() {
+  require_cmd ansible
+  require_cmd ansible-galaxy
+  require_cmd python3
+
+  [[ -f "ansible/requirements.yml" ]] || die "ansible/requirements.yml not found"
+  [[ -f "ansible/ansible.cfg" ]] || die "ansible/ansible.cfg not found"
+
+  grep -q collections_path ansible/ansible.cfg || echo "warn: collections_path not set in ansible/ansible.cfg"
+
+  local playbook
+  for playbook in ansible/playbook-server.yml ansible/playbook-workstation.yml; do
+    [[ -f "${playbook}" ]] || die "${playbook} not found"
+    python3 - <<'PY' "${playbook}"
+import sys, yaml
+yaml.safe_load(open(sys.argv[1]))
+PY
+    echo "ok: yaml ${playbook}"
+  done
+
+  if [[ -n "${ANSIBLE_COLLECTIONS_PATH:-}" ]]; then
+    [[ -d "${ANSIBLE_COLLECTIONS_PATH}" ]] || echo "warn: ANSIBLE_COLLECTIONS_PATH does not exist: ${ANSIBLE_COLLECTIONS_PATH}"
+  fi
+
+  local tmp
+  tmp="$(mktemp -d)"
+  trap 'rm -rf "${tmp}"' RETURN
+  ansible-galaxy collection install -r ansible/requirements.yml -p "${tmp}" --force >/dev/null 2>&1 \
+    && echo "ok: galaxy install" \
+    || echo "warn: galaxy install skipped/failed"
+
+  for playbook in ansible/playbook-server.yml ansible/playbook-workstation.yml; do
+    grep -Eq 'hosts:' "${playbook}" || echo "warn: hosts missing: ${playbook}"
+    grep -Eq 'tasks:|roles:' "${playbook}" || echo "warn: tasks/roles missing: ${playbook}"
+  done
+
+  grep -r "drts01.collection" ansible/*.yml >/dev/null 2>&1 \
+    && echo "ok: collection refs present" \
+    || echo "warn: no drts01.collection refs"
 }
 
 run_test() {
   local platform="${1:-qemu}"
   local variant="${2:-server}"
 
-  validate_in "${platform}" "qemu|virtualbox|all" "platform must be qemu, virtualbox, or all"
+  validate_in "${platform}" "qemu|virtualbox|all|ansible-collection" "platform must be qemu, virtualbox, all, or ansible-collection"
+
+  if [[ "${platform}" == "ansible-collection" ]]; then
+    test_ansible_collection
+    return
+  fi
+
   validate_in "${variant}" "server|workstation|all" "variant must be server, workstation, or all"
 
   is_selected "${platform}" qemu && {

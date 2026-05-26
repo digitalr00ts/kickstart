@@ -1,0 +1,161 @@
+---
+- name: Compute image and runtime values
+  ansible.builtin.set_fact:
+    host_arch_raw: "{{ lookup('pipe', 'uname -m') }}"
+    guest_arch_default: >-
+      {{ 'aarch64' if lookup('pipe', 'uname -m') in ['arm64', 'aarch64'] else 'x86_64' }}
+
+- name: Resolve guest architecture
+  ansible.builtin.set_fact:
+    guest_arch: '{{ lookup(''env'', ''GUEST_ARCH'') | default(guest_arch_default, true) }}'
+
+- name: Resolve qemu image candidate paths
+  ansible.builtin.set_fact:
+    qemu_image_primary: >-
+      output/qemu-{{ guest_arch }}-{{ variant }}/fedora-{{ fedora_version }}-{{ guest_arch }}-{{ variant }}
+    qemu_image_legacy_v2: output/qemu-{{ variant }}/fedora-{{ fedora_version }}-{{ variant }}
+    qemu_image_legacy: output/{{ variant }}/fedora-{{ variant }}
+
+- name: Check qemu primary image path
+  ansible.builtin.stat:
+    path: '{{ qemu_image_primary }}'
+  register: qemu_primary_stat
+  when: vm_platform == 'qemu'
+
+- name: Check qemu legacy v2 image path
+  ansible.builtin.stat:
+    path: '{{ qemu_image_legacy_v2 }}'
+  register: qemu_legacy_v2_stat
+  when: vm_platform == 'qemu'
+
+- name: Check qemu legacy image path
+  ansible.builtin.stat:
+    path: '{{ qemu_image_legacy }}'
+  register: qemu_legacy_stat
+  when: vm_platform == 'qemu'
+
+- name: Resolve qemu image path
+  ansible.builtin.set_fact:
+    image_path: >-
+      {{
+        qemu_image_primary if qemu_primary_stat.stat.exists
+        else (qemu_image_legacy_v2 if qemu_legacy_v2_stat.stat.exists else qemu_image_legacy)
+      }}
+  when: vm_platform == 'qemu'
+
+- name: Resolve virtualbox image path
+  ansible.builtin.set_fact:
+    image_path: "{{ lookup('pipe', \"find output -name '*%s*.ovf' | head -1\" | format(variant)) | trim }}"
+  when: vm_platform == 'virtualbox'
+
+- name: Ensure image artifact exists
+  ansible.builtin.stat:
+    path: '{{ image_path }}'
+  register: image_path_stat
+
+- name: Fail when artifact is missing
+  ansible.builtin.fail:
+    msg: Image artifact not found at {{ image_path }}
+  when: not image_path_stat.stat.exists
+
+- name: Ensure old qemu test pid is removed
+  ansible.builtin.file:
+    path: /tmp/molecule-{{ vm_platform }}-{{ variant }}.pid
+    state: absent
+  when: vm_platform == 'qemu'
+
+- name: Start qemu VM
+  ansible.builtin.command:
+    argv:
+      - qemu-system-{{ guest_arch }}
+      - -name
+      - molecule-fedora-{{ variant }}
+      - -m
+      - '2048'
+      - -smp
+      - '2'
+      - -drive
+      - file={{ image_path }},if=virtio,format=qcow2
+      - -net
+      - nic,model=virtio
+      - -net
+      - user,hostfwd=tcp::{{ ssh_port }}-:22
+      - -display
+      - none
+      - -daemonize
+      - -pidfile
+      - /tmp/molecule-{{ vm_platform }}-{{ variant }}.pid
+  when: vm_platform == 'qemu' and guest_arch != 'aarch64'
+
+- name: Start qemu aarch64 VM
+  ansible.builtin.command:
+    argv:
+      - qemu-system-{{ guest_arch }}
+      - -name
+      - molecule-fedora-{{ variant }}
+      - -machine
+      - virt
+      - -cpu
+      - max
+      - -m
+      - '2048'
+      - -smp
+      - '2'
+      - -drive
+      - file={{ image_path }},if=virtio,format=qcow2
+      - -net
+      - nic,model=virtio
+      - -net
+      - user,hostfwd=tcp::{{ ssh_port }}-:22
+      - -display
+      - none
+      - -daemonize
+      - -pidfile
+      - /tmp/molecule-{{ vm_platform }}-{{ variant }}.pid
+  when: vm_platform == 'qemu' and guest_arch == 'aarch64'
+
+- name: Ensure VirtualBox exists on host
+  ansible.builtin.command: command -v VBoxManage
+  changed_when: false
+  when: vm_platform == 'virtualbox'
+
+- name: Ensure stale VirtualBox VM is removed
+  ansible.builtin.shell: |
+    if VBoxManage showvminfo molecule-fedora-{{ fedora_version }}-{{ variant }} >/dev/null 2>&1; then
+      VBoxManage controlvm molecule-fedora-{{ fedora_version }}-{{ variant }} poweroff >/dev/null 2>&1 || true
+      VBoxManage unregistervm molecule-fedora-{{ fedora_version }}-{{ variant }} --delete >/dev/null 2>&1 || true
+    fi
+  changed_when: true
+  when: vm_platform == 'virtualbox'
+
+- name: Import VirtualBox OVF
+  ansible.builtin.command:
+    argv:
+      - VBoxManage
+      - import
+      - '{{ image_path }}'
+      - --vsys
+      - 0
+      - --vmname
+      - molecule-fedora-{{ fedora_version }}-{{ variant }}
+  when: vm_platform == 'virtualbox'
+
+- name: Configure VirtualBox SSH forwarding
+  ansible.builtin.command:
+    argv:
+      - VBoxManage
+      - modifyvm
+      - molecule-fedora-{{ fedora_version }}-{{ variant }}
+      - --natpf1
+      - ssh,tcp,,{{ ssh_port }},,22
+  when: vm_platform == 'virtualbox'
+
+- name: Start VirtualBox VM
+  ansible.builtin.command:
+    argv:
+      - VBoxManage
+      - startvm
+      - molecule-fedora-{{ fedora_version }}-{{ variant }}
+      - --type
+      - headless
+  when: vm_platform == 'virtualbox'

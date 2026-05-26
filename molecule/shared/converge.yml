@@ -1,0 +1,10 @@
+---
+- name: Wait for molecule instance readiness
+  hosts: molecule
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH to be available
+      ansible.builtin.wait_for_connection:
+        timeout: 180
+        delay: 3
+        sleep: 3

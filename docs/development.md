@@ -41,7 +41,7 @@ The pre-commit hooks validate:
 - YAML syntax
 - Best practices enforcement
 
-#### 4. **Shell Scripts** (`scripts/*.sh`, `tests/*.sh`)
+#### 4. **Shell Scripts** (`scripts/*.sh`)
 
 - ShellCheck validation
 - Executable permissions
@@ -150,7 +150,7 @@ pip install ansible-lint black isort detect-secrets
 ## Test Ansible
 
   ```sh
-   ./tests/test-ansible-collection.sh
+   ./scripts/task.sh test ansible-collection
    ```
 
 1. **Commit changes**:
@@ -199,7 +199,7 @@ packer fmt -recursive packer/
 
 ```bash
 # Validate playbooks
-./tests/test-ansible-collection.sh
+./scripts/task.sh test ansible-collection
 
 # Lint playbooks
 ansible-lint ansible/playbook-server.yml
@@ -213,13 +213,13 @@ export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collection
 
 ```bash
 # Check syntax
-shellcheck scripts/*.sh tests/*.sh
+shellcheck scripts/*.sh
 
 # Make executable
 chmod +x scripts/my-script.sh
 
 # Run tests
-./tests/test-qemu.sh server
+./scripts/task.sh test qemu server
 ```
 
 ## Code Style Guidelines
