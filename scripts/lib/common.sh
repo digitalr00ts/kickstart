@@ -40,8 +40,8 @@ setup_build_context() {
     echo "Error: GUEST_ARCH must be x86_64 or aarch64."
     exit 1
   }
-  [[ -z "${QEMU_DISPLAY_MODE_OVERRIDE}" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "auto" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "none" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "gtk" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "cocoa" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "sdl" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "vnc" ]] || {
-    echo "Error: QEMU_DISPLAY_MODE must be auto, none, gtk, cocoa, sdl, or vnc."
+  [[ -z "${QEMU_DISPLAY_MODE_OVERRIDE}" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "spice" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "auto" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "none" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "gtk" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "cocoa" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "sdl" || "${QEMU_DISPLAY_MODE_OVERRIDE}" == "vnc" ]] || {
+    echo "Error: QEMU_DISPLAY_MODE must be spice, auto, none, gtk, cocoa, sdl, or vnc."
     exit 1
   }
 }
@@ -49,7 +49,7 @@ setup_build_context() {
 print_build_context() {
   echo "==> Guest architecture${GUEST_ARCH_OVERRIDE:+ override}: ${GUEST_ARCH_OVERRIDE:-auto (HCL resolves from host hints/defaults)}"
   echo "==> Host hints: auto (HCL resolves from HOSTTYPE/OSTYPE or safe defaults)"
-  echo "==> QEMU display mode${QEMU_DISPLAY_MODE_OVERRIDE:+ override}: ${QEMU_DISPLAY_MODE_OVERRIDE:-auto}"
+  echo "==> QEMU display mode${QEMU_DISPLAY_MODE_OVERRIDE:+ override}: ${QEMU_DISPLAY_MODE_OVERRIDE:-spice}"
   echo "==> Vars file: ${VAR_FILE}"
 }
 

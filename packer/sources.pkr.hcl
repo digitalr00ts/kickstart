@@ -60,6 +60,7 @@ locals {
     "none"
   )
   qemu_display_arg = lookup({
+    spice = "spice-app"
     none  = "none"
     gtk   = "gtk,gl=on"
     cocoa = "cocoa"

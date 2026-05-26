@@ -127,10 +127,11 @@ variable "headless" {
 
 variable "qemu_display_mode" {
   type        = string
-  default     = "auto"
-  description = "QEMU display backend when headless is false: auto, none, gtk, cocoa, sdl, or vnc."
+  default     = "spice"
+  description = "QEMU display backend when headless is false: spice, auto, none, gtk, cocoa, sdl, or vnc."
   validation {
     condition = contains([
+      "spice",
       "auto",
       "none",
       "gtk",
@@ -138,6 +139,6 @@ variable "qemu_display_mode" {
       "sdl",
       "vnc",
     ], lower(trimspace(var.qemu_display_mode)))
-    error_message = "QEMU display mode must be one of: auto, none, gtk, cocoa, sdl, or vnc."
+    error_message = "QEMU display mode must be one of: spice, auto, none, gtk, cocoa, sdl, or vnc."
   }
 }

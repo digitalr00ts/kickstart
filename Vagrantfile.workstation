@@ -37,7 +37,7 @@ Vagrant.configure("2") do |config|
       "-enable-kvm",
       "-cpu", "host",
       "-vga", "virtio",
-      "-display", "gtk,gl=on"
+      "-display", "spice-app"
     ]
 
     # SSH configuration

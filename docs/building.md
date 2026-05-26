@@ -383,14 +383,17 @@ By default, builds run headless.
 To watch installation output locally, keep templates unchanged and pass runtime variables:
 
 ```bash
-# Preferred: host/arch-aware display backend
+# Preferred default GUI backend (SPICE)
+packer build -var headless=false ...
+
+# Optional: host/arch-aware display backend
 packer build -var headless=false -var qemu_display_mode=auto ...
 
 # Explicit fallback for hosts where GTK is unavailable (common on qemu-system-aarch64)
 packer build -var headless=false -var qemu_display_mode=vnc ...
 ```
 
-Supported display values are `auto`, `none`, `gtk`, `cocoa`, `sdl`, and `vnc`.
+Supported display values are `spice`, `auto`, `none`, `gtk`, `cocoa`, `sdl`, and `vnc`.
 
 ### Parallel Builds
 

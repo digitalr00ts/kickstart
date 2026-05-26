@@ -64,7 +64,8 @@ EFI firmware paths can still be overridden via `aarch64_efi_firmware_code` and `
 
 Display backend selection when `headless=false` is controlled by `qemu_display_mode`:
 
-- `auto`: host/arch-aware default (`cocoa` on macOS, `gtk` on Linux x86_64, `vnc` on Linux aarch64)
+- `spice` (default): SPICE GUI frontend via `-display spice-app`
+- `auto`: host/arch-aware selection (`cocoa` on macOS, `gtk` on Linux x86_64, `vnc` on Linux aarch64)
 - `none`, `gtk`, `cocoa`, `sdl`, `vnc`: explicit backend override
 
 For `qemu-system-aarch64`, `gtk` may not be available depending on the host package build.
@@ -220,7 +221,10 @@ packer build -var cpus=4 ...
 # Override guest architecture explicitly
 packer build -var guest_arch=aarch64 ...
 
-# Enable GUI with host-aware backend selection
+# Enable GUI with default backend (SPICE)
+packer build -var headless=false ...
+
+# Use host-aware backend selection instead of SPICE
 packer build -var headless=false -var qemu_display_mode=auto ...
 
 # Force a portable GUI fallback when GTK/Cocoa is unavailable
