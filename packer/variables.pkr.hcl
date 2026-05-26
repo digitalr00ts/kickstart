@@ -32,14 +32,14 @@ variable "output_directory" {
 
 variable "disk_size" {
   type        = string
-  default     = "40960"
-  description = "Disk size in MB (default: 40GB)"
+  default     = "20480"
+  description = "Disk size in MB (default: 20GB)"
 }
 
 variable "memory" {
   type        = string
-  default     = "2048"
-  description = "Memory allocation in MB (default: 2GB)"
+  default     = "4096"
+  description = "Memory allocation in MB (default: 4GB)"
 }
 
 variable "cpus" {
