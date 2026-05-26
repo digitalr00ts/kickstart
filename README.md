@@ -1,5 +1,7 @@
 # Fedora Image Builder
 
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 Automated build system for creating reproducible Fedora workstation and server images for QEMU and
 VirtualBox using Packer, Kickstart, and Ansible.
 
@@ -253,7 +255,7 @@ See [docs/kickstart-reference.md](docs/kickstart-reference.md#security-considera
 
 ## License
 
-See LICENSE file for details.
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ## Contributing
 
