@@ -33,12 +33,13 @@ This project provides a Packer-based infrastructure to build Fedora images with:
 - QEMU >= 10.0 (for QEMU builds)
 - VirtualBox >= 7.0 (for VirtualBox builds)
 - Ansible >= 2.15
-- task script (scripts/task.sh)
+- uv (for running Poe tasks)
 
 ### Task Runner
 
-- `scripts/task.sh` delegates to shared helpers in `scripts/lib/`
-- Scripts can also be run directly from `scripts/`
+- Primary: `uv run poe <task> [args]`
+- Compatibility: `./scripts/task.sh <command> [args]` delegates to Poe by default
+- Legacy bash path: `KICKSTART_TASK_LEGACY=1 ./scripts/task.sh <command> [args]`
 
 ### Initial Setup
 
@@ -51,26 +52,26 @@ cd kickstart
 # Refresh that file if Fedora publishes a newer point release.
 
 # Initialize Packer plugins
-./scripts/task.sh init
+uv run poe init
 
 # Validate templates
-./scripts/task.sh validate
+uv run poe validate
 ```text
 
 ### Build Your First Image
 
 ```bash
 # Build Fedora 44 server image for QEMU
-./scripts/task.sh build qemu server
+uv run poe build qemu server
 
 # Optional: override guest architecture (x86_64, aarch64)
-GUEST_ARCH=aarch64 ./scripts/task.sh build qemu server
+GUEST_ARCH=aarch64 uv run poe build qemu server
 
 # Or build for VirtualBox
-./scripts/task.sh build virtualbox server
+uv run poe build virtualbox server
 
 # Build workstation variant
-./scripts/task.sh build qemu workstation
+uv run poe build qemu workstation
 ```text
 
 Images are output to the `output/` directory organized by platform and variant.
@@ -79,20 +80,20 @@ Images are output to the `output/` directory organized by platform and variant.
 
 ```bash
 # Build all combinations (server/workstation × QEMU/VirtualBox)
-./scripts/task.sh build all
+uv run poe build all
 ```text
 
 ### Testing Images
 
 ```bash
 # Test QEMU images
-./scripts/task.sh test qemu server
+uv run poe test qemu server
 
 # Test VirtualBox images
-./scripts/task.sh test virtualbox server
+uv run poe test virtualbox server
 
 # Test all platforms
-./scripts/task.sh test all server
+uv run poe test all server
 ```text
 
 ## Project Structure
@@ -126,7 +127,7 @@ kickstart/
 ```bash
 # Set environment variable to use local collection
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
-./scripts/task.sh build qemu server
+uv run poe build qemu server
 ```text
 
 ### Using GitHub Collection (Production)
@@ -134,7 +135,7 @@ export ANSIBLE_COLLECTIONS_PATH=/path/to/local/ansible-collection
 ```bash
 # Unset local path to use GitHub collection
 unset ANSIBLE_COLLECTIONS_PATH
-./scripts/task.sh build qemu server
+uv run poe build qemu server
 ```text
 
 ### Testing Collection Changes
@@ -152,23 +153,23 @@ ansible-playbook -i <vm-ip>, playbook-server.yml \
 ## Available Task Commands
 
 ```bash
-./scripts/task.sh help                         # Show usage
-./scripts/task.sh init                         # Initialize Packer plugins
-./scripts/task.sh validate                     # Validate Packer templates
-./scripts/task.sh build qemu server            # Build server for QEMU
-./scripts/task.sh build virtualbox server      # Build server for VirtualBox
-./scripts/task.sh build qemu workstation       # Build workstation for QEMU
-./scripts/task.sh build virtualbox workstation # Build workstation for VirtualBox
-./scripts/task.sh build all                    # Build all variants and platforms
-./scripts/task.sh test qemu server             # Test QEMU images
-./scripts/task.sh test virtualbox server       # Test VirtualBox images
-./scripts/task.sh test all server              # Test all images
-./scripts/task.sh clean                        # Remove build artifacts
-./scripts/task.sh status                       # Show build status and artifacts
-./scripts/task.sh build qemu server            # Quick build - server on QEMU only
+uv run poe --help                              # Show usage
+uv run poe init                                # Initialize Packer plugins
+uv run poe validate                            # Validate Packer templates
+uv run poe build qemu server                   # Build server for QEMU
+uv run poe build virtualbox server             # Build server for VirtualBox
+uv run poe build qemu workstation              # Build workstation for QEMU
+uv run poe build virtualbox workstation        # Build workstation for VirtualBox
+uv run poe build all                           # Build all variants and platforms
+uv run poe test qemu server                    # Test QEMU images
+uv run poe test virtualbox server              # Test VirtualBox images
+uv run poe test all server                     # Test all images
+uv run poe clean                               # Remove build artifacts
+uv run poe status                              # Show build status and artifacts
+uv run poe build qemu server                   # Quick build - server on QEMU only
 ```text
 
-Run `./scripts/task.sh help` to see command usage.
+Run `uv run poe --help` to see command usage.
 
 ## System Requirements
 

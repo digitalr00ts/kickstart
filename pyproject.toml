@@ -8,3 +8,259 @@ requires-python = ">=3.14"
 dependencies = [
     "molecule>=26.4.0",
 ]
+
+[dependency-groups]
+dev = [
+        "poethepoet>=0.35.0",
+]
+
+[tool.poe]
+shell_interpreter = "bash"
+
+[tool.poe.tasks.init]
+help = "Initialize Packer plugins"
+cmd = "packer init ${PACKER_DIR:-packer}/"
+
+[tool.poe.tasks.validate]
+help = "Validate Packer templates with host context"
+shell = """
+set -euo pipefail
+source scripts/lib/common.sh
+
+require_cmd packer
+setup_build_context
+print_build_context
+
+read -r -a packer_args <<< "$(packer_common_args)"
+packer validate "${packer_args[@]}" "${PACKER_DIR}/"
+"""
+
+[tool.poe.tasks.build]
+help = "Build images: build [qemu|virtualbox|all] [server|workstation|all]"
+args = [
+        { name = "platform", positional = true, default = "qemu" },
+        { name = "variant", positional = true, default = "all" },
+]
+shell = """
+set -euo pipefail
+source scripts/lib/common.sh
+
+platform="${platform:-qemu}"
+variant="${variant:-all}"
+
+case "$platform" in
+    qemu|virtualbox|all) ;;
+    *) echo "Error: platform must be qemu, virtualbox, or all"; exit 1 ;;
+esac
+
+case "$variant" in
+    server|workstation|all) ;;
+    *) echo "Error: variant must be server, workstation, or all"; exit 1 ;;
+esac
+
+require_cmd packer
+require_cmd ansible-playbook
+
+build_qemu_variant() {
+    local selected_variant="$1"
+    setup_build_context
+    print_build_context
+    read -r -a packer_args <<< "$(packer_common_args)"
+    packer build -only=qemu.fedora "${packer_args[@]}" -var "variant=${selected_variant}" "${PACKER_DIR}/"
+}
+
+build_virtualbox_variant() {
+    local selected_variant="$1"
+    if ! command -v VBoxManage >/dev/null 2>&1; then
+        echo "Error: VBoxManage not found. Please install VirtualBox."
+        exit 1
+    fi
+    setup_build_context
+    read -r -a packer_args <<< "$(packer_common_args)"
+    packer build -only=virtualbox-iso.fedora "${packer_args[@]}" -var "variant=${selected_variant}" "${PACKER_DIR}/"
+}
+
+run_variants() {
+    local selected_platform="$1"
+    local selected_variant="$2"
+    local variant_list
+    if [[ "$selected_variant" == "all" ]]; then
+        variant_list="server workstation"
+    else
+        variant_list="$selected_variant"
+    fi
+
+    local v
+    for v in $variant_list; do
+        case "$selected_platform" in
+            qemu) build_qemu_variant "$v" ;;
+            virtualbox) build_virtualbox_variant "$v" ;;
+        esac
+    done
+}
+
+if [[ "$platform" == "qemu" || "$platform" == "all" ]]; then
+    run_variants qemu "$variant"
+fi
+
+if [[ "$platform" == "virtualbox" || "$platform" == "all" ]]; then
+    run_variants virtualbox "$variant"
+fi
+"""
+
+[tool.poe.tasks.packer-build]
+help = "Bare packer build wrapper: inject host uname vars and pass through args"
+shell = """
+set -euo pipefail
+
+[[ -n "${POE_EXTRA_ARGS:-}" ]] && eval "set -- ${POE_EXTRA_ARGS}" || set --
+
+if [[ -n "${ARGS:-}" ]]; then
+    read -r -a env_args <<< "${ARGS}"
+    set -- "$@" "${env_args[@]}"
+fi
+
+packer build \
+    -var="host_arch=$(uname -m)" \
+    -var="host_os=$(uname -s)" \
+    "$@" \
+    "${PACKER_DIR:-packer}/"
+"""
+
+[tool.poe.tasks.test]
+help = "Run tests: test [qemu|virtualbox|all|ansible-collection] [server|workstation|all]"
+args = [
+        { name = "platform", positional = true, default = "qemu" },
+        { name = "variant", positional = true, default = "server" },
+]
+shell = """
+set -euo pipefail
+source scripts/lib/common.sh
+
+platform="${platform:-qemu}"
+variant="${variant:-server}"
+policy_mode="${MOLECULE_POLICY_MODE:-strict}"
+
+case "$platform" in
+    qemu|virtualbox|all|ansible-collection) ;;
+    *) echo "Error: platform must be qemu, virtualbox, all, or ansible-collection"; exit 1 ;;
+esac
+
+if [[ "$platform" == "ansible-collection" ]]; then
+    require_cmd ansible
+    require_cmd ansible-galaxy
+    require_cmd python3
+
+    [[ -f "ansible/requirements.yml" ]] || { echo "Error: ansible/requirements.yml not found"; exit 1; }
+    [[ -f "ansible/ansible.cfg" ]] || { echo "Error: ansible/ansible.cfg not found"; exit 1; }
+
+    grep -q collections_path ansible/ansible.cfg || echo "warn: collections_path not set in ansible/ansible.cfg"
+
+    for playbook in ansible/playbook-server.yml ansible/playbook-workstation.yml; do
+        [[ -f "${playbook}" ]] || { echo "Error: ${playbook} not found"; exit 1; }
+        python3 - <<'PY' "${playbook}"
+import sys, yaml
+yaml.safe_load(open(sys.argv[1]))
+PY
+        echo "ok: yaml ${playbook}"
+    done
+
+    if [[ -n "${ANSIBLE_COLLECTIONS_PATH:-}" && ! -d "${ANSIBLE_COLLECTIONS_PATH}" ]]; then
+        echo "warn: ANSIBLE_COLLECTIONS_PATH does not exist: ${ANSIBLE_COLLECTIONS_PATH}"
+    fi
+
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "${tmp}"' RETURN
+    ansible-galaxy collection install -r ansible/requirements.yml -p "${tmp}" --force >/dev/null 2>&1 \
+        && echo "ok: galaxy install" \
+        || echo "warn: galaxy install skipped/failed"
+
+    for playbook in ansible/playbook-server.yml ansible/playbook-workstation.yml; do
+        grep -Eq 'hosts:' "${playbook}" || echo "warn: hosts missing: ${playbook}"
+        grep -Eq 'tasks:|roles:' "${playbook}" || echo "warn: tasks/roles missing: ${playbook}"
+    done
+
+    grep -r "drts01.collection" ansible/*.yml >/dev/null 2>&1 \
+        && echo "ok: collection refs present" \
+        || echo "warn: no drts01.collection refs"
+    exit 0
+fi
+
+case "$variant" in
+    server|workstation|all) ;;
+    *) echo "Error: variant must be server, workstation, or all"; exit 1 ;;
+esac
+
+require_cmd molecule
+
+run_qemu_test_variant() {
+    local selected_variant="$1"
+    setup_build_context
+    MOLECULE_POLICY_MODE="$policy_mode" molecule test -s "qemu-${selected_variant}"
+}
+
+run_virtualbox_test_variant() {
+    local selected_variant="$1"
+    if ! command -v VBoxManage >/dev/null 2>&1; then
+        echo "Error: VBoxManage not found. Please install VirtualBox."
+        exit 1
+    fi
+    MOLECULE_POLICY_MODE="$policy_mode" molecule test -s "virtualbox-${selected_variant}"
+}
+
+run_test_variants() {
+    local selected_platform="$1"
+    local selected_variant="$2"
+    local variant_list
+    if [[ "$selected_variant" == "all" ]]; then
+        variant_list="server workstation"
+    else
+        variant_list="$selected_variant"
+    fi
+
+    local v
+    for v in $variant_list; do
+        case "$selected_platform" in
+            qemu) run_qemu_test_variant "$v" ;;
+            virtualbox) run_virtualbox_test_variant "$v" ;;
+        esac
+    done
+}
+
+if [[ "$platform" == "qemu" || "$platform" == "all" ]]; then
+    run_test_variants qemu "$variant"
+fi
+
+if [[ "$platform" == "virtualbox" || "$platform" == "all" ]]; then
+    run_test_variants virtualbox "$variant"
+fi
+"""
+
+[tool.poe.tasks.clean]
+help = "Remove build artifacts and Packer cache"
+cmd = "rm -rf ${OUTPUT_DIR:-output}/ .packer_cache/ ./*.box ./*.qcow2 ./*.vdi"
+
+[tool.poe.tasks.status]
+help = "Show output artifacts and Packer cache state"
+shell = """
+set -euo pipefail
+source scripts/lib/common.sh
+
+echo "==> Build Status"
+echo
+echo "Output directory: ${OUTPUT_DIR}"
+if [[ -d "${OUTPUT_DIR}" ]]; then
+    echo "Artifacts:"
+    ls -lh "${OUTPUT_DIR}/"
+else
+    echo "No build artifacts found."
+fi
+
+echo
+echo "Packer cache:"
+if [[ -d ".packer_cache" ]]; then
+    du -sh .packer_cache/
+else
+    echo "No Packer cache."
+fi
+"""

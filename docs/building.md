@@ -10,12 +10,12 @@ Ensure the following tools are installed:
 - **QEMU** (>= 10.1.0): `qemu-system-x86_64 --version`
 - **Ansible** (>= 2.20.0): `ansible --version`
 - **VirtualBox** (optional): `VBoxManage --version`
-- **Bash**: `bash --version`
+- **uv**: `uv --version`
 
 Check all prerequisites:
 
 ```bash
-./scripts/task.sh init  # This will verify Packer and initialize plugins
+uv run poe init  # This will verify Packer and initialize plugins
 ```
 
 ### Host-aware QEMU accelerator defaults
@@ -36,7 +36,7 @@ Build scripts also select a default guest architecture from the host CPU:
 Override at runtime when needed:
 
 ```bash
-GUEST_ARCH=x86_64 ./scripts/task.sh build qemu server
+GUEST_ARCH=x86_64 uv run poe build qemu server
 ```
 
 ### ARM64 boot behavior
@@ -79,40 +79,46 @@ packer build \
 2. **Initialize Packer plugins**:
 
    ```bash
-   ./scripts/task.sh init
+   uv run poe init
    ```
 
 3. **Validate configuration**:
 
    ```bash
-   ./scripts/task.sh validate
+   uv run poe validate
    ```
 
 4. **Build a server image**:
 
    ```bash
-   ./scripts/task.sh build qemu server
+   uv run poe build qemu server
    ```
 
 ## Building Images
 
-### Using task.sh (Recommended)
+### Using Poe (Recommended)
 
-The task script provides convenient commands for all build operations:
+Poe provides convenient commands for all build operations:
 
 ```bash
 # Build specific variants
-./scripts/task.sh build qemu server            # Server for QEMU
-./scripts/task.sh build qemu workstation       # Workstation for QEMU
-./scripts/task.sh build virtualbox server      # Server for VirtualBox
-./scripts/task.sh build virtualbox workstation # Workstation for VirtualBox
+uv run poe build qemu server            # Server for QEMU
+uv run poe build qemu workstation       # Workstation for QEMU
+uv run poe build virtualbox server      # Server for VirtualBox
+uv run poe build virtualbox workstation # Workstation for VirtualBox
 
 # Build all variants
-./scripts/task.sh build all
+uv run poe build all
 
 # Clean and rebuild
-./scripts/task.sh clean
-./scripts/task.sh build qemu server
+uv run poe clean
+uv run poe build qemu server
+```
+
+Legacy compatibility mode is still available:
+
+```bash
+KICKSTART_TASK_LEGACY=1 ./scripts/task.sh build qemu server
 ```
 
 ### Using Packer Directly
@@ -178,7 +184,7 @@ The build process supports both local development and production workflows for A
 Default behavior - uses collection from GitHub:
 
 ```bash
-./scripts/task.sh build qemu server
+uv run poe build qemu server
 ```
 
 This will:
@@ -196,7 +202,7 @@ For local collection development:
 export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collections
 
 # Build with local collection
-./scripts/task.sh build qemu server
+uv run poe build qemu server
 ```
 
 The build will use your local collection instead of downloading from GitHub.
@@ -213,8 +219,8 @@ The build will use your local collection instead of downloading from GitHub.
 3. **Build and test**:
 
    ```bash
-   ./scripts/task.sh build qemu server
-   ./scripts/task.sh test qemu server
+   uv run poe build qemu server
+   uv run poe test qemu server
    ```
 
 ### Collection Requirements
@@ -341,7 +347,7 @@ then update it if Fedora publishes a newer point release.
 
 **Solutions**:
 
-- Clean previous builds: `./scripts/task.sh clean`
+- Clean previous builds: `uv run poe clean`
 - Remove Packer cache: `rm -rf .packer_cache/`
 - Free up host disk space
 - Reduce image disk size with `-var disk_size=20000`
@@ -385,8 +391,8 @@ headless = false  # Shows VM window during build
 Build multiple variants simultaneously:
 
 ```bash
-./scripts/task.sh build qemu server &
-./scripts/task.sh build qemu workstation &
+uv run poe build qemu server &
+uv run poe build qemu workstation &
 wait
 ```
 

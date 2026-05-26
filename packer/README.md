@@ -80,14 +80,14 @@ Version-specific variable values for Fedora 44:
 
 ## Building Images
 
-### Using task.sh (Recommended)
+### Using Poe (Recommended)
 
 ```bash
 # Build server variant
-./scripts/task.sh build qemu server
+uv run poe build qemu server
 
 # Build workstation variant
-./scripts/task.sh build qemu workstation
+uv run poe build qemu workstation
 ```
 
 ### Using Packer Directly

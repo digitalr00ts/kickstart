@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+# Poe is the primary task runner; set KICKSTART_TASK_LEGACY=1 to force legacy bash logic.
+if [[ "${KICKSTART_TASK_LEGACY:-0}" != "1" ]] && command -v uv >/dev/null 2>&1; then
+  exec uv run poe "$@"
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/common.sh"
 
