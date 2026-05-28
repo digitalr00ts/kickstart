@@ -40,7 +40,7 @@ Optimized for desktop environments:
 
 - **Memory**: 4GB RAM
 - **CPUs**: 4 cores
-- **Display**: GUI enabled (backend depends on host QEMU support)
+- **Display**: GUI enabled (Linux defaults to SPICE, macOS defaults to Cocoa, unknown hosts use QEMU default)
 - **SSH Port**: 2223
 - **Use Case**: GUI applications, desktop testing
 
@@ -293,18 +293,20 @@ config.vm.boot_timeout = 600  # 10 minutes
 **Solution**:
 
 - Ensure you're using the workstation Vagrantfile
-- Check QEMU display arguments:
+- Check host-aware QEMU display selection:
 
 ```ruby
-qemu.extra_qemu_args = [
-  "-enable-kvm",
-  "-cpu", "host",
-  "-vga", "virtio",
-  "-display", "vnc=:0"
-]
+host_os = RbConfig::CONFIG["host_os"].downcase
+workstation_display = if host_os.include?("linux")
+                        "spice-app"
+                      elsif host_os.include?("darwin")
+                        "cocoa"
+                      else
+                        nil
+                      end
 ```
 
-- If `vnc=:0` is not suitable for your environment, try: `cocoa`, `sdl`, or `none`
+- If your host needs a specific backend, set `-display` explicitly in `qemu.extra_qemu_args`
 - `gtk` may be unavailable on some `qemu-system-aarch64` builds
 
 ### Box Already Exists

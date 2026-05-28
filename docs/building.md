@@ -383,13 +383,14 @@ By default, builds run headless.
 To watch installation output locally, keep templates unchanged and pass runtime variables:
 
 ```bash
-# Preferred default GUI backend (SPICE)
+# Host-aware default GUI backend
+# Linux hosts default to SPICE, macOS hosts default to Cocoa
 packer build -var headless=false ...
 
-# Optional: host/arch-aware display backend
+# Optional: force host-aware resolution explicitly
 packer build -var headless=false -var qemu_display_mode=auto ...
 
-# Explicit fallback for hosts where GTK is unavailable (common on qemu-system-aarch64)
+# Explicit fallback for hosts where your preferred GUI backend is unavailable
 packer build -var headless=false -var qemu_display_mode=vnc ...
 ```
 

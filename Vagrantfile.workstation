@@ -1,10 +1,21 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require "rbconfig"
+
 # Vagrantfile for Fedora Workstation with GUI support
 # Uses vagrant-qemu provider with display enabled
 
 Vagrant.configure("2") do |config|
+  host_os = RbConfig::CONFIG["host_os"].downcase
+  workstation_display = if host_os.include?("linux")
+                          "spice-app"
+                        elsif host_os.include?("darwin")
+                          "cocoa"
+                        else
+                          nil
+                        end
+
   # Box configuration for workstation variant
   config.vm.box = "fedora-44-workstation"
 
@@ -33,12 +44,13 @@ Vagrant.configure("2") do |config|
     qemu.qemu_dir = "/usr/bin"
 
     # Enable GUI display (remove -nographic)
-    qemu.extra_qemu_args = [
+    qemu_args = [
       "-enable-kvm",
       "-cpu", "host",
-      "-vga", "virtio",
-      "-display", "spice-app"
+      "-vga", "virtio"
     ]
+    qemu_args += ["-display", workstation_display] unless workstation_display.nil?
+    qemu.extra_qemu_args = qemu_args
 
     # SSH configuration
     qemu.ssh_port = 2223

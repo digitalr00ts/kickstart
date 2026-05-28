@@ -1,6 +1,12 @@
 # MacOS Setup
 
-SPICE is the default GUI backend for non-headless QEMU builds. Install a SPICE-capable QEMU package set:
+Non-headless QEMU builds default to Cocoa on macOS.
+
+```sh
+brew install qemu
+```
+
+If you want SPICE explicitly on macOS, install a SPICE-capable QEMU package set:
 
 ```sh
 brew tap avoidik/qemu-spice

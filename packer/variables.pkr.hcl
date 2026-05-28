@@ -127,10 +127,10 @@ variable "headless" {
 
 variable "qemu_display_mode" {
   type        = string
-  default     = "spice"
-  description = "QEMU display backend when headless is false: spice, auto, none, gtk, cocoa, sdl, or vnc."
+  default     = ""
+  description = "QEMU display backend when headless is false. Empty uses host-aware defaults (linux=spice, macos=cocoa, unknown=auto). Options: spice, auto, none, gtk, cocoa, sdl, or vnc."
   validation {
-    condition = contains([
+    condition = trimspace(var.qemu_display_mode) == "" || contains([
       "spice",
       "auto",
       "none",

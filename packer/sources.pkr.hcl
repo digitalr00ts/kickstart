@@ -53,14 +53,21 @@ locals {
   aarch64_efi_code       = trimspace(var.aarch64_efi_firmware_code) != "" ? var.aarch64_efi_firmware_code : local.host_defaults_for_hint.aarch64_code_fd
   aarch64_efi_vars       = trimspace(var.aarch64_efi_firmware_vars) != "" ? var.aarch64_efi_firmware_vars : local.host_defaults_for_hint.aarch64_vars_fd
   qemu_display_mode      = lower(trimspace(var.qemu_display_mode))
-  qemu_display_backend = local.qemu_display_mode != "auto" ? local.qemu_display_mode : (
+  qemu_display_backend = local.qemu_display_mode != "" ? (
+    local.qemu_display_mode == "auto" ? (
+      local.host_os_hint == "linux" ? "spice" :
+      local.host_os_hint == "macos" ? "cocoa" :
+      "auto"
+    ) :
+    local.qemu_display_mode
+    ) : (
+    local.host_os_hint == "linux" ? "spice" :
     local.host_os_hint == "macos" ? "cocoa" :
-    (local.host_os_hint == "linux" && local.guest_arch == "x86_64") ? "gtk" :
-    (local.host_os_hint == "linux" && local.guest_arch == "aarch64") ? "vnc" :
-    "none"
+    "auto"
   )
   qemu_display_arg = lookup({
     spice = "spice-app"
+    auto  = "none"
     none  = "none"
     gtk   = "gtk,gl=on"
     cocoa = "cocoa"

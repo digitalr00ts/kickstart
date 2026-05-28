@@ -47,9 +47,18 @@ setup_build_context() {
 }
 
 print_build_context() {
+  local host_os default_display
+  host_os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+  default_display="auto"
+  if [[ "${host_os}" == linux* ]]; then
+    default_display="spice"
+  elif [[ "${host_os}" == darwin* ]]; then
+    default_display="cocoa"
+  fi
+
   echo "==> Guest architecture${GUEST_ARCH_OVERRIDE:+ override}: ${GUEST_ARCH_OVERRIDE:-auto (HCL resolves from host hints/defaults)}"
   echo "==> Host hints: auto (HCL resolves from HOSTTYPE/OSTYPE or safe defaults)"
-  echo "==> QEMU display mode${QEMU_DISPLAY_MODE_OVERRIDE:+ override}: ${QEMU_DISPLAY_MODE_OVERRIDE:-spice}"
+  echo "==> QEMU display mode${QEMU_DISPLAY_MODE_OVERRIDE:+ override}: ${QEMU_DISPLAY_MODE_OVERRIDE:-${default_display}}"
   echo "==> Vars file: ${VAR_FILE}"
 }
 
