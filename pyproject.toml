@@ -5,112 +5,23 @@ description = "Add your description here"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.14"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.14",
+]
 dependencies = [
-    "molecule>=26.4.0",
+  "molecule>=26.4",
 ]
 
 [dependency-groups]
 dev = [
-        "poethepoet>=0.35.0",
+  "poethepoet>=0.35",
 ]
 
 [tool.poe]
 shell_interpreter = "bash"
-
-[tool.poe.tasks.init]
-help = "Initialize Packer plugins"
-cmd = "packer init ${PACKER_DIR:-packer}/"
-
-[tool.poe.tasks.validate]
-help = "Validate Packer templates with host context"
-shell = """
-set -euo pipefail
-source scripts/lib/common.sh
-
-require_cmd packer
-setup_build_context
-print_build_context
-
-read -r -a packer_args <<< "$(packer_common_args)"
-packer validate "${packer_args[@]}" "${PACKER_DIR}/"
-"""
-
-[tool.poe.tasks.build]
-help = "Build images: build [qemu|virtualbox|all] [server|workstation|all]"
-args = [
-        { name = "platform", positional = true, default = "qemu" },
-        { name = "variant", positional = true, default = "all" },
-]
-shell = """
-set -euo pipefail
-source scripts/lib/common.sh
-
-platform="${platform:-qemu}"
-variant="${variant:-all}"
-
-case "$platform" in
-    qemu|virtualbox|all) ;;
-    *) echo "Error: platform must be qemu, virtualbox, or all"; exit 1 ;;
-esac
-
-case "$variant" in
-    server|workstation|all) ;;
-    *) echo "Error: variant must be server, workstation, or all"; exit 1 ;;
-esac
-
-require_cmd packer
-require_cmd ansible-playbook
-
-build_qemu_variant() {
-    local selected_variant="$1"
-    setup_build_context
-    print_build_context
-    read -r -a packer_args <<< "$(packer_common_args)"
-    packer build -only=qemu.fedora "${packer_args[@]}" -var "variant=${selected_variant}" "${PACKER_DIR}/"
-}
-
-build_virtualbox_variant() {
-    local selected_variant="$1"
-    if ! command -v VBoxManage >/dev/null 2>&1; then
-        echo "Error: VBoxManage not found. Please install VirtualBox."
-        exit 1
-    fi
-    setup_build_context
-    read -r -a packer_args <<< "$(packer_common_args)"
-    packer build -only=virtualbox-iso.fedora "${packer_args[@]}" -var "variant=${selected_variant}" "${PACKER_DIR}/"
-}
-
-run_variants() {
-    local selected_platform="$1"
-    local selected_variant="$2"
-    local variant_list
-    if [[ "$selected_variant" == "all" ]]; then
-        variant_list="server workstation"
-    else
-        variant_list="$selected_variant"
-    fi
-
-    local v
-    for v in $variant_list; do
-        case "$selected_platform" in
-            qemu) build_qemu_variant "$v" ;;
-            virtualbox) build_virtualbox_variant "$v" ;;
-        esac
-    done
-}
-
-if [[ "$platform" == "qemu" || "$platform" == "all" ]]; then
-    run_variants qemu "$variant"
-fi
-
-if [[ "$platform" == "virtualbox" || "$platform" == "all" ]]; then
-    run_variants virtualbox "$variant"
-fi
-"""
-
-[tool.poe.tasks.packer-build]
-help = "Bare packer build wrapper: inject host uname vars and pass through args"
-shell = """
+tasks.build.help = "Build images with Packer"
+tasks.build.shell = """
 set -euo pipefail
 
 [[ -n "${POE_EXTRA_ARGS:-}" ]] && eval "set -- ${POE_EXTRA_ARGS}" || set --
@@ -126,14 +37,39 @@ packer build \
     "$@" \
     "${PACKER_DIR:-packer}/"
 """
+tasks.clean.help = "Remove build artifacts and Packer cache"
+tasks.clean.cmd = "rm -rf ${OUTPUT_DIR:-output}/ .packer_cache/ ./*.box ./*.qcow2 ./*.vdi"
+tasks.init.help = "Initialize Packer plugins"
+tasks.init.cmd = "packer init -upgrade ${PACKER_DIR:-packer}/"
+tasks.status.help = "Show output artifacts and Packer cache state"
+tasks.status.shell = """
+set -euo pipefail
+source scripts/lib/common.sh
 
-[tool.poe.tasks.test]
-help = "Run tests: test [qemu|virtualbox|all|ansible-collection] [server|workstation|all]"
-args = [
-        { name = "platform", positional = true, default = "qemu" },
-        { name = "variant", positional = true, default = "server" },
+echo "==> Build Status"
+echo
+echo "Output directory: ${OUTPUT_DIR}"
+if [[ -d "${OUTPUT_DIR}" ]]; then
+    echo "Artifacts:"
+    ls -lh "${OUTPUT_DIR}/"
+else
+    echo "No build artifacts found."
+fi
+
+echo
+echo "Packer cache:"
+if [[ -d ".packer_cache" ]]; then
+    du -sh .packer_cache/
+else
+    echo "No Packer cache."
+fi
+"""
+tasks.test.help = "Run tests: test [qemu|virtualbox|all|ansible-collection] [server|workstation|all]"
+tasks.test.args = [
+  { name = "platform", positional = true, default = "qemu" },
+  { name = "variant", positional = true, default = "server" },
 ]
-shell = """
+tasks.test.shell = """
 set -euo pipefail
 source scripts/lib/common.sh
 
@@ -235,32 +171,5 @@ if [[ "$platform" == "virtualbox" || "$platform" == "all" ]]; then
     run_test_variants virtualbox "$variant"
 fi
 """
-
-[tool.poe.tasks.clean]
-help = "Remove build artifacts and Packer cache"
-cmd = "rm -rf ${OUTPUT_DIR:-output}/ .packer_cache/ ./*.box ./*.qcow2 ./*.vdi"
-
-[tool.poe.tasks.status]
-help = "Show output artifacts and Packer cache state"
-shell = """
-set -euo pipefail
-source scripts/lib/common.sh
-
-echo "==> Build Status"
-echo
-echo "Output directory: ${OUTPUT_DIR}"
-if [[ -d "${OUTPUT_DIR}" ]]; then
-    echo "Artifacts:"
-    ls -lh "${OUTPUT_DIR}/"
-else
-    echo "No build artifacts found."
-fi
-
-echo
-echo "Packer cache:"
-if [[ -d ".packer_cache" ]]; then
-    du -sh .packer_cache/
-else
-    echo "No Packer cache."
-fi
-"""
+tasks.validate.help = "Validate Packer templates with host context"
+tasks.validate.shell = "prek run --color=always --all-files --show-diff-on-failure packer-validate kickstart-validate"
