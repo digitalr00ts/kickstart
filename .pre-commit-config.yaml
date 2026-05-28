@@ -54,6 +54,11 @@ repos:
   #     - id: ansible-lint
   #       args: [--fix]
 
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.21.2
+    hooks:
+      - id: pyproject-fmt
+
   - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
     rev: v1.7.12.24
     hooks:
