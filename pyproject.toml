@@ -20,48 +20,53 @@ dev = [
 
 [tool.poe]
 shell_interpreter = "bash"
-tasks.build.help = "Build images with Packer"
-tasks.build.shell = """
+# Kiwi NG tasks (primary method)
+tasks.build-kiwi.help = "Build Fedora image with Kiwi NG (Lima on macOS, native on Linux)"
+tasks.build-kiwi.args = [
+  { name = "version", positional = true, default = "44" },
+  { name = "arch", positional = true, default = "" },
+]
+tasks.build-kiwi.shell = "scripts/build-with-kiwi.sh ${version} ${arch}"
+tasks.provision-image.help = "Apply Ansible provisioning to a Kiwi-built image"
+tasks.provision-image.args = [
+  { name = "image", positional = true, required = true },
+]
+tasks.provision-image.shell = "scripts/provision-with-ansible.sh ${image}"
+tasks.build-full.help = "Build image with Kiwi + Ansible provisioning (complete workflow)"
+tasks.build-full.args = [
+  { name = "version", positional = true, default = "44" },
+  { name = "arch", positional = true, default = "" },
+]
+tasks.build-full.shell = """
 set -euo pipefail
-
-[[ -n "${POE_EXTRA_ARGS:-}" ]] && eval "set -- ${POE_EXTRA_ARGS}" || set --
-
-if [[ -n "${ARGS:-}" ]]; then
-    read -r -a env_args <<< "${ARGS}"
-    set -- "$@" "${env_args[@]}"
+scripts/build-with-kiwi.sh ${version} ${arch}
+IMAGE=$(find output/kiwi-* -name '*.qcow2' -type f | head -n 1)
+if [ -n "$IMAGE" ]; then
+    scripts/provision-with-ansible.sh "$IMAGE"
+else
+    echo "Error: No qcow2 image found in output/"
+    exit 1
 fi
-
-packer build \
-    -var="host_arch=$(uname -m)" \
-    -var="host_os=$(uname -s)" \
-    "$@" \
-    "${PACKER_DIR:-packer}/"
 """
-tasks.clean.help = "Remove build artifacts and Packer cache"
-tasks.clean.cmd = "rm -rf ${OUTPUT_DIR:-output}/ .packer_cache/ ./*.box ./*.qcow2 ./*.vdi"
-tasks.init.help = "Initialize Packer plugins"
-tasks.init.cmd = "packer init -upgrade ${PACKER_DIR:-packer}/"
-tasks.status.help = "Show output artifacts and Packer cache state"
+tasks.kiwi-clean.help = "Remove Kiwi build artifacts"
+tasks.kiwi-clean.cmd = "rm -rf output/kiwi-* build/ .kiwi-*"
+# Utility tasks
+tasks.clean.help = "Remove all build artifacts"
+tasks.clean.cmd = "rm -rf output/ ./*.box ./*.qcow2 ./*.vdi"
+tasks.status.help = "Show build artifacts status"
 tasks.status.shell = """
 set -euo pipefail
-source scripts/lib/common.sh
+
+OUTPUT_DIR="${OUTPUT_DIR:-output}"
 
 echo "==> Build Status"
 echo
 echo "Output directory: ${OUTPUT_DIR}"
 if [[ -d "${OUTPUT_DIR}" ]]; then
     echo "Artifacts:"
-    ls -lh "${OUTPUT_DIR}/"
+    ls -lh "${OUTPUT_DIR}/" 2>/dev/null || echo "  (empty)"
 else
-    echo "No build artifacts found."
-fi
-
-echo
-echo "Packer cache:"
-if [[ -d ".packer_cache" ]]; then
-    du -sh .packer_cache/
-else
-    echo "No Packer cache."
+    echo "No output directory found."
 fi
 """
 tasks.test.help = "Run tests: test [qemu|ansible-collection]"
@@ -70,7 +75,6 @@ tasks.test.args = [
 ]
 tasks.test.shell = """
 set -euo pipefail
-source scripts/lib/common.sh
 
 platform="${platform:-qemu}"
 policy_mode="${MOLECULE_POLICY_MODE:-strict}"
@@ -81,9 +85,9 @@ case "$platform" in
 esac
 
 if [[ "$platform" == "ansible-collection" ]]; then
-    require_cmd ansible
-    require_cmd ansible-galaxy
-    require_cmd python3
+    command -v ansible >/dev/null 2>&1 || { echo "Error: ansible not found"; exit 1; }
+    command -v ansible-galaxy >/dev/null 2>&1 || { echo "Error: ansible-galaxy not found"; exit 1; }
+    command -v python3 >/dev/null 2>&1 || { echo "Error: python3 not found"; exit 1; }
 
     [[ -f "ansible/requirements.yml" ]] || { echo "Error: ansible/requirements.yml not found"; exit 1; }
     [[ -f "ansible/ansible.cfg" ]] || { echo "Error: ansible/ansible.cfg not found"; exit 1; }
@@ -117,42 +121,9 @@ PY
     exit 0
 fi
 
-require_cmd molecule
+command -v molecule >/dev/null 2>&1 || { echo "Error: molecule not found"; exit 1; }
 
 if [[ "$platform" == "qemu" ]]; then
-    setup_build_context
     MOLECULE_POLICY_MODE="$policy_mode" molecule test -s "qemu"
 fi
 """
-tasks.validate.help = "Validate Packer templates with host context"
-tasks.validate.shell = "prek run --color=always --all-files --show-diff-on-failure packer-validate kickstart-validate"
-# Kiwi NG build tasks (new primary method)
-tasks.build-kiwi.help = "Build Fedora image with Kiwi NG (Lima on macOS, native on Linux)"
-tasks.build-kiwi.args = [
-  { name = "version", positional = true, default = "44" },
-  { name = "arch", positional = true, default = "" },
-]
-tasks.build-kiwi.shell = "scripts/build-with-kiwi.sh ${version} ${arch}"
-tasks.provision-image.help = "Apply Ansible provisioning to a Kiwi-built image"
-tasks.provision-image.args = [
-  { name = "image", positional = true, required = true },
-]
-tasks.provision-image.shell = "scripts/provision-with-ansible.sh ${image}"
-tasks.build-full.help = "Build image with Kiwi + Ansible provisioning (complete workflow)"
-tasks.build-full.args = [
-  { name = "version", positional = true, default = "44" },
-  { name = "arch", positional = true, default = "" },
-]
-tasks.build-full.shell = """
-set -euo pipefail
-scripts/build-with-kiwi.sh ${version} ${arch}
-IMAGE=$(find output/kiwi-* -name '*.qcow2' -type f | head -n 1)
-if [ -n "$IMAGE" ]; then
-    scripts/provision-with-ansible.sh "$IMAGE"
-else
-    echo "Error: No qcow2 image found in output/"
-    exit 1
-fi
-"""
-tasks.kiwi-clean.help = "Remove Kiwi build artifacts"
-tasks.kiwi-clean.cmd = "rm -rf output/kiwi-* build/ .kiwi-*"
