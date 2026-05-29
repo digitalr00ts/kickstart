@@ -9,14 +9,10 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = [
-  "molecule>=26.4",
-]
+dependencies = [ "molecule>=26.4" ]
 
 [dependency-groups]
-dev = [
-  "poethepoet>=0.35",
-]
+dev = [ "poethepoet>=0.35" ]
 
 [tool.poe]
 shell_interpreter = "bash"
@@ -70,9 +66,7 @@ else
 fi
 """
 tasks.test.help = "Run tests: test [qemu|ansible-collection]"
-tasks.test.args = [
-  { name = "platform", positional = true, default = "qemu" },
-]
+tasks.test.args = [ { name = "platform", positional = true, default = "qemu" } ]
 tasks.test.shell = """
 set -euo pipefail
 
