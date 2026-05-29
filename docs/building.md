@@ -1,425 +1,67 @@
-# Building Fedora Images
+# Building Images
 
-This document provides detailed instructions for building Fedora images with Packer.
+This guide covers image creation with Kiwi NG and optional post-build provisioning.
 
 ## Prerequisites
 
-Ensure the following tools are installed:
+- `uv`
+- `kiwi-ng`
+- `qemu-system-*`
+- `ansible-playbook`
+- `ansible-galaxy`
 
-- **Packer** (>= 1.15.0): `packer version`
-- **QEMU** (>= 10.1.0): `qemu-system-x86_64 --version`
-- **Ansible** (>= 2.20.0): `ansible --version`
-- **VirtualBox** (optional): `VBoxManage --version`
-- **uv**: `uv --version`
-
-Check all prerequisites:
+On macOS, install Lima:
 
 ```bash
-uv run poe init  # This will verify Packer and initialize plugins
+brew install lima
 ```
 
-### Host-aware QEMU accelerator defaults
-
-Build scripts automatically select a sensible accelerator for the host OS:
-
-- Linux: `kvm`
-- macOS: `hvf`
-- Fallback for unsupported hosts: `tcg`
-
-### Host-aware guest architecture defaults
-
-Build scripts also select a default guest architecture from the host CPU:
-
-- x86_64 host: `x86_64` guest
-- arm64/aarch64 host: `aarch64` guest
-
-Override at runtime when needed:
+## Quick Build
 
 ```bash
-GUEST_ARCH=x86_64 uv run poe build qemu server
+uv run poe build-kiwi
 ```
 
-### ARM64 boot behavior
-
-When `GUEST_ARCH=aarch64`,
-the QEMU builder uses EFI boot to avoid BIOS-style boot-device-list handling that can fail on ARM with:
-
-```text
-qemu-system-aarch64: no function defined to set boot device list for this architecture
-```
-
-Default EFI firmware paths are host-aware:
-
-- macOS: `/opt/homebrew/share/qemu/edk2-aarch64-code.fd` and `/opt/homebrew/share/qemu/edk2-arm-vars.fd`
-- Linux: `/usr/share/AAVMF/AAVMF_CODE.fd` and `/usr/share/AAVMF/AAVMF_VARS.fd`
-
-Override at runtime when needed:
+Build with explicit version and architecture:
 
 ```bash
-packer build \
-   -only=qemu.fedora \
-   -var-file=packer/fedora-44.auto.pkrvars.hcl \
-   -var guest_arch=aarch64 \
-   -var aarch64_efi_firmware_code=/custom/path/CODE.fd \
-   -var aarch64_efi_firmware_vars=/custom/path/VARS.fd \
-   -var variant=server \
-   packer/
+uv run poe build-kiwi 44 x86_64
+uv run poe build-kiwi 44 aarch64
 ```
 
-## Quick Start
-
-1. **Review the active Fedora vars file** in `packer/fedora-44.auto.pkrvars.hcl`:
-
-   ```bash
-   # Fedora 44.1.7 URLs and checksums are already included.
-   # Refresh this file if Fedora publishes a newer point release.
-   vim packer/fedora-44.auto.pkrvars.hcl
-   ```
-
-2. **Initialize Packer plugins**:
-
-   ```bash
-   uv run poe init
-   ```
-
-3. **Validate configuration**:
-
-   ```bash
-   uv run poe validate
-   ```
-
-4. **Build a server image**:
-
-   ```bash
-   uv run poe build qemu server
-   ```
-
-## Building Images
-
-### Using Poe (Recommended)
-
-Poe provides convenient commands for all build operations:
+## Build and Provision in One Step
 
 ```bash
-# Build specific variants
-uv run poe build qemu server            # Server for QEMU
-uv run poe build qemu workstation       # Workstation for QEMU
-uv run poe build virtualbox server      # Server for VirtualBox
-uv run poe build virtualbox workstation # Workstation for VirtualBox
+uv run poe build-full
+```
 
-# Build all variants
-uv run poe build all
+The command builds an image first, then applies the Ansible playbook to the first qcow2 image found under `output/kiwi-*`.
 
-# Clean and rebuild
+## Provision an Existing Image
+
+```bash
+uv run poe provision-image output/kiwi-x86_64/fedora-minimal.x86_64-44.1.7.qcow2
+```
+
+## Build Outputs
+
+Artifacts are written to:
+
+- `output/kiwi-x86_64/`
+- `output/kiwi-aarch64/`
+
+Use status helpers:
+
+```bash
+uv run poe status
+uv run poe kiwi-clean
 uv run poe clean
-uv run poe build qemu server
 ```
 
-Legacy compatibility mode is still available:
+## Environment Overrides
 
-```bash
-KICKSTART_TASK_LEGACY=1 ./scripts/task.sh build qemu server
-```
+Useful environment variables:
 
-### Using Packer Directly
-
-For more control, use Packer commands directly:
-
-```bash
-# Build server variant for QEMU
-packer build \
-  -only=qemu.fedora \
-   -var-file=packer/fedora-44.auto.pkrvars.hcl \
-   -var guest_arch=x86_64 \
-  -var variant=server \
-  packer/
-
-# Build workstation variant for QEMU
-packer build \
-  -only=qemu.fedora \
-   -var-file=packer/fedora-44.auto.pkrvars.hcl \
-   -var guest_arch=aarch64 \
-  -var variant=workstation \
-  packer/
-
-# Build for VirtualBox
-packer build \
-  -only=virtualbox-iso.fedora \
-   -var-file=packer/fedora-44.auto.pkrvars.hcl \
-  -var variant=server \
-  packer/
-```
-
-### Build Options
-
-#### Override Variables
-
-```bash
-# Use different disk size
-packer build -var disk_size=80000 ...
-
-# Use more memory
-packer build -var memory=4096 ...
-
-# Different Fedora version (if vars file exists)
-packer build -var-file=packer/fedora-44.auto.pkrvars.hcl ...
-```
-
-#### Debug Mode
-
-```bash
-# Enable debug output
-PACKER_LOG=1 packer build ...
-
-# Interactive debugging
-packer build -debug ...
-```
-
-## Ansible Collection Integration
-
-The build process supports both local development and production workflows for Ansible collections.
-
-### Production Build (GitHub Collection)
-
-Default behavior - uses collection from GitHub:
-
-```bash
-uv run poe build qemu server
-```
-
-This will:
-
-1. Install `drts01.collection` from GitHub
-2. Apply provisioning from the collection
-3. Create the final image
-
-### Development Build (Local Collection)
-
-For local collection development:
-
-```bash
-# Set the local collection path
-export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collections
-
-# Build with local collection
-uv run poe build qemu server
-```
-
-The build will use your local collection instead of downloading from GitHub.
-
-### Testing Collection Changes
-
-1. **Modify local collection** at your development path
-2. **Set environment variable**:
-
-   ```bash
-   export ANSIBLE_COLLECTIONS_PATH=/path/to/local/collections
-   ```
-
-3. **Build and test**:
-
-   ```bash
-   uv run poe build qemu server
-   uv run poe test qemu server
-   ```
-
-### Collection Requirements
-
-Edit `ansible/requirements.yml` to:
-
-- Change collection version/branch
-- Add additional collections
-- Configure for air-gapped environments
-
-## Build Process
-
-Understanding what happens during a build:
-
-### 1. ISO Download (First Build Only)
-
-Packer downloads and caches the Fedora ISO:
-
-- Cache location: `.packer_cache/`
-- Verifies checksum before use
-- Reuses cached ISO for subsequent builds
-
-### 2. VM Creation
-
-- Creates virtual machine with specified resources
-- Attaches ISO as boot media
-- Starts HTTP server for kickstart file
-
-### 3. Kickstart Installation
-
-- Boots from ISO
-- Fetches kickstart from Packer's HTTP server
-- Performs automated installation
-- Reboots into installed system
-
-### 4. Provisioning
-
-- **Shell Provisioner**: Installs Python and dependencies
-- **Ansible Provisioner**:
-  - Installs collections (if needed)
-  - Runs playbook for variant
-  - Applies configuration
-- **Shell Provisioner**: Final cleanup
-
-### 5. Image Export
-
-- Shuts down VM
-- Exports image in platform format:
-  - QEMU: qcow2 format
-  - VirtualBox: OVF/OVA format
-- Saves to `output/` directory
-
-## Build Time Estimates
-
-Typical build times (varies by hardware):
-
-| Variant     | Platform   | Time      |
-|-------------|------------|-----------|
-| Server      | QEMU       | 15-25 min |
-| Workstation | QEMU       | 25-40 min |
-| Server      | VirtualBox | 20-30 min |
-| Workstation | VirtualBox | 30-45 min |
-
-Factors affecting build time:
-
-- Internet connection speed (ISO download, package downloads)
-- CPU cores available
-- Disk I/O speed
-- Amount of RAM
-- Ansible provisioning complexity
-
-## Output Files
-
-After successful build:
-
-```text
-output/
-├── qemu/
-│   ├── server/
-│   │   └── fedora-44       # QEMU image (qcow2)
-│   └── workstation/
-│       └── fedora-44
-└── virtualbox/
-    ├── server/
-   │   └── fedora-44.ovf   # VirtualBox VM
-    └── workstation/
-      └── fedora-44.ovf
-```
-
-## Troubleshooting Builds
-
-### ISO Checksum Errors
-
-**Problem**: `invalid checksum` error
-
-**Solution**: Verify `packer/fedora-44.auto.pkrvars.hcl` matches the current Fedora release metadata,
-then update it if Fedora publishes a newer point release.
-
-### SSH Timeout
-
-**Problem**: Packer times out waiting for SSH
-
-**Solutions**:
-
-- Check kickstart has correct root password
-- Verify network configuration in kickstart
-- Increase `ssh_timeout` in `packer/sources.pkr.hcl`
-- Check VM has booted successfully (view console if possible)
-
-### Ansible Collection Not Found
-
-**Problem**: Ansible cannot find `drts01.collection`
-
-**Solutions**:
-
-- Verify `ansible/requirements.yml` has correct GitHub URL
-- Check network connectivity
-- For local development, ensure `ANSIBLE_COLLECTIONS_PATH` is set correctly
-- Verify collection structure matches expected format
-
-### Out of Disk Space
-
-**Problem**: Build fails due to insufficient disk space
-
-**Solutions**:
-
-- Clean previous builds: `uv run poe clean`
-- Remove Packer cache: `rm -rf .packer_cache/`
-- Free up host disk space
-- Reduce image disk size with `-var disk_size=20000`
-
-### VirtualBox Not Found
-
-**Problem**: VirtualBox builds fail
-
-**Solution**: Either install VirtualBox or use QEMU builds only
-
-## Advanced Topics
-
-### Custom Kickstart Modifications
-
-To modify kickstart behavior:
-
-1. Edit files in `http/` directory
-2. No need to rebuild - Packer serves current files
-3. Run validation if available: `ksvalidator http/ks-server.cfg`
-
-### Multi-Version Builds
-
-To support multiple Fedora versions:
-
-1. Create new vars file: `packer/fedora-44.auto.pkrvars.hcl`
-2. Update ISO URLs and checksums
-3. Build with: `packer build -var-file=packer/fedora-44.auto.pkrvars.hcl ...`
-
-### Headless vs. GUI Builds
-
-By default, builds run headless.
-
-To watch installation output locally, keep templates unchanged and pass runtime variables:
-
-```bash
-# Host-aware default GUI backend
-# Linux hosts default to SPICE, macOS hosts default to Cocoa
-packer build -var headless=false ...
-
-# Optional: force host-aware resolution explicitly
-packer build -var headless=false -var qemu_display_mode=auto ...
-
-# Explicit fallback for hosts where your preferred GUI backend is unavailable
-packer build -var headless=false -var qemu_display_mode=vnc ...
-```
-
-Supported display values are `spice`, `auto`, `none`, `gtk`, `cocoa`, `sdl`, and `vnc`.
-
-### Parallel Builds
-
-Build multiple variants simultaneously:
-
-```bash
-uv run poe build qemu server &
-uv run poe build qemu workstation &
-wait
-```
-
-**Note**: Ensure sufficient system resources (RAM, CPU).
-
-## Next Steps
-
-After building images:
-
-1. **Test**: See [testing.md](testing.md) for validation procedures
-2. **Deploy**: Use images for your infrastructure
-3. **Automate**: Integrate into CI/CD pipelines
-4. **Customize**: Modify Ansible playbooks for your requirements
-
-## References
-
-- [Packer Documentation](https://www.packer.io/docs)
-- [QEMU Documentation](https://www.qemu.org/documentation/)
-- [VirtualBox Manual](https://www.virtualbox.org/manual/)
-- [Fedora Downloads](https://getfedora.org/)
+- `ANSIBLE_COLLECTIONS_PATH`: use a local collection checkout
+- `ANSIBLE_PLAYBOOK`: override playbook path for provisioning
+- `MOLECULE_POLICY_MODE`: influence test policy behavior

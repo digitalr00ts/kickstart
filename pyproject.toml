@@ -1,5 +1,5 @@
 [project]
-name = "kickstart"
+name = "fedora-image-builder"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"

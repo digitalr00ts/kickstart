@@ -1,7 +1,3 @@
-# Packer cache and builds
-.packer_cache/
-packer_cache/
-
 # Kiwi NG build artifacts
 .kiwi-*
 build/
@@ -14,9 +10,6 @@ output/
 *.box
 *.packages
 *.verified
-
-# Vagrant
-.vagrant/
 
 # OS files
 .DS_Store

@@ -1,19 +1,12 @@
 collections/
 openspec/
 
-# Packer cache and builds
-.packer_cache/
-packer_cache/
-
 # Build output directories
 output/
 *.qcow2
 *.vdi
 *.vmdk
 *.box
-
-# Vagrant
-.vagrant/
 
 # OS files
 .DS_Store

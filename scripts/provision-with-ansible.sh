@@ -4,8 +4,8 @@ set -euo pipefail
 IMAGE_PATH=${1:-}
 ARCH=${2:-$(uname -m)}
 SSH_PORT=${SSH_PORT:-2222}
-SSH_USER=${SSH_USER:-vagrant}
-SSH_PASS=${SSH_PASS:-vagrant}
+SSH_USER=${SSH_USER:-admin}
+SSH_PASS=${SSH_PASS:-admin}
 PLAYBOOK=${ANSIBLE_PLAYBOOK:-ansible/playbook.yml}
 REQS=${ANSIBLE_REQUIREMENTS:-ansible/requirements.yml}
 

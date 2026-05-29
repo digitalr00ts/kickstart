@@ -1,6 +1,6 @@
 #!/bin/bash
 # Kiwi NG Configuration Script
-# Equivalent to kickstart %post section
+# Equivalent to image post-installation setup
 # This runs inside the image during build
 
 set -euxo pipefail
@@ -10,14 +10,14 @@ echo "Kiwi NG Configuration Script Starting"
 echo "========================================="
 
 #======================================
-# Configure sudo for vagrant user
+# Configure sudo for admin user
 #======================================
-echo "Configuring sudo for vagrant user..."
-cat > /etc/sudoers.d/vagrant <<EOF
-Defaults:vagrant !requiretty
-%vagrant ALL=(ALL) NOPASSWD: ALL
+echo "Configuring sudo for admin user..."
+cat > /etc/sudoers.d/admin <<EOF
+Defaults:admin !requiretty
+%admin ALL=(ALL) NOPASSWD: ALL
 EOF
-chmod 440 /etc/sudoers.d/vagrant
+chmod 440 /etc/sudoers.d/admin
 
 #======================================
 # Lock root password (security)
@@ -31,7 +31,7 @@ passwd -l root || true
 echo "Configuring DNF..."
 cat >> /etc/dnf/dnf.conf <<EOF
 
-# Optimizations from kickstart
+# Build-time optimizations
 install_weak_deps=False
 fastestmirror=True
 repo_gpgcheck=True
@@ -110,7 +110,7 @@ rm -rf /var/tmp/* || true
 #======================================
 # Remove build logs
 #======================================
-rm -f /root/ks-post.log || true
+rm -f /root/build-post.log || true
 
 echo "========================================="
 echo "Kiwi NG Configuration Script Complete"

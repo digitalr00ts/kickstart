@@ -72,7 +72,6 @@ default_language_version:
 
 exclude: |
   (?x)^(
-    \.packer_cache/.*|
     output/.*|
     .*\.box$|
     .*\.qcow2$|

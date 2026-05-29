@@ -7,7 +7,7 @@
   become: true
 
   vars:
-    # Fedora version passed from Packer
+    # Fedora version passed from the build workflow
     # fedora_version: "{{ fedora_version }}"
     image_variant: minimal
 
