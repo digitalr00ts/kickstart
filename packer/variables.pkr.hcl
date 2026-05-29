@@ -38,7 +38,7 @@ variable "disk_size" {
 
 variable "memory" {
   type        = string
-  default     = "4096"
+  default     = "6144"
   description = "Memory allocation in MB (default: 4GB)"
 }
 
