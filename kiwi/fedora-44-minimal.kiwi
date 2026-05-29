@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kiwi NG Image Description for Fedora Minimal
+     Converted from kickstart.cfg
+     This is XML format - YAML support requires kiwi-ng >= 9.24 -->
+
+<image schemaversion="7.5" name="fedora-minimal">
+    <description type="system">
+        <author>Digital Roots</author>
+        <contact>https://github.com/digitalr00ts/kickstart</contact>
+        <specification>Minimal Fedora base image for QEMU platform</specification>
+    </description>
+
+    <preferences>
+        <version>44.1.7</version>
+        <packagemanager>dnf</packagemanager>
+        <locale>en_US.UTF-8</locale>
+        <keytable>us</keytable>
+        <timezone>America/Los_Angeles</timezone>
+        <rpm-excludedocs>true</rpm-excludedocs>
+        <rpm-check-signatures>false</rpm-check-signatures>
+        <bootsplash-theme>none</bootsplash-theme>
+
+        <type image="oem"
+              filesystem="btrfs"
+              format="qcow2"
+              bootloader="grub2"
+              firmware="efi"
+              kernelcmdline="console=ttyS0,115200n8 console=tty0"
+              bootpartition="false"
+              btrfs_root_is_snapshot="true">
+            <oemconfig>
+                <oem-resize>false</oem-resize>
+            </oemconfig>
+            <size unit="G">20</size>
+        </type>
+    </preferences>
+
+    <!-- Fedora 44 Repositories -->
+    <repository type="rpm-md" alias="fedora-44" priority="1">
+        <source path="https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/$basearch/os/"/>
+    </repository>
+
+    <repository type="rpm-md" alias="fedora-updates" priority="2">
+        <source path="https://download.fedoraproject.org/pub/fedora/linux/updates/44/$basearch/"/>
+    </repository>
+
+    <!-- Package Selection -->
+    <packages type="image">
+        <!-- Core system packages -->
+        <package name="@core"/>
+        <package name="openssh-server"/>
+        <package name="python3"/>
+        <package name="python3-pip"/>
+        <package name="dnf"/>
+        <package name="dnf-plugins-core"/>
+        <package name="vim-minimal"/>
+        <package name="glibc-langpack-en"/>
+
+        <!-- Required for image building -->
+        <package name="kernel"/>
+        <package name="grub2-efi-x64"/>
+        <package name="grub2-efi-x64-modules"/>
+        <package name="shim-x64"/>
+        <package name="efibootmgr"/>
+
+        <!-- Excludes from kickstart -->
+        <ignore name="plymouth"/>
+        <ignore name="initial-setup-gui"/>
+        <ignore name="glibc-all-langpacks"/>
+    </packages>
+
+    <packages type="bootstrap">
+        <package name="filesystem"/>
+        <package name="basesystem"/>
+        <package name="glibc"/>
+    </packages>
+
+    <!-- Users Configuration -->
+    <users>
+        <user password="$6$rounds=123456$kickstart$8BDRblt8lkOOA..4iCG/xJZR6L4nl2ZJxsZ9pkoK1ECbfqkZs60Gew6j2jvVCYSi9.e.hYGK2.S1v4ZG6zpBT/"
+              home="/home/admin"
+              name="admin"
+              groups="wheel"
+              pwdformat="encrypted"/>
+
+        <user password="$6$rounds=5000$default$L/jbIehFuDL9yFtCbhxk/DrduO/YwFORc8a3AT4.wx3WIFUeMHOS/ihM8uV7Ovi4p571WPJq70t0XJbAwBH83/"
+              home="/home/vagrant"
+              name="vagrant"
+              groups="wheel"
+              id="900"
+              pwdformat="encrypted"/>
+    </users>
+</image>
+
+<!-- Configuration Script
+     Equivalent to kickstart %post section
+     The config.sh script in this directory will be automatically executed -->

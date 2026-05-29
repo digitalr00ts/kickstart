@@ -126,3 +126,33 @@ fi
 """
 tasks.validate.help = "Validate Packer templates with host context"
 tasks.validate.shell = "prek run --color=always --all-files --show-diff-on-failure packer-validate kickstart-validate"
+# Kiwi NG build tasks (new primary method)
+tasks.build-kiwi.help = "Build Fedora image with Kiwi NG (Lima on macOS, native on Linux)"
+tasks.build-kiwi.args = [
+  { name = "version", positional = true, default = "44" },
+  { name = "arch", positional = true, default = "" },
+]
+tasks.build-kiwi.shell = "scripts/build-with-kiwi.sh ${version} ${arch}"
+tasks.provision-image.help = "Apply Ansible provisioning to a Kiwi-built image"
+tasks.provision-image.args = [
+  { name = "image", positional = true, required = true },
+]
+tasks.provision-image.shell = "scripts/provision-with-ansible.sh ${image}"
+tasks.build-full.help = "Build image with Kiwi + Ansible provisioning (complete workflow)"
+tasks.build-full.args = [
+  { name = "version", positional = true, default = "44" },
+  { name = "arch", positional = true, default = "" },
+]
+tasks.build-full.shell = """
+set -euo pipefail
+scripts/build-with-kiwi.sh ${version} ${arch}
+IMAGE=$(find output/kiwi-* -name '*.qcow2' -type f | head -n 1)
+if [ -n "$IMAGE" ]; then
+    scripts/provision-with-ansible.sh "$IMAGE"
+else
+    echo "Error: No qcow2 image found in output/"
+    exit 1
+fi
+"""
+tasks.kiwi-clean.help = "Remove Kiwi build artifacts"
+tasks.kiwi-clean.cmd = "rm -rf output/kiwi-* build/ .kiwi-*"

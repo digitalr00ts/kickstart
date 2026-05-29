@@ -2,12 +2,18 @@
 .packer_cache/
 packer_cache/
 
+# Kiwi NG build artifacts
+.kiwi-*
+build/
+
 # Build output directories
 output/
 *.qcow2
 *.vdi
 *.vmdk
 *.box
+*.packages
+*.verified
 
 # Vagrant
 .vagrant/
