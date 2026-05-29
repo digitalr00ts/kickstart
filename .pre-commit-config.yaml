@@ -60,36 +60,6 @@ repos:
           - pyflakes
           - shellcheck-py
 
-  - repo: local
-    hooks:
-      # Packer format check
-      - id: packer-fmt
-        name: Packer Format
-        entry: packer fmt -recursive
-        language: system
-        files: \.pkr\.hcl$
-        pass_filenames: false
-        args: [packer/]
-
-      # Packer validation
-      - id: packer-validate
-        name: Packer Validate
-        entry: bash -c 'packer validate packer/'
-        language: system
-        files: packer/.*\.pkr\.hcl$
-        pass_filenames: false
-
-  - repo: local
-    hooks:
-      - id: ksvalidator
-        name: Validate Kickstart Configuration
-        entry: ksvalidator
-        language: python
-        files: http/ks-base.*\.cfg$
-        types: [file]
-        additional_dependencies: [pykickstart]
-        args: [--version=F44]
-
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.48.0
     hooks:

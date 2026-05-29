@@ -1,6 +1,8 @@
 # Fedora Image Builder
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Build Kiwi NG Image](https://github.com/digitalr00ts/kickstart/actions/workflows/build-kiwi-image.yml/badge.svg)](https://github.com/digitalr00ts/kickstart/actions/workflows/build-kiwi-image.yml)
+[![Test Image](https://github.com/digitalr00ts/kickstart/actions/workflows/test-image.yml/badge.svg)](https://github.com/digitalr00ts/kickstart/actions/workflows/test-image.yml)
 
 Automated image build system for generating minimal Fedora images using **Kiwi NG** (primary) or Packer (legacy),
 with Ansible provisioning.
