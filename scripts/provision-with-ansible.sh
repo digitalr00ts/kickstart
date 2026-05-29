@@ -82,20 +82,61 @@ create_working_copy() {
 }
 
 #======================================
-# Start QEMU instance
+# Detect if we should use Lima
+#======================================
+should_use_lima() {
+    local host_arch
+    host_arch="$(uname -m)"
+
+    # Only consider Lima on macOS
+    [[ "$(uname -s)" != "Darwin" ]] && return 1
+
+    # Check if architectures match
+    if [[ "$host_arch" == "$ARCH" ]] || [[ "$host_arch" == "arm64" && "$ARCH" == "aarch64" ]]; then
+        # Native architecture - HVF is fastest
+        return 1
+    fi
+
+    # Cross-architecture - Lima with KVM is much faster than TCG
+    if command -v limactl &> /dev/null; then
+        echo -e "${YELLOW}Cross-architecture detected, using Lima for better performance${NC}"
+        return 0
+    else
+        echo -e "${YELLOW}⚠ Warning: Cross-architecture without Lima - using slow TCG emulation${NC}"
+        echo -e "${YELLOW}  Install Lima for much faster provisioning: brew install lima${NC}"
+        return 1
+    fi
+}
+
+#======================================
+# Start QEMU instance (native or Lima)
 #======================================
 start_qemu() {
     echo -e "${BLUE}→${NC} Starting QEMU instance..."
     echo -e "  Image: ${YELLOW}${WORKING_IMAGE}${NC}"
     echo -e "  SSH Port: ${YELLOW}${SSH_PORT}${NC}"
 
+    if should_use_lima; then
+        start_qemu_lima
+    else
+        start_qemu_native
+    fi
+}
+
+#======================================
+# Start QEMU natively (with HVF/KVM/TCG)
+#======================================
+start_qemu_native() {
     # Determine QEMU acceleration
     if [[ "$(uname -s)" == "Darwin" ]]; then
         ACCEL="-accel hvf"
+        echo -e "  Acceleration: ${YELLOW}HVF (native macOS)${NC}"
     elif [[ -e /dev/kvm ]]; then
         ACCEL="-accel kvm"
+        echo -e "  Acceleration: ${YELLOW}KVM (native Linux)${NC}"
     else
         ACCEL="-accel tcg"
+        echo -e "  Acceleration: ${YELLOW}TCG (emulation - slow)${NC}"
     fi
 
     # Start QEMU in background
@@ -111,7 +152,44 @@ start_qemu() {
         > /tmp/qemu-provision-$$.log 2>&1 &
 
     QEMU_PID=$!
+    USE_LIMA=false
     echo -e "${GREEN}✓${NC} QEMU started (PID: ${QEMU_PID})"
+
+    # Ensure cleanup on exit
+    trap "cleanup_qemu" EXIT INT TERM
+}
+
+#======================================
+# Start QEMU via Lima (for cross-arch)
+#======================================
+start_qemu_lima() {
+    echo -e "  Method: ${YELLOW}Lima (Linux VM with KVM)${NC}"
+
+    # Ensure Lima instance exists
+    if ! limactl list | grep -q "^provision-vm"; then
+        echo -e "${BLUE}→${NC} Creating Lima VM for provisioning..."
+        limactl start --name=provision-vm template://default
+    fi
+
+    # Copy image to Lima
+    echo -e "${BLUE}→${NC} Copying image to Lima VM..."
+    limactl copy "${WORKING_IMAGE}" provision-vm:/tmp/provision-image.qcow2
+
+    # Start QEMU inside Lima
+    limactl shell provision-vm qemu-system-${ARCH} \
+        -accel kvm \
+        -m 2048 \
+        -smp 2 \
+        -drive file=/tmp/provision-image.qcow2,format=qcow2,if=virtio \
+        -netdev user,id=net0,hostfwd=tcp:0.0.0.0:${SSH_PORT}-:22 \
+        -device virtio-net-pci,netdev=net0 \
+        -nographic \
+        -daemonize \
+        -pidfile /tmp/qemu-provision.pid
+
+    QEMU_PID=$(limactl shell provision-vm cat /tmp/qemu-provision.pid)
+    USE_LIMA=true
+    echo -e "${GREEN}✓${NC} QEMU started in Lima VM (PID: ${QEMU_PID})"
 
     # Ensure cleanup on exit
     trap "cleanup_qemu" EXIT INT TERM
@@ -191,15 +269,31 @@ shutdown_qemu() {
     # Wait for QEMU to exit
     local timeout=30
     local elapsed=0
-    while kill -0 $QEMU_PID 2>/dev/null && [ $elapsed -lt $timeout ]; do
-        sleep 1
-        elapsed=$((elapsed+1))
-    done
 
-    # Force kill if still running
-    if kill -0 $QEMU_PID 2>/dev/null; then
-        echo -e "${YELLOW}Force killing QEMU...${NC}"
-        kill -9 $QEMU_PID 2>/dev/null || true
+    if [[ "${USE_LIMA:-false}" == "true" ]]; then
+        # Check if QEMU in Lima is still running
+        while limactl shell provision-vm test -e /proc/$QEMU_PID 2>/dev/null && [ $elapsed -lt $timeout ]; do
+            sleep 1
+            elapsed=$((elapsed+1))
+        done
+
+        # Force kill if still running
+        if limactl shell provision-vm test -e /proc/$QEMU_PID 2>/dev/null; then
+            echo -e "${YELLOW}Force killing QEMU in Lima...${NC}"
+            limactl shell provision-vm kill -9 $QEMU_PID 2>/dev/null || true
+        fi
+    else
+        # Native QEMU shutdown
+        while kill -0 $QEMU_PID 2>/dev/null && [ $elapsed -lt $timeout ]; do
+            sleep 1
+            elapsed=$((elapsed+1))
+        done
+
+        # Force kill if still running
+        if kill -0 $QEMU_PID 2>/dev/null; then
+            echo -e "${YELLOW}Force killing QEMU...${NC}"
+            kill -9 $QEMU_PID 2>/dev/null || true
+        fi
     fi
 
     echo -e "${GREEN}✓${NC} QEMU shutdown"
@@ -211,6 +305,11 @@ shutdown_qemu() {
 replace_image() {
     echo -e "${BLUE}→${NC} Replacing original image..."
 
+    if [[ "${USE_LIMA:-false}" == "true" ]]; then
+        # Copy image back from Lima
+        limactl copy provision-vm:/tmp/provision-image.qcow2 "${WORKING_IMAGE}"
+    fi
+
     mv "$WORKING_IMAGE" "$IMAGE_PATH"
 
     echo -e "${GREEN}✓${NC} Image updated: ${IMAGE_PATH}"
@@ -220,10 +319,16 @@ replace_image() {
 # Cleanup function
 #======================================
 cleanup_qemu() {
-    if [ -n "${QEMU_PID:-}" ] && kill -0 $QEMU_PID 2>/dev/null; then
+    if [ -n "${QEMU_PID:-}" ]; then
         echo ""
         echo -e "${YELLOW}Cleaning up QEMU process...${NC}"
-        kill -9 $QEMU_PID 2>/dev/null || true
+
+        if [[ "${USE_LIMA:-false}" == "true" ]]; then
+            limactl shell provision-vm kill -9 $QEMU_PID 2>/dev/null || true
+            limactl shell provision-vm rm -f /tmp/provision-image.qcow2 2>/dev/null || true
+        else
+            kill -9 $QEMU_PID 2>/dev/null || true
+        fi
     fi
 
     # Clean up working copy if it still exists and wasn't moved
