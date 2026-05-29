@@ -15,39 +15,33 @@ The testing infrastructure validates that built images:
 
 ## Quick Testing
 
-### Test QEMU Images
+### Test Images with Molecule
 
 ```bash
-# Test server image
-./scripts/task.sh test qemu server
+# Host-aware backend selection:
+# - macOS: Lima-managed VM lifecycle
+# - Linux: QEMU/KVM VM lifecycle
+uv run poe test qemu
 
-# Test workstation image
-./scripts/task.sh test qemu workstation
+# Or run Molecule directly
+molecule test -s qemu
+```
 
-# Or run Molecule scenarios directly
-molecule test -s qemu-server
-molecule test -s qemu-workstation
-```bash
-
-### Test VirtualBox Images
+### Platform prerequisites
 
 ```bash
-# Test server image
-./scripts/task.sh test virtualbox server
+# macOS
+brew install lima
 
-# Test workstation image
-./scripts/task.sh test virtualbox workstation
+# Linux
+sudo dnf install -y qemu-kvm qemu-system-x86 qemu-system-aarch64
+```
 
-# Or run Molecule scenarios directly
-molecule test -s virtualbox-server
-molecule test -s virtualbox-workstation
-```bash
-
-### Test All Platforms
+### Test Ansible Collection Integration
 
 ```bash
-./scripts/task.sh test all server
-```bash
+uv run poe test ansible-collection
+```
 
 ## Molecule Test Scenarios
 
@@ -55,10 +49,9 @@ Image lifecycle and validation are now managed by Molecule delegated scenarios.
 
 ### Scenario map
 
-- `qemu-server` - boots a server qcow2 image in QEMU and verifies baseline checks
-- `qemu-workstation` - boots a workstation qcow2 image in QEMU and verifies desktop checks
-- `virtualbox-server` - imports server OVF into VirtualBox and verifies baseline checks
-- `virtualbox-workstation` - imports workstation OVF into VirtualBox and verifies desktop checks
+- `qemu` - boots a qcow2 image and verifies baseline checks
+  - macOS hosts: Molecule creates and destroys a Lima instance
+  - Linux hosts: Molecule creates and destroys a QEMU/KVM instance with SPICE enabled
 
 ### Strict policy modes
 
@@ -70,49 +63,26 @@ Set `MOLECULE_POLICY_MODE` before running tests:
 
 ### task.sh test qemu
 
-Runs the QEMU Molecule scenario by:
+Runs the host-aware Molecule scenario by:
 
-1. Running `molecule test -s qemu-<variant>`
+1. Running `molecule test -s qemu`
 2. Creating and destroying VM lifecycle in scenario `create`/`destroy`
 3. Executing checks in scenario `verify`
 
 **Usage:**
 
 ```bash
-./scripts/task.sh test qemu [variant]
-
-# Examples
-./scripts/task.sh test qemu server
-./scripts/task.sh test qemu workstation
+uv run poe test qemu
 
 # With strict checks
-MOLECULE_POLICY_MODE=strict ./scripts/task.sh test qemu server
+MOLECULE_POLICY_MODE=strict uv run poe test qemu
 
 # Downgrade to mixed checks
-MOLECULE_POLICY_MODE=mixed ./scripts/task.sh test qemu server
+MOLECULE_POLICY_MODE=mixed uv run poe test qemu
 
 # Downgrade to parity checks
-MOLECULE_POLICY_MODE=parity ./scripts/task.sh test qemu server
-```bash
-
-### task.sh test virtualbox
-
-Runs the VirtualBox Molecule scenario by:
-
-1. Running `molecule test -s virtualbox-<variant>`
-2. Importing and starting VM in scenario `create`
-3. Executing checks in scenario `verify`
-4. Powering off and unregistering VM in scenario `destroy`
-
-**Usage:**
-
-```bash
-./scripts/task.sh test virtualbox [variant]
-
-# Examples
-./scripts/task.sh test virtualbox server
-./scripts/task.sh test virtualbox workstation
-```bash
+MOLECULE_POLICY_MODE=parity uv run poe test qemu
+```
 
 ### task.sh test ansible-collection
 

@@ -5,8 +5,43 @@
   connection: local
   vars:
     fedora_version: "{{ lookup('env', 'FEDORA_VERSION') | default('44', true) }}"
-    vm_platform: "{{ lookup('env', 'VM_PLATFORM') }}"
-    variant: "{{ lookup('env', 'VM_VARIANT') }}"
+    vm_platform: "{{ lookup('env', 'VM_PLATFORM') | default('auto', true) }}"
+    variant: "{{ lookup('env', 'VM_VARIANT') | default('server', true) }}"
   tasks:
+    - name: Resolve host operating system
+      ansible.builtin.set_fact:
+        host_os_raw: "{{ lookup('pipe', 'uname -s') | trim }}"
+
+    - name: Normalize host operating system
+      ansible.builtin.set_fact:
+        host_os: >-
+          {{
+            'darwin' if host_os_raw == 'Darwin'
+            else ('linux' if host_os_raw == 'Linux' else 'unsupported')
+          }}
+
+    - name: Resolve requested platform alias
+      ansible.builtin.set_fact:
+        vm_platform_requested: "{{ 'qemu-kvm' if vm_platform == 'qemu' else vm_platform }}"
+
+    - name: Resolve effective platform
+      ansible.builtin.set_fact:
+        vm_platform_effective: >-
+          {{
+            ('lima' if host_os == 'darwin' else 'qemu-kvm')
+            if vm_platform_requested in ['auto', '']
+            else vm_platform_requested
+          }}
+
+    - name: Validate host-platform pairing
+      ansible.builtin.assert:
+        that:
+          - (host_os == 'darwin' and vm_platform_effective == 'lima') or
+            (host_os == 'linux' and vm_platform_effective == 'qemu-kvm')
+          - variant in ['server', 'workstation']
+        fail_msg: macOS requires Lima and Linux requires QEMU/KVM
+
     - name: Include shared destroy tasks
       ansible.builtin.include_tasks: ../shared/instance-destroy.yml
+      vars:
+        vm_platform: '{{ vm_platform_effective }}'

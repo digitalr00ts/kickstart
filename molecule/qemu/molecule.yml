@@ -8,7 +8,8 @@ platforms:
 provisioner:
   name: ansible
   env:
-    VM_PLATFORM: qemu
+    VM_PLATFORM: auto
+    VM_VARIANT: server
     VM_SSH_PORT: '2222'
   playbooks:
     create: ../shared/create.yml
@@ -21,7 +22,6 @@ provisioner:
         ansible_port: 2222
         ansible_user: root
         ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-        vm_platform: qemu
 verifier:
   name: ansible
   enabled: true

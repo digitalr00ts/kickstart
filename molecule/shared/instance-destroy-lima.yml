@@ -1,0 +1,20 @@
+---
+- name: Stop and delete Lima instance if present
+  ansible.builtin.shell: |
+    if command -v limactl >/dev/null 2>&1; then
+      if limactl list | awk 'NR>1 {print $1}' | grep -qx '{{ lima_instance_name }}'; then
+        limactl stop '{{ lima_instance_name }}' >/dev/null 2>&1 || true
+        limactl delete -f '{{ lima_instance_name }}' >/dev/null 2>&1 || true
+      fi
+    fi
+  changed_when: true
+
+- name: Remove Lima template file
+  ansible.builtin.file:
+    path: '{{ lima_template_path }}'
+    state: absent
+
+- name: Remove Lima state file
+  ansible.builtin.file:
+    path: '{{ lima_state_path }}'
+    state: absent

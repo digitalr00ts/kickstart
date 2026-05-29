@@ -233,7 +233,7 @@ uv run poe build                          # Build with Packer
 ### Testing & Utilities
 
 ```bash
-uv run poe test qemu                      # Test QEMU images
+uv run poe test qemu                      # Test images (Lima on macOS, QEMU/KVM+SPICE on Linux)
 uv run poe test ansible-collection        # Validate Ansible collection
 uv run poe clean                          # Remove all build artifacts
 uv run poe status                         # Show build status

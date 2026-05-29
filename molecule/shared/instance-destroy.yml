@@ -6,28 +6,16 @@
       default('aarch64' if lookup('pipe', 'uname -m') in ['arm64', 'aarch64'] else 'x86_64',
       true) }}
 
-- name: Stop qemu VM if running
-  ansible.builtin.shell: |
-    pid_file='/tmp/molecule-{{ vm_platform }}-{{ variant }}.pid'
-    if [ -f "${pid_file}" ]; then
-      pid="$(cat "${pid_file}")"
-      if kill -0 "${pid}" >/dev/null 2>&1; then
-        kill "${pid}" >/dev/null 2>&1 || true
-        sleep 2
-        kill -9 "${pid}" >/dev/null 2>&1 || true
-      fi
-      rm -f "${pid_file}"
-    fi
-  changed_when: true
-  when: vm_platform == 'qemu'
+- name: Resolve Lima instance and state paths
+  ansible.builtin.set_fact:
+    lima_instance_name: molecule-fedora-{{ fedora_version }}-{{ variant }}
+    lima_template_path: /tmp/molecule-lima-{{ fedora_version }}-{{ variant }}.yaml
+    lima_state_path: /tmp/molecule-lima-{{ fedora_version }}-{{ variant }}.state
 
-- name: Power off and remove VirtualBox VM
-  ansible.builtin.shell: |
-    name=molecule-fedora-{{ fedora_version }}-{{ variant }}
-    if VBoxManage showvminfo "${name}" >/dev/null 2>&1; then
-      VBoxManage controlvm "${name}" poweroff >/dev/null 2>&1 || true
-      sleep 2
-      VBoxManage unregistervm "${name}" --delete >/dev/null 2>&1 || true
-    fi
-  changed_when: true
-  when: vm_platform == 'virtualbox'
+- name: Include QEMU/KVM destroy tasks
+  ansible.builtin.include_tasks: ../shared/instance-destroy-qemu-kvm.yml
+  when: vm_platform == 'qemu-kvm'
+
+- name: Include Lima destroy tasks
+  ansible.builtin.include_tasks: ../shared/instance-destroy-lima.yml
+  when: vm_platform == 'lima'

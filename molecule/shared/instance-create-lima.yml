@@ -1,0 +1,72 @@
+---
+- name: Ensure limactl exists on host
+  ansible.builtin.command:
+    argv:
+      - limactl
+      - --version
+  changed_when: false
+
+- name: Remove stale Lima state file
+  ansible.builtin.file:
+    path: '{{ lima_state_path }}'
+    state: absent
+
+- name: Remove stale Lima template file
+  ansible.builtin.file:
+    path: '{{ lima_template_path }}'
+    state: absent
+
+- name: Write Lima template
+  ansible.builtin.copy:
+    dest: '{{ lima_template_path }}'
+    mode: '0600'
+    content: |
+      vmType: "qemu"
+      arch: "{{ guest_arch }}"
+      cpus: 2
+      memory: "2GiB"
+      disk: "20GiB"
+      images:
+        - location: "file://{{ image_path_absolute }}"
+          arch: "{{ guest_arch }}"
+      mounts: []
+      ssh:
+        localPort: {{ ssh_port }}
+        loadDotSSHPubKeys: false
+      containerd:
+        system: false
+        user: false
+
+- name: Delete stale Lima instance if present
+  ansible.builtin.shell: |
+    set -o pipefail
+    if limactl list | awk 'NR>1 {print $1}' | grep -qx '{{ lima_instance_name }}'; then
+      limactl delete -f '{{ lima_instance_name }}' >/dev/null 2>&1 || true
+    fi
+  changed_when: true
+
+- name: Create Lima instance for Molecule
+  ansible.builtin.command:
+    argv:
+      - limactl
+      - create
+      - --name={{ lima_instance_name }}
+      - '{{ lima_template_path }}'
+    creates: '{{ lima_state_path }}'
+
+- name: Start Lima instance for Molecule
+  ansible.builtin.command:
+    argv:
+      - limactl
+      - start
+      - '{{ lima_instance_name }}'
+  changed_when: true
+
+- name: Record Lima lifecycle state
+  ansible.builtin.copy:
+    dest: '{{ lima_state_path }}'
+    mode: '0600'
+    content: |
+      instance={{ lima_instance_name }}
+      template={{ lima_template_path }}
+      ssh_port={{ ssh_port }}

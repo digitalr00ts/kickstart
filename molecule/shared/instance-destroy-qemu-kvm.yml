@@ -1,0 +1,14 @@
+---
+- name: Stop qemu-kvm VM if running
+  ansible.builtin.shell: |
+    pid_file='/tmp/molecule-qemu-kvm-{{ variant }}.pid'
+    if [ -f "${pid_file}" ]; then
+      pid="$(cat "${pid_file}")"
+      if kill -0 "${pid}" >/dev/null 2>&1; then
+        kill "${pid}" >/dev/null 2>&1 || true
+        sleep 2
+        kill -9 "${pid}" >/dev/null 2>&1 || true
+      fi
+      rm -f "${pid_file}"
+    fi
+  changed_when: true

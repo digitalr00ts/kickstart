@@ -9,23 +9,61 @@
     lvm_expected: '{{ (lookup(''env'', ''MOLECULE_LVM_EXPECTED'') | default(''false'', true)) | bool }}'
     network_required: '{{ (lookup(''env'', ''MOLECULE_NETWORK_REQUIRED'') | default(''false'', true)) | bool }}'
     verify_retries: '{{ lookup(''env'', ''MOLECULE_VERIFY_RETRIES'') | default(''1'', true) | int }}'
-    vm_platform: '{{ lookup(''env'', ''VM_PLATFORM'') }}'
-    variant: '{{ lookup(''env'', ''VM_VARIANT'') }}'
+    vm_platform: '{{ lookup(''env'', ''VM_PLATFORM'') | default(''auto'', true) }}'
+    variant: '{{ lookup(''env'', ''VM_VARIANT'') | default(''server'', true) }}'
     ssh_port: '{{ lookup(''env'', ''VM_SSH_PORT'') | int }}'
   tasks:
+    - name: Resolve host operating system
+      ansible.builtin.set_fact:
+        host_os_raw: "{{ lookup('pipe', 'uname -s') | trim }}"
+
+    - name: Normalize host operating system
+      ansible.builtin.set_fact:
+        host_os: >-
+          {{
+            'darwin' if host_os_raw == 'Darwin'
+            else ('linux' if host_os_raw == 'Linux' else 'unsupported')
+          }}
+
+    - name: Resolve requested platform alias
+      ansible.builtin.set_fact:
+        vm_platform_requested: "{{ 'qemu-kvm' if vm_platform == 'qemu' else vm_platform }}"
+
+    - name: Resolve effective platform
+      ansible.builtin.set_fact:
+        vm_platform_effective: >-
+          {{
+            ('lima' if host_os == 'darwin' else 'qemu-kvm')
+            if vm_platform_requested in ['auto', '']
+            else vm_platform_requested
+          }}
+
     - name: Validate strict policy mode
       ansible.builtin.assert:
         that:
           - molecule_policy_mode in ['parity', 'mixed', 'strict']
         fail_msg: 'Invalid MOLECULE_POLICY_MODE: {{ molecule_policy_mode }}'
 
-    - name: Validate platform and variant values
+    - name: Validate host and scenario values
       ansible.builtin.assert:
         that:
-          - vm_platform in ['qemu', 'virtualbox']
+          - host_os in ['darwin', 'linux']
+          - vm_platform_effective in ['lima', 'qemu-kvm']
           - variant in ['server', 'workstation']
           - ssh_port > 0
-        fail_msg: Scenario VM vars are invalid
+        fail_msg: Scenario VM vars are invalid for this host
+
+    - name: Validate host-platform pairing
+      ansible.builtin.assert:
+        that:
+          - >-
+            (host_os == 'darwin' and vm_platform_effective == 'lima')
+            or
+            (host_os == 'linux' and vm_platform_effective == 'qemu-kvm')
+        fail_msg: macOS requires Lima and Linux requires QEMU/KVM
 
     - name: Include shared create tasks
       ansible.builtin.include_tasks: ../shared/instance-create.yml
+      vars:
+        vm_platform: '{{ vm_platform_effective }}'
+        host_os: '{{ host_os }}'

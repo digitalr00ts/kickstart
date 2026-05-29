@@ -1,0 +1,82 @@
+---
+- name: Ensure QEMU binary exists on host
+  ansible.builtin.command:
+    argv:
+      - qemu-system-{{ guest_arch }}
+      - --version
+  changed_when: false
+
+- name: Ensure KVM is available on host
+  ansible.builtin.stat:
+    path: /dev/kvm
+  register: kvm_stat
+
+- name: Fail when KVM is unavailable
+  ansible.builtin.fail:
+    msg: /dev/kvm is unavailable. Linux Molecule tests require QEMU with KVM.
+  when: not kvm_stat.stat.exists
+
+- name: Ensure old qemu test pid is removed
+  ansible.builtin.file:
+    path: /tmp/molecule-qemu-kvm-{{ variant }}.pid
+    state: absent
+
+- name: Start qemu-kvm VM for x86_64
+  ansible.builtin.command:
+    argv:
+      - qemu-system-{{ guest_arch }}
+      - -name
+      - molecule-fedora-{{ variant }}
+      - -machine
+      - q35,accel=kvm
+      - -cpu
+      - host
+      - -m
+      - '2048'
+      - -smp
+      - '2'
+      - -drive
+      - file={{ image_path_absolute }},if=virtio,format=qcow2
+      - -net
+      - nic,model=virtio
+      - -net
+      - user,hostfwd=tcp::{{ ssh_port }}-:22
+      - -spice
+      - addr=127.0.0.1,port={{ spice_port }},disable-ticketing=on
+      - -display
+      - none
+      - -daemonize
+      - -pidfile
+      - /tmp/molecule-qemu-kvm-{{ variant }}.pid
+    creates: /tmp/molecule-qemu-kvm-{{ variant }}.pid
+  when: guest_arch != 'aarch64'
+
+- name: Start qemu-kvm VM for aarch64
+  ansible.builtin.command:
+    argv:
+      - qemu-system-{{ guest_arch }}
+      - -name
+      - molecule-fedora-{{ variant }}
+      - -machine
+      - virt,accel=kvm
+      - -cpu
+      - host
+      - -m
+      - '2048'
+      - -smp
+      - '2'
+      - -drive
+      - file={{ image_path_absolute }},if=virtio,format=qcow2
+      - -net
+      - nic,model=virtio
+      - -net
+      - user,hostfwd=tcp::{{ ssh_port }}-:22
+      - -spice
+      - addr=127.0.0.1,port={{ spice_port }},disable-ticketing=on
+      - -display
+      - none
+      - -daemonize
+      - -pidfile
+      - /tmp/molecule-qemu-kvm-{{ variant }}.pid
+    creates: /tmp/molecule-qemu-kvm-{{ variant }}.pid
+  when: guest_arch == 'aarch64'
