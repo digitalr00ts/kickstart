@@ -90,13 +90,14 @@ repos:
   # Kickstart validation (if ksvalidator is available)
   - repo: local
     hooks:
-      - id: kickstart-validate
-        name: Kickstart Syntax Check
-        entry: bash -c 'for f in "$@"; do if command -v ksvalidator &> /dev/null; then ksvalidator "$f" || exit 1; else
-          echo "ksvalidator not found, skipping kickstart validation"; fi; done'
-        language: system
-        files: http/ks-.*\.cfg$
-        pass_filenames: true
+      - id: ksvalidator
+        name: Validate Kickstart Configuration
+        entry: ksvalidator
+        language: python
+        files: http/ks-base.*\.cfg$
+        types: [file]
+        additional_dependencies: [pykickstart]
+        args: [--version=F44]
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
