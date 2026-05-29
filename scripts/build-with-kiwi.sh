@@ -216,7 +216,9 @@ display_results() {
 
     if [ -d "$OUTPUT_DIR" ]; then
         echo -e "${GREEN}Output files:${NC}"
-        ls -lh "$OUTPUT_DIR" | grep -v "^total" | awk '{print "  " $9 " (" $5 ")"}'
+        for file in "$OUTPUT_DIR"/*; do
+            [ -f "$file" ] && echo "  $(basename "$file") ($(du -h "$file" | cut -f1))"
+        done
         echo ""
 
         # Find the qcow2 image
