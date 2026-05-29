@@ -1,0 +1,164 @@
+---
+name: Cleanup Old Artifacts
+
+on:
+  schedule:
+    # Run every Sunday at 2 AM UTC
+    - cron: 0 2 * * 0
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Dry run (preview only, no deletion)
+        required: false
+        default: true
+        type: boolean
+      retention_days:
+        description: Delete artifacts older than (days)
+        required: false
+        default: 30
+        type: string
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set variables
+        id: vars
+        run: |
+          DRY_RUN="${{ github.event.inputs.dry_run || 'true' }}"
+          RETENTION="${{ github.event.inputs.retention_days || '30' }}"
+          CUTOFF_DATE=$(date -d "-${RETENTION} days" +%s)
+
+          {
+            echo "dry_run=$DRY_RUN"
+            echo "retention_days=$RETENTION"
+            echo "cutoff_date=$CUTOFF_DATE"
+            echo "cutoff_human=$(date -d "@$CUTOFF_DATE")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: List artifacts
+        id: list
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const cutoffDate = ${{ steps.vars.outputs.cutoff_date }};
+
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner,
+              repo,
+              per_page: 100
+            });
+
+            let totalSize = 0;
+            let oldSize = 0;
+            let oldCount = 0;
+            const toDelete = [];
+
+            for (const artifact of artifacts.data.artifacts) {
+              const createdAt = new Date(artifact.created_at).getTime() / 1000;
+              totalSize += artifact.size_in_bytes;
+
+              if (createdAt < cutoffDate) {
+                oldSize += artifact.size_in_bytes;
+                oldCount++;
+                toDelete.push({
+                  id: artifact.id,
+                  name: artifact.name,
+                  size: artifact.size_in_bytes,
+                  created: artifact.created_at
+                });
+              }
+            }
+
+            core.setOutput('total_artifacts', artifacts.data.artifacts.length);
+            core.setOutput('old_artifacts', oldCount);
+            core.setOutput('total_size', (totalSize / 1024 / 1024 / 1024).toFixed(2));
+            core.setOutput('old_size', (oldSize / 1024 / 1024 / 1024).toFixed(2));
+            core.setOutput('to_delete', JSON.stringify(toDelete));
+
+      - name: Delete old artifacts
+        if: steps.vars.outputs.dry_run == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const toDelete = JSON.parse('${{ steps.list.outputs.to_delete }}');
+
+            let deletedCount = 0;
+            let deletedSize = 0;
+
+            for (const artifact of toDelete) {
+              try {
+                await github.rest.actions.deleteArtifact({
+                  owner,
+                  repo,
+                  artifact_id: artifact.id
+                });
+                deletedCount++;
+                deletedSize += artifact.size;
+                console.log(`✅ Deleted: ${artifact.name} (${(artifact.size / 1024 / 1024).toFixed(2)} MB)`);
+              } catch (error) {
+                console.log(`❌ Failed to delete: ${artifact.name} - ${error.message}`);
+              }
+            }
+
+            core.setOutput('deleted_count', deletedCount);
+            core.setOutput('deleted_size', (deletedSize / 1024 / 1024 / 1024).toFixed(2));
+
+      - name: Generate report
+        run: |
+          DRY_RUN="${{ steps.vars.outputs.dry_run }}"
+
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          # 🧹 Artifact Cleanup Report
+
+          ## Settings
+          - **Mode**: $(if [ "$DRY_RUN" = "true" ]; then
+            echo "🔍 Dry Run (Preview Only)"; else echo "🗑️  Delete Mode"; fi)
+          - **Retention**: ${{ steps.vars.outputs.retention_days }} days
+          - **Cutoff Date**: ${{ steps.vars.outputs.cutoff_human }}
+
+          ## Statistics
+          - **Total Artifacts**: ${{ steps.list.outputs.total_artifacts }}
+          - **Total Size**: ${{ steps.list.outputs.total_size }} GB
+          - **Old Artifacts**: ${{ steps.list.outputs.old_artifacts }}
+          - **Old Size**: ${{ steps.list.outputs.old_size }} GB
+          EOF
+
+          if [ "$DRY_RUN" = "false" ]; then
+            cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+
+          ## Deletion Results
+          - **Deleted**: artifacts
+          - **Space Reclaimed**: GB
+          EOF
+          else
+            cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+
+          ## Preview (No Deletions)
+          To actually delete these artifacts, run this workflow again with:
+          - \`dry_run: false\`
+          EOF
+          fi
+
+          # List artifacts to be deleted
+          OLD_ARTIFACTS="${{ steps.list.outputs.old_artifacts }}"
+          if [ "$OLD_ARTIFACTS" -gt 0 ]; then
+            cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+
+          ## Artifacts to Delete
+          EOF
+            echo '${{ steps.list.outputs.to_delete }}' | \
+              jq -r '.[] | "- `\(.name)` - \(.created) - \((.size / 1024 / 1024 | floor)) MB"' \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi

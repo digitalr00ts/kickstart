@@ -1,0 +1,206 @@
+---
+name: Build Kiwi NG Image
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - kiwi/**
+      - ansible/**
+      - scripts/build-with-kiwi.sh
+      - .github/workflows/build-kiwi-image.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - kiwi/**
+      - ansible/**
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Fedora version
+        required: false
+        default: 44
+        type: choice
+        options:
+          - 43
+          - 44
+      arch:
+        description: Architecture
+        required: false
+        default: x86_64
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+      debug:
+        description: Enable debug mode
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: |
+          echo "Before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          echo "After cleanup:"
+          df -h
+
+      - name: Install Kiwi NG
+        run: |
+          sudo dnf install -y kiwi-cli python3-kiwi kiwi-systemdeps
+          kiwi-ng --version
+
+      - name: Cache Kiwi packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/kiwi
+          key: kiwi-packages-${{ github.run_id }}
+          restore-keys: |
+            kiwi-packages-
+
+      - name: Set build variables
+        id: vars
+        run: |
+          VERSION="${{ github.event.inputs.version || '44' }}"
+          ARCH="${{ github.event.inputs.arch || 'x86_64' }}"
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
+          {
+            echo "version=$VERSION"
+            echo "arch=$ARCH"
+            echo "short_sha=$SHORT_SHA"
+            echo "timestamp=$TIMESTAMP"
+            echo "artifact_name=fedora-${VERSION}-${ARCH}-${SHORT_SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build image with Kiwi NG
+        run: |
+          sudo kiwi-ng --type oem system build \
+            --description kiwi/ \
+            --target-dir output/kiwi-${{ steps.vars.outputs.arch }}
+        env:
+          KIWI_DEBUG: ${{ github.event.inputs.debug }}
+
+      - name: Get image info
+        id: image_info
+        run: |
+          ARCH="${{ steps.vars.outputs.arch }}"
+          IMAGE=$(find "output/kiwi-$ARCH" -name "*.qcow2" | head -n 1)
+          if [ -z "$IMAGE" ]; then
+            echo "Error: No image found"
+            exit 1
+          fi
+
+          SIZE=$(du -h "$IMAGE" | cut -f1)
+          SIZE_BYTES=$(stat -c%s "$IMAGE" 2>/dev/null || stat -f%z "$IMAGE")
+
+          {
+            echo "image_path=$IMAGE"
+            echo "image_size=$SIZE"
+            echo "image_size_bytes=$SIZE_BYTES"
+            echo "image_name=$(basename "$IMAGE")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Compress image
+        run: |
+          ARCH="${{ steps.vars.outputs.arch }}"
+          ARTIFACT="${{ steps.vars.outputs.artifact_name }}"
+          cd "output/kiwi-$ARCH"
+          tar -I "zstd -19 -T0" -cf \
+            "../../${ARTIFACT}.tar.zst" \
+            -- *.qcow2 *.packages
+
+      - name: Get compressed size
+        id: compressed
+        run: |
+          ARTIFACT="${{ steps.vars.outputs.artifact_name }}"
+          ARCHIVE="${ARTIFACT}.tar.zst"
+          COMPRESSED_SIZE=$(du -h "$ARCHIVE" | cut -f1)
+          COMPRESSED_BYTES=$(stat -c%s "$ARCHIVE" 2>/dev/null || stat -f%z "$ARCHIVE")
+          IMAGE_SIZE_BYTES="${{ steps.image_info.outputs.image_size_bytes }}"
+          RATIO=$(echo "scale=2; $IMAGE_SIZE_BYTES / $COMPRESSED_BYTES" | bc)
+
+          {
+            echo "compressed_size=$COMPRESSED_SIZE"
+            echo "ratio=${RATIO}x"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create build metadata
+        run: |
+          cat > build-metadata.json <<EOF
+          {
+            "fedora_version": "${{ steps.vars.outputs.version }}",
+            "architecture": "${{ steps.vars.outputs.arch }}",
+            "commit_sha": "${{ github.sha }}",
+            "short_sha": "${{ steps.vars.outputs.short_sha }}",
+            "build_time": "$(date -Iseconds)",
+            "builder": "kiwi-ng",
+            "image_name": "${{ steps.image_info.outputs.image_name }}",
+            "image_size": "${{ steps.image_info.outputs.image_size }}",
+            "image_size_bytes": ${{ steps.image_info.outputs.image_size_bytes }},
+            "compressed_size": "${{ steps.compressed.outputs.compressed_size }}",
+            "compression_ratio": "${{ steps.compressed.outputs.ratio }}",
+            "artifact_name": "${{ steps.vars.outputs.artifact_name }}.tar.zst",
+            "workflow_run_id": "${{ github.run_id }}",
+            "workflow_run_number": "${{ github.run_number }}"
+          }
+          EOF
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vars.outputs.artifact_name }}
+          path: ${{ steps.vars.outputs.artifact_name }}.tar.zst
+          retention-days: 30
+          compression-level: 0
+
+      - name: Upload build metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-metadata-${{ steps.vars.outputs.short_sha }}
+          path: build-metadata.json
+          retention-days: 90
+
+      - name: Generate summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          # 🚀 Kiwi NG Build Complete
+
+          ## Build Information
+          - **Fedora Version**: ${{ steps.vars.outputs.version }}
+          - **Architecture**: ${{ steps.vars.outputs.arch }}
+          - **Commit**: \`${{ steps.vars.outputs.short_sha }}\`
+          - **Timestamp**: ${{ steps.vars.outputs.timestamp }}
+
+          ## Image Details
+          - **Image**: \`${{ steps.image_info.outputs.image_name }}\`
+          - **Size (uncompressed)**: ${{ steps.image_info.outputs.image_size }}
+          - **Size (compressed)**: ${{ steps.compressed.outputs.compressed_size }}
+          - **Compression ratio**: ${{ steps.compressed.outputs.ratio }}
+
+          ## Artifact
+          - **Name**: \`${{ steps.vars.outputs.artifact_name }}.tar.zst\`
+          - **Retention**: 30 days
+
+          ## Next Steps
+          - Download artifact from Actions tab
+          - Run provisioning: \`uv run poe provision-image <image>\`
+          - Run tests: \`uv run poe test qemu\`
+          EOF

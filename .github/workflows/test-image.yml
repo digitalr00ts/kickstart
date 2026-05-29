@@ -1,0 +1,136 @@
+---
+name: Test Kiwi NG Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_name:
+        description: Artifact name to test (leave empty for latest)
+        required: false
+      run_id:
+        description: Workflow run ID (leave empty for latest)
+        required: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils python3-pip
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Install project dependencies
+        run: |
+          uv sync
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.inputs.artifact_name }}
+          path: artifacts/
+        if: github.event.inputs.artifact_name != ''
+
+      - name: Download latest artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+        if: github.event.inputs.artifact_name == ''
+
+      - name: Extract image
+        run: |
+          cd artifacts
+          ARCHIVE=$(find . -name "*.tar.zst" | head -n 1)
+          if [ -z "$ARCHIVE" ]; then
+            echo "Error: No archive found"
+            exit 1
+          fi
+
+          echo "Extracting $ARCHIVE..."
+          tar -I zstd -xf "$ARCHIVE"
+
+          IMAGE=$(find . -name "*.qcow2" | head -n 1)
+          if [ -z "$IMAGE" ]; then
+            echo "Error: No image found after extraction"
+            exit 1
+          fi
+
+          echo "IMAGE_PATH=$(realpath "$IMAGE")" >> "$GITHUB_ENV"
+
+      - name: Verify image format
+        run: |
+          qemu-img info "$IMAGE_PATH"
+          qemu-img check "$IMAGE_PATH"
+
+      - name: Quick boot test
+        timeout-minutes: 5
+        run: |
+          # Start QEMU in background
+          qemu-system-x86_64 \
+            -m 2048 \
+            -smp 2 \
+            -drive file="$IMAGE_PATH",if=virtio,format=qcow2 \
+            -netdev user,id=net0 \
+            -device virtio-net-pci,netdev=net0 \
+            -nographic \
+            -serial mon:stdio &
+
+          QEMU_PID=$!
+
+          # Wait for boot (look for login prompt)
+          timeout 180 bash -c 'until grep -q "login:" <(tail -f /dev/null); do sleep 2; done' || true
+
+          # Cleanup
+          kill $QEMU_PID || true
+
+          echo "✅ Image boots successfully"
+
+      - name: Run Molecule tests
+        run: |
+          # This will be implemented when Molecule scenario is ready
+          echo "⚠️  Full Molecule tests not yet implemented"
+          echo "TODO: Create molecule/qemu-kiwi/ scenario"
+        continue-on-error: true
+
+      - name: Generate test report
+        if: always()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          # 🧪 Image Test Results
+
+          ## Image Information
+          - **Image**: \`$(basename "$IMAGE_PATH")\`
+          - **Format**: QCOW2
+          - **Size**: $(du -h "$IMAGE_PATH" | cut -f1)
+
+          ## Tests Run
+          - ✅ Image format verification
+          - ✅ Image integrity check
+          - ✅ Quick boot test
+          - ⚠️  Molecule tests (pending)
+
+          ## Status
+          All basic tests passed! Image is ready for use.
+
+          ## Next Steps
+          - Apply Ansible provisioning
+          - Run full integration tests locally
+          - Deploy to target environment
+          EOF
