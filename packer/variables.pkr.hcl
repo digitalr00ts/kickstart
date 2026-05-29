@@ -7,21 +7,11 @@ variable "fedora_version" {
 }
 
 variable "fedora_iso_metadata" {
-  type = map(map(object({
+  type = map(object({
     url      = string
     checksum = string
-  })))
-  description = "ISO metadata indexed by guest architecture and variant"
-}
-
-variable "variant" {
-  type        = string
-  default     = "server"
-  description = "Image variant: server or workstation"
-  validation {
-    condition     = contains(["server", "workstation"], var.variant)
-    error_message = "Variant must be either 'server' or 'workstation'."
-  }
+  }))
+  description = "ISO metadata indexed by guest architecture"
 }
 
 variable "output_directory" {
@@ -115,7 +105,7 @@ variable "http_directory" {
 
 variable "kickstart_file" {
   type        = string
-  default     = "ks-base.cfg"
+  default     = "kickstart.cfg"
   description = "Kickstart file"
 }
 

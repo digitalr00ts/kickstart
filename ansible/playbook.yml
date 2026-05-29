@@ -1,21 +1,21 @@
 ---
-# Ansible Playbook for Fedora Server Provisioning
-# Applies server-specific configuration using drts01 collection
+# Ansible Playbook for Fedora Minimal Image Provisioning
+# Applies minimal configuration using drts01 collection
 
-- name: Provision Fedora Server Image
+- name: Provision Fedora Minimal Image
   hosts: all
   become: true
 
   vars:
     # Fedora version passed from Packer
     # fedora_version: "{{ fedora_version }}"
-    image_variant: server
+    image_variant: minimal
 
   pre_tasks:
     - name: Display provisioning information
       ansible.builtin.debug:
         msg: |
-          Provisioning Fedora {{ fedora_version | default("unknown") }} Server
+          Provisioning Fedora {{ fedora_version | default("unknown") }} Minimal
           Using drts01 collection from: {{ lookup("env", "ANSIBLE_COLLECTIONS_PATH") | default("default path") }}
 
     - name: Ensure system is up to date
@@ -25,7 +25,7 @@
         update_cache: true
       tags: [update]
 
-    - name: Install common server packages
+    - name: Install common minimal packages
       ansible.builtin.dnf:
         name:
           - vim
@@ -34,7 +34,6 @@
           - wget
           - rsync
           - bind-utils
-          - nmap-ncat
         state: present
       tags: [packages]
 
@@ -42,17 +41,13 @@
     # Placeholder for drts01 collection roles
     # Once the collection structure is known, add role calls here
     # Example:
-    # - name: Apply base server configuration
+    # - name: Apply base configuration
     #   ansible.builtin.include_role:
     #     name: drts01.collection.base
 
-    # - name: Configure server-specific settings
-    #   ansible.builtin.include_role:
-    #     name: drts01.collection.server
-
-    - name: Placeholder - Configure server settings
+    - name: Placeholder - Configure minimal settings
       ansible.builtin.debug:
-        msg: Server provisioning tasks will be configured based on drts01 collection roles
+        msg: Minimal provisioning tasks will be configured based on drts01 collection roles
 
   post_tasks:
     - name: Clean up DNF cache
@@ -62,4 +57,4 @@
 
     - name: Display completion message
       ansible.builtin.debug:
-        msg: Fedora {{ fedora_version | default("unknown") }} Server provisioning complete
+        msg: Fedora {{ fedora_version | default("unknown") }} Minimal provisioning complete

@@ -8,9 +8,8 @@ platforms:
 provisioner:
   name: ansible
   env:
-    VM_PLATFORM: virtualbox
-    VM_VARIANT: workstation
-    VM_SSH_PORT: '2223'
+    VM_PLATFORM: qemu
+    VM_SSH_PORT: '2222'
   playbooks:
     create: ../shared/create.yml
     converge: ../shared/converge.yml
@@ -19,11 +18,10 @@ provisioner:
     host_vars:
       instance:
         ansible_host: 127.0.0.1
-        ansible_port: 2223
+        ansible_port: 2222
         ansible_user: root
         ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-        vm_platform: virtualbox
-        variant: workstation
+        vm_platform: qemu
 verifier:
   name: ansible
   enabled: true

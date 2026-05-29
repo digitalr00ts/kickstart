@@ -1,5 +1,5 @@
 build {
-  name = "fedora-${var.fedora_version}-${var.variant}"
+  name = "fedora-${var.fedora_version}"
 
   sources = [
     "source.qemu.fedora"
@@ -10,7 +10,7 @@ build {
   # # Applies configuration using drts01 collection
   # # Supports both local development (ANSIBLE_COLLECTIONS_PATH) and production (GitHub)
   # provisioner "ansible" {
-  #   playbook_file = "ansible/playbook-${var.variant}.yml"
+  #   playbook_file = "ansible/playbook.yml"
   #   galaxy_file   = "ansible/requirements.yml"
 
   #   # Pass Fedora version to playbook
@@ -33,7 +33,7 @@ build {
 
   post-processors {
     post-processor "vagrant" {
-      output               = "${var.output_directory}/vagrant/fedora-${var.fedora_version}-${var.variant}-{{.Provider}}.box"
+      output               = "${var.output_directory}/vagrant/fedora-${var.fedora_version}-{{.Provider}}.box"
       compression_level    = 9
       keep_input_artifact  = true
       vagrantfile_template = null

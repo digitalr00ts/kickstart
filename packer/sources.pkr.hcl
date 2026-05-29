@@ -78,8 +78,8 @@ locals {
 }
 
 source "qemu" "fedora" {
-  iso_url      = var.fedora_iso_metadata[local.guest_arch][var.variant].url
-  iso_checksum = var.fedora_iso_metadata[local.guest_arch][var.variant].checksum
+  iso_url      = var.fedora_iso_metadata[local.guest_arch].url
+  iso_checksum = var.fedora_iso_metadata[local.guest_arch].checksum
 
   # aarch64/virt does not support BIOS-style boot device list handling.
   efi_boot          = local.guest_arch == "aarch64"
@@ -87,8 +87,8 @@ source "qemu" "fedora" {
   efi_firmware_vars = local.guest_arch == "aarch64" ? local.aarch64_efi_vars : null
 
   # Output Configuration
-  output_directory = "${var.output_directory}/qemu-${local.guest_arch}-${var.variant}"
-  vm_name          = "fedora-${var.fedora_version}-${local.guest_arch}-${var.variant}"
+  output_directory = "${var.output_directory}/qemu-${local.guest_arch}"
+  vm_name          = "fedora-${var.fedora_version}-${local.guest_arch}"
 
   qemuargs = concat(
     local.guest_arch == "aarch64" ? [
