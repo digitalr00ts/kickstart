@@ -1,15 +1,10 @@
 ---
-# Pre-commit hooks for Fedora Image Builder
-# Install: pip install pre-commit && pre-commit install
-# Run manually: pre-commit run --all-files
-
 repos:
   - repo: meta
     hooks:
       - id: check-hooks-apply
       - id: check-useless-excludes
 
-  # General file quality checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -25,7 +20,6 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
       - id: check-added-large-files
-        args: [--maxkb=10240] # 10MB limit
       - id: check-case-conflict
       - id: check-executables-have-shebangs
 
@@ -34,7 +28,6 @@ repos:
     hooks:
       - id: fix-smartquotes
 
-  # Shell script validation
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
     hooks:
@@ -67,7 +60,6 @@ repos:
           - pyflakes
           - shellcheck-py
 
-  # Packer validation
   - repo: local
     hooks:
       # Packer format check
@@ -87,7 +79,6 @@ repos:
         files: packer/.*\.pkr\.hcl$
         pass_filenames: false
 
-  # Kickstart validation (if ksvalidator is available)
   - repo: local
     hooks:
       - id: ksvalidator
@@ -99,7 +90,6 @@ repos:
         additional_dependencies: [pykickstart]
         args: [--version=F44]
 
-  # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.48.0
     hooks:
@@ -107,11 +97,9 @@ repos:
         args: [--fix]
         files: \.(md|markdown)$
 
-# Configuration for specific tools
 default_language_version:
   python: python3
 
-# Exclude patterns
 exclude: |
   (?x)^(
     \.packer_cache/.*|
