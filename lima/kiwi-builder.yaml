@@ -1,0 +1,24 @@
+---
+arch: default
+images:
+  - location: https://download.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/aarch64/images/Fedora-Cloud-Base-Rawhide-latest.aarch64.qcow2
+    arch: aarch64
+  - location: https://download.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/Fedora-Cloud-Base-Rawhide-latest.x86_64.qcow2
+    arch: x86_64
+cpus: 4
+memory: 8GiB
+disk: 50GiB
+mounts:
+  - location: ~
+    writable: true
+  - location: /tmp/lima
+    writable: true
+containerd:
+  system: false
+  user: false
+provision:
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      dnf install -y kiwi-cli python3-kiwi kiwi-systemdeps
