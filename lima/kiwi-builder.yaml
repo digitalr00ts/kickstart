@@ -20,5 +20,14 @@ provision:
   - mode: system
     script: |
       #!/bin/bash
+
+      cat >> /etc/dnf/dnf.conf <<EOF
+      install_weak_deps=False
+      fastestmirror=True
+      repo_gpgcheck=True
+      timeout=10
+      max_parallel_downloads=8
+      EOF
+
       set -eux -o pipefail
       dnf install -y kiwi-cli python3-kiwi kiwi-systemdeps
