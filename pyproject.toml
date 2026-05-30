@@ -21,7 +21,7 @@ tasks.build.args = [
   { name = "version", positional = true, default = "44" },
   { name = "arch", positional = true, default = "" },
 ]
-tasks.build.shell = "scripts/build-with-kiwi.sh ${version} ${arch}"
+tasks.build.shell = "scripts/build.sh ${version} ${arch}"
 tasks.clean.help = "Remove all build artifacts"
 tasks.clean.cmd = "rm -rf output/ build/ .kiwi-* ./*.qcow2"
 tasks.test.help = "Run Molecule QEMU test scenario"

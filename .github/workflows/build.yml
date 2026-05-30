@@ -1,14 +1,13 @@
 ---
-name: Build Kiwi NG Image
+name: Build
 
 on:
   push:
     branches: [main, develop]
     paths:
       - kiwi/**
-      - ansible/**
-      - scripts/build-with-kiwi.sh
-      - .github/workflows/build-kiwi-image.yml
+      - scripts/build.sh
+      - .github/workflows/build.yml
   pull_request:
     branches: [main]
     paths:
@@ -19,11 +18,11 @@ on:
       version:
         description: Fedora version
         required: false
-        default: 44
+        default: '44'
         type: choice
         options:
-          - 43
-          - 44
+          - '43'
+          - '44'
       arch:
         description: Architecture
         required: false
@@ -47,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Free up disk space
         run: |
@@ -66,7 +65,7 @@ jobs:
           kiwi-ng --version
 
       - name: Cache Kiwi packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/kiwi
@@ -164,7 +163,7 @@ jobs:
           EOF
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.vars.outputs.artifact_name }}
           path: ${{ steps.vars.outputs.artifact_name }}.tar.zst
@@ -172,7 +171,7 @@ jobs:
           compression-level: 0
 
       - name: Upload build metadata
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: build-metadata-${{ steps.vars.outputs.short_sha }}
           path: build-metadata.json
