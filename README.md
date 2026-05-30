@@ -2,32 +2,26 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-Automated Fedora image builds with Kiwi NG and Ansible provisioning.
+Automated Fedora image builds with Kiwi NG.
 
 ## Quick Start
 
 ```bash
 brew install lima
-uv run poe build-kiwi
-uv run poe build-full
+uv run poe build
 ```
 
 ## Requirements
 
 - Kiwi NG
 - QEMU
-- Ansible 2.15+
 - uv
 
 ## Commands
 
 ```bash
-uv run poe build-kiwi [version] [arch]
-uv run poe provision-image <image>
-uv run poe build-full [version] [arch]
-uv run poe kiwi-clean
-uv run poe test qemu
-uv run poe test ansible-collection
+uv run poe build [version] [arch]
+uv run poe test
 uv run poe clean
 uv run poe status
 ```
@@ -36,7 +30,6 @@ uv run poe status
 
 - Supported architectures: x86_64 and aarch64
 - Output images are written under output/kiwi-*/
-- Local collection development is supported via ANSIBLE_COLLECTIONS_PATH
 
 ## Documentation
 

@@ -16,108 +16,17 @@ dev = [ "poethepoet>=0.35" ]
 
 [tool.poe]
 shell_interpreter = "bash"
-# Kiwi NG tasks (primary method)
-tasks.build-kiwi.help = "Build Fedora image with Kiwi NG (Lima on macOS, native on Linux)"
-tasks.build-kiwi.args = [
+tasks.build.help = "Build Fedora image with Kiwi NG (Lima on macOS, native on Linux)"
+tasks.build.args = [
   { name = "version", positional = true, default = "44" },
   { name = "arch", positional = true, default = "" },
 ]
-tasks.build-kiwi.shell = "scripts/build-with-kiwi.sh ${version} ${arch}"
-tasks.provision-image.help = "Apply Ansible provisioning to a Kiwi-built image"
-tasks.provision-image.args = [
-  { name = "image", positional = true, required = true },
-]
-tasks.provision-image.shell = "scripts/provision-with-ansible.sh ${image}"
-tasks.build-full.help = "Build image with Kiwi + Ansible provisioning (complete workflow)"
-tasks.build-full.args = [
-  { name = "version", positional = true, default = "44" },
-  { name = "arch", positional = true, default = "" },
-]
-tasks.build-full.shell = """
-set -euo pipefail
-scripts/build-with-kiwi.sh ${version} ${arch}
-IMAGE=$(find output/kiwi-* -name '*.qcow2' -type f | head -n 1)
-if [ -n "$IMAGE" ]; then
-    scripts/provision-with-ansible.sh "$IMAGE"
-else
-    echo "Error: No qcow2 image found in output/"
-    exit 1
-fi
-"""
-tasks.kiwi-clean.help = "Remove Kiwi build artifacts"
-tasks.kiwi-clean.cmd = "rm -rf output/kiwi-* build/ .kiwi-*"
-# Utility tasks
+tasks.build.shell = "scripts/build-with-kiwi.sh ${version} ${arch}"
 tasks.clean.help = "Remove all build artifacts"
-tasks.clean.cmd = "rm -rf output/ ./*.box ./*.qcow2 ./*.vdi"
-tasks.status.help = "Show build artifacts status"
-tasks.status.shell = """
-set -euo pipefail
-
-OUTPUT_DIR="${OUTPUT_DIR:-output}"
-
-echo "==> Build Status"
-echo
-echo "Output directory: ${OUTPUT_DIR}"
-if [[ -d "${OUTPUT_DIR}" ]]; then
-    echo "Artifacts:"
-    ls -lh "${OUTPUT_DIR}/" 2>/dev/null || echo "  (empty)"
-else
-    echo "No output directory found."
-fi
-"""
-tasks.test.help = "Run tests: test [qemu|ansible-collection]"
-tasks.test.args = [ { name = "platform", positional = true, default = "qemu" } ]
+tasks.clean.cmd = "rm -rf output/ build/ .kiwi-* ./*.qcow2"
+tasks.test.help = "Run Molecule QEMU test scenario"
 tasks.test.shell = """
 set -euo pipefail
-
-platform="${platform:-qemu}"
 policy_mode="${MOLECULE_POLICY_MODE:-strict}"
-
-case "$platform" in
-    qemu|ansible-collection) ;;
-    *) echo "Error: platform must be qemu or ansible-collection"; exit 1 ;;
-esac
-
-if [[ "$platform" == "ansible-collection" ]]; then
-    command -v ansible >/dev/null 2>&1 || { echo "Error: ansible not found"; exit 1; }
-    command -v ansible-galaxy >/dev/null 2>&1 || { echo "Error: ansible-galaxy not found"; exit 1; }
-    command -v python3 >/dev/null 2>&1 || { echo "Error: python3 not found"; exit 1; }
-
-    [[ -f "ansible/requirements.yml" ]] || { echo "Error: ansible/requirements.yml not found"; exit 1; }
-    [[ -f "ansible/ansible.cfg" ]] || { echo "Error: ansible/ansible.cfg not found"; exit 1; }
-
-    grep -q collections_path ansible/ansible.cfg || echo "warn: collections_path not set in ansible/ansible.cfg"
-
-    playbook="ansible/playbook.yml"
-    [[ -f "${playbook}" ]] || { echo "Error: ${playbook} not found"; exit 1; }
-    python3 - <<'PY' "${playbook}"
-import sys, yaml
-yaml.safe_load(open(sys.argv[1]))
-PY
-    echo "ok: yaml ${playbook}"
-
-    if [[ -n "${ANSIBLE_COLLECTIONS_PATH:-}" && ! -d "${ANSIBLE_COLLECTIONS_PATH}" ]]; then
-        echo "warn: ANSIBLE_COLLECTIONS_PATH does not exist: ${ANSIBLE_COLLECTIONS_PATH}"
-    fi
-
-    tmp="$(mktemp -d)"
-    trap 'rm -rf "${tmp}"' RETURN
-    ansible-galaxy collection install -r ansible/requirements.yml -p "${tmp}" --force >/dev/null 2>&1 \
-        && echo "ok: galaxy install" \
-        || echo "warn: galaxy install skipped/failed"
-
-    grep -Eq 'hosts:' "${playbook}" || echo "warn: hosts missing: ${playbook}"
-    grep -Eq 'tasks:|roles:' "${playbook}" || echo "warn: tasks/roles missing: ${playbook}"
-
-    grep -r "drts01.collection" ansible/*.yml >/dev/null 2>&1 \
-        && echo "ok: collection refs present" \
-        || echo "warn: no drts01.collection refs"
-    exit 0
-fi
-
-command -v molecule >/dev/null 2>&1 || { echo "Error: molecule not found"; exit 1; }
-
-if [[ "$platform" == "qemu" ]]; then
-    MOLECULE_POLICY_MODE="$policy_mode" molecule test -s "qemu"
-fi
+MOLECULE_POLICY_MODE="$policy_mode" molecule test -s "qemu"
 """

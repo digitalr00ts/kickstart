@@ -20,21 +20,19 @@ pre-commit install
 
 ```bash
 pre-commit run --all-files
-uv run poe test ansible-collection
-uv run poe test qemu
+uv run poe test
 ```
 
 For a full build pass:
 
 ```bash
-uv run poe build-full
+uv run poe build
 ```
 
 ## Code Areas
 
 - `kiwi/`: image descriptions and in-image configuration script
-- `ansible/`: provisioning playbook and collection requirements
-- `scripts/`: build and provisioning wrappers
+- `scripts/`: build wrappers
 - `molecule/`: scenario lifecycle and verification playbooks
 - `docs/`: operator and contributor documentation
 

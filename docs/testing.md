@@ -1,36 +1,21 @@
 # Testing Guide
 
-This project provides two primary test paths.
+This project provides image validation testing.
 
-## 1) Image Validation Scenario
+## Image Validation Scenario
 
 Run the Molecule scenario:
 
 ```bash
-uv run poe test qemu
+uv run poe test
 ```
 
 What it does:
 
 - creates a test instance
-- converges the Ansible configuration
+- converges the configuration
 - runs verification playbooks
 - destroys the instance
-
-## 2) Collection and Playbook Validation
-
-Run collection checks:
-
-```bash
-uv run poe test ansible-collection
-```
-
-What it validates:
-
-- core tool availability (`ansible`, `ansible-galaxy`, `python3`)
-- required files in `ansible/`
-- YAML parse validity for the playbook
-- collection install behavior using a temporary path
 
 ## Manual Runtime Smoke Test
 
@@ -51,7 +36,6 @@ Then verify SSH reachability and expected package state.
 ## Recommended CI Smoke Sequence
 
 ```bash
-uv run poe build-kiwi
-uv run poe test ansible-collection
-uv run poe test qemu
+uv run poe build
+uv run poe test
 ```
