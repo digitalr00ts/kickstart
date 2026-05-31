@@ -1,16 +1,9 @@
 #!/bin/bash
 set -euxo pipefail
 
-cat > /etc/sudoers.d/admin <<'EOF'
-Defaults:admin !requiretty
-%admin ALL=(ALL) NOPASSWD: ALL
-EOF
-chmod 440 /etc/sudoers.d/admin
-
 passwd -l root || true
 
 cat >> /etc/dnf/dnf.conf <<'EOF'
-
 install_weak_deps=False
 fastestmirror=True
 repo_gpgcheck=True
