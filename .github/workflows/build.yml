@@ -47,6 +47,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
       - name: Free up disk space
         run: |
           echo "Before cleanup:"
@@ -59,9 +62,10 @@ jobs:
           df -h
 
       - name: Install Kiwi NG
-        run: |
-          sudo dnf install -y kiwi-cli python3-kiwi kiwi-systemdeps
-          kiwi-ng --version
+        run: sudo dnf install -y kiwi-systemdeps jing
+
+      - name: Install Python build dependencies
+        run: uv sync --no-dev --group build
 
       - name: Cache Kiwi packages
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
@@ -90,7 +94,7 @@ jobs:
 
       - name: Build image with Kiwi NG
         run: |
-          sudo kiwi-ng --type oem system build \
+          sudo uv run kiwi-ng --type oem system build \
             --profile ${{ steps.vars.outputs.arch }} \
             --description kiwi/ \
             --target-dir output/kiwi-${{ steps.vars.outputs.arch }}
