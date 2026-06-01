@@ -13,6 +13,7 @@ repos:
       # - id: check-symlinks
       - id: check-yaml
         args: [--allow-multiple-documents, --unsafe]
+        files: \.(yaml|yml|kiwi)$
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
       - id: mixed-line-ending
@@ -39,6 +40,17 @@ repos:
     hooks:
       - id: yamllint
         args: [-s]
+        files: \.(yaml|yml|kiwi)$
+
+  - repo: local
+    hooks:
+      - id: kiwi
+        name: Validate KIWI image descriptions
+        entry: sh -ec 'for ARCH in x86_64 aarch64; do kiwi-ng --profile $ARCH image info --description kiwi; done'
+        language: python
+        additional_dependencies: ['kiwi[markup]']
+        files: kiwi/.*\.kiwi$
+        pass_filenames: false
 
   - repo: https://github.com/ansible/ansible-lint
     rev: v26.4.0
