@@ -9,10 +9,11 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = [ "molecule>=26.4" ]
 
 [dependency-groups]
 dev = [ "poethepoet>=0.35" ]
+test = [ "molecule>=26.4" ]
+build = [ "kiwi[markup]; sys_platform=='linux'" ]
 
 [tool.poe]
 shell_interpreter = "bash"
