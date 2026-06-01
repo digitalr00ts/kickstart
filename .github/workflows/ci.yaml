@@ -16,5 +16,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Install Jing  # RELAX NG validator for KIWI image descriptions
+        run: sudo apt install jing
       - name: Run pre-commit
         uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2

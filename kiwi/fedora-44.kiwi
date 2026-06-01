@@ -1,0 +1,96 @@
+image:
+  '@name': fedora-minimal
+  '@schemaversion': '8.4'
+  profiles:
+    profile:
+    - '@name': x86_64
+      '@description': x86_64 profile
+    - '@name': aarch64
+      '@description': aarch64 profile
+  description:
+    '@type': system
+    author: Digital Roots
+    contact: https://github.com/digitalr00ts/fedora-image-builder
+    specification: Minimal Fedora base image for QEMU platform
+  packages:
+  - '@type': image
+    ignore:
+    - '@name': plymouth
+    - '@name': initial-setup-gui
+    - '@name': glibc-all-langpacks
+    package:
+    - '@name': '@core'
+    - '@name': openssh-server
+    - '@name': python3
+    - '@name': python3-pip
+    - '@name': dnf
+    - '@name': dnf-plugins-core
+    - '@name': vim-minimal
+    - '@name': glibc-langpack-en
+    - '@name': kernel
+    - '@name': efibootmgr
+  - '@type': image
+    '@profiles': x86_64
+    package:
+    - '@name': grub2-efi-x64
+    - '@name': grub2-efi-x64-modules
+    - '@name': shim-x64
+  - '@type': image
+    '@profiles': aarch64
+    package:
+    - '@name': grub2-efi-aa64
+    - '@name': grub2-efi-aa64-modules
+    - '@name': shim-aa64
+  - '@type': bootstrap
+    package:
+    - '@name': filesystem
+    - '@name': basesystem
+    - '@name': glibc
+  preferences:
+  - bootsplash-theme: none
+    keytable: us
+    locale: en_US
+    packagemanager: dnf4
+    rpm-check-signatures: 'false'
+    rpm-excludedocs: 'true'
+    timezone: America/Los_Angeles
+    version: 44.1.7
+  - '@profiles': x86_64
+    type:
+      &oem_type
+      '@bootpartition': 'false'
+      '@btrfs_root_is_snapper_snapshot': 'true'
+      '@filesystem': btrfs
+      '@firmware': efi
+      '@format': qcow2
+      '@image': oem
+      '@kernelcmdline': console=ttyS0,115200n8 console=tty0
+      bootloader:
+        '@name': grub2
+      oemconfig:
+        oem-resize: 'false'
+      size:
+        '#text': '10'
+        '@unit': G
+  - '@profiles': aarch64
+    type:
+      <<: *oem_type
+      '@kernelcmdline': console=ttyAMA0,115200n8 console=tty0
+  repository:
+  - '@alias': fedora-44
+    '@priority': '1'
+    '@type': rpm-md
+    source:
+      '@path': https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/$basearch/os/
+  - '@alias': fedora-updates
+    '@priority': '2'
+    '@type': rpm-md
+    source:
+      '@path': https://download.fedoraproject.org/pub/fedora/linux/updates/44/$basearch/
+  users:
+    user:
+      '@groups': wheel
+      '@home': /home/admin
+      '@name': admin
+      '@password': $6$adminsalt$/RCXK82SD7SIBMNJCijpnuFll5F8Dic6XahiA0Vkm55Ro6w/voHWISiSMm5YcIxS6AA6BFHfYHrUmpHgBZFDp1
+      '@pwdformat': encrypted

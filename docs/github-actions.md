@@ -31,7 +31,7 @@ uv run poe test qemu
 For release workflows, produce image artifacts:
 
 ```bash
-uv run poe build-kiwi
+uv run poe build
 uv run poe status
 ```
 

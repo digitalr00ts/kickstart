@@ -21,7 +21,6 @@ on:
         default: '44'
         type: choice
         options:
-          - '43'
           - '44'
       arch:
         description: Architecture
@@ -92,6 +91,7 @@ jobs:
       - name: Build image with Kiwi NG
         run: |
           sudo kiwi-ng --type oem system build \
+            --profile ${{ steps.vars.outputs.arch }} \
             --description kiwi/ \
             --target-dir output/kiwi-${{ steps.vars.outputs.arch }}
         env:

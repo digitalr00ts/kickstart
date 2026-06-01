@@ -9,7 +9,17 @@ LIMA_TEMPLATE=lima/kiwi-builder.yaml
 [[ $ARCH == arm64 ]] && ARCH=aarch64
 [[ $ARCH == amd64 ]] && ARCH=x86_64
 
-KIWI_DESC=kiwi/fedora-${VERSION}-minimal.kiwi
+case "$ARCH" in
+  x86_64|aarch64) ;;
+  *)
+    echo "Error: Unsupported architecture '$ARCH'. Use x86_64 or aarch64." >&2
+    exit 1
+    ;;
+esac
+
+KIWI_DESC=kiwi/fedora-${VERSION}.kiwi
+KIWI_DESC_DIR=${KIWI_DESC%/*}
+KIWI_PROFILE=$ARCH
 OUTPUT_DIR=output/kiwi-${ARCH}
 
 err() { echo "Error: $*" >&2; exit 1; }
@@ -35,8 +45,8 @@ setup_lima() {
 build() {
   mkdir -p "$OUTPUT_DIR"
   [[ $PLATFORM == macos ]] && \
-    limactl shell "$LIMA_INSTANCE" sudo kiwi-ng --type oem system build --description "$(pwd)/${KIWI_DESC%/*}" --target-dir "$(pwd)/$OUTPUT_DIR" || \
-    sudo kiwi-ng --type oem system build --description "${KIWI_DESC%/*}" --target-dir "$OUTPUT_DIR"
+    limactl shell "$LIMA_INSTANCE" sudo kiwi-ng --type oem --profile "$KIWI_PROFILE" system build --description "$(pwd)/$KIWI_DESC_DIR" --target-dir "$(pwd)/$OUTPUT_DIR" || \
+    sudo kiwi-ng --type oem --profile "$KIWI_PROFILE" system build --description "$KIWI_DESC_DIR" --target-dir "$OUTPUT_DIR"
 }
 
 setup_lima

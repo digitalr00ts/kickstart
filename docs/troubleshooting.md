@@ -11,7 +11,7 @@ Symptom:
 Fix:
 
 - install missing tools first
-- re-run `uv run poe build-kiwi`
+- re-run `uv run poe build`
 
 ## macOS Build Cannot Start Virtualized Builder
 
@@ -32,7 +32,7 @@ If needed, recreate the instance:
 
 ```bash
 limactl delete kiwi-builder
-uv run poe build-kiwi
+uv run poe build
 ```
 
 ## Provisioning Fails to Connect Over SSH
@@ -61,8 +61,8 @@ Fix:
 - run with explicit architecture argument:
 
 ```bash
-uv run poe build-kiwi 44 aarch64
-uv run poe build-kiwi 44 x86_64
+uv run poe build 44 aarch64
+uv run poe build 44 x86_64
 ```
 
 ## Molecule Validation Fails
