@@ -61,11 +61,11 @@ jobs:
           echo "After cleanup:"
           df -h
 
-      - name: Install Kiwi NG
+      - name: Install Kiwi NG dependencies
         run: sudo dnf install -y kiwi-systemdeps jing
 
       - name: Install Python build dependencies
-        run: uv sync --no-dev --group build
+        run: uv sync --group build --frozen
 
       - name: Cache Kiwi packages
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
@@ -76,7 +76,7 @@ jobs:
           restore-keys: |
             kiwi-packages-
 
-      - name: Set build variables
+      - name: Set variables
         id: vars
         run: |
           VERSION="${{ github.event.inputs.version || '44' }}"
@@ -92,12 +92,8 @@ jobs:
             echo "artifact_name=fedora-${VERSION}-${ARCH}-${SHORT_SHA}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Build image with Kiwi NG
-        run: |
-          sudo uv run kiwi-ng --type oem system build \
-            --profile ${{ steps.vars.outputs.arch }} \
-            --description kiwi/ \
-            --target-dir output/kiwi-${{ steps.vars.outputs.arch }}
+      - name: Build image
+        run: uv run poe build "${{ steps.vars.outputs.version }}" "${{ steps.vars.outputs.arch }}"
         env:
           KIWI_DEBUG: ${{ github.event.inputs.debug }}
 
