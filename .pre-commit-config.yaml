@@ -95,4 +95,5 @@ exclude: |
     .*\.iso$|
     \.cline.*|
     openspec/.*
+    uv\.lock
   )$
