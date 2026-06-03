@@ -5,32 +5,29 @@ VERSION=${1:-44}
 ARCH=${2:-$(uname -m)}
 LIMA_INSTANCE=kiwi-builder
 LIMA_TEMPLATE=lima/kiwi-builder.yaml
-
-[[ $ARCH == arm64 ]] && ARCH=aarch64
-[[ $ARCH == amd64 ]] && ARCH=x86_64
-
-case "$ARCH" in
-  x86_64|aarch64) ;;
-  *)
-    echo "Error: Unsupported architecture '$ARCH'. Use x86_64 or aarch64." >&2
-    exit 1
-    ;;
-esac
-
 KIWI_DESC=kiwi/fedora-${VERSION}.kiwi
 KIWI_DESC_DIR=${KIWI_DESC%/*}
 KIWI_PROFILE=$ARCH
 OUTPUT_DIR=output/kiwi-${ARCH}
 
+[[ $ARCH == arm64 ]] && ARCH=aarch64
+[[ $ARCH == amd64 ]] && ARCH=x86_64
+
 err() { echo "Error: $*" >&2; exit 1; }
 
+case "$ARCH" in
+  x86_64|aarch64) ;;
+  *)
+    err "Unsupported architecture '$ARCH'. Use x86_64 or aarch64."
+    ;;
+esac
+
 [[ -f $KIWI_DESC ]] || err "Missing: $KIWI_DESC"
-[[ -f kiwi/config.sh ]] || err "Missing: kiwi/config.sh"
 [[ -f $LIMA_TEMPLATE ]] || err "Missing: $LIMA_TEMPLATE"
 
 case $(uname -s) in
   Darwin) PLATFORM=macos; command -v limactl &>/dev/null || err "Lima required: brew install lima" ;;
-  Linux) PLATFORM=linux; command -v kiwi-ng &>/dev/null || err "Kiwi required: sudo dnf install -y kiwi-cli python3-kiwi kiwi-systemdeps" ;;
+  Linux) PLATFORM=linux; command -v kiwi-ng &>/dev/null || err "Kiwi required: uv sync --group build && sudo dnf install -y kiwi-systemdeps" ;;
   *) err "Unsupported: $(uname -s)" ;;
 esac
 
