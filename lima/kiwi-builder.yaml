@@ -1,5 +1,8 @@
 ---
 base: template:fedora
+env:
+  UV_PROJECT_ENVIRONMENT: /opt/.venv.kiwi-builder
+  OUTPUT_DIR: /opt/output
 disk: 50GiB
 mounts:
   - location: '~'
@@ -9,6 +12,8 @@ provision:
     script: |
       #!/bin/bash
 
+      set -eux -o pipefail
+
       cat >> /etc/dnf/dnf.conf <<EOF
       install_weak_deps=False
       fastestmirror=True
@@ -17,5 +22,6 @@ provision:
       max_parallel_downloads=8
       EOF
 
-      set -eux -o pipefail
-      dnf install -y kiwi-cli kiwi-systemdeps
+      dnf update -y
+      dnf install -y dnf-plugin-versionlock kiwi-systemdeps uv
+      uv sync --group build --frozen
