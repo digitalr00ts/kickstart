@@ -26,8 +26,7 @@ tasks.build.shell = "scripts/build.sh ${version} ${arch}"
 tasks.clean.help = "Remove all build artifacts"
 tasks.clean.cmd = "rm -rf output/ build/ .kiwi-* ./*.qcow2"
 tasks.test.help = "Run Molecule QEMU test scenario"
-tasks.test.shell = """
-set -euo pipefail
+tasks.test.shell = '''set -euo pipefail
 policy_mode="${MOLECULE_POLICY_MODE:-strict}"
 MOLECULE_POLICY_MODE="$policy_mode" molecule test -s "qemu"
-"""
+'''
