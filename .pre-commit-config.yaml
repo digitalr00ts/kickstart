@@ -59,8 +59,13 @@ repos:
         args: [--fix]
         stages: [manual]
 
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.21.2
+    rev: v2.23.0
     hooks:
       - id: pyproject-fmt
 
