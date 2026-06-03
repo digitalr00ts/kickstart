@@ -19,8 +19,8 @@ build = [ "kiwi[markup]; sys_platform=='linux'" ]
 shell_interpreter = "bash"
 tasks.build.help = "Build Fedora image with Kiwi NG (Lima on macOS, native on Linux)"
 tasks.build.args = [
-  { name = "version", positional = true, default = "44" },
-  { name = "arch", positional = true, default = "" },
+  { name = "version", positional = true, default = "44", help = "Target Fedora version" },
+  { name = "arch", positional = true, default = "", help = "Target architecture (x86_64, aarch64) [default: auto-detect]" },
 ]
 tasks.build.shell = "scripts/build.sh ${version} ${arch}"
 tasks.clean.help = "Remove all build artifacts"
