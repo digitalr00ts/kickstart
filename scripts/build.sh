@@ -41,9 +41,11 @@ setup_lima() {
 
 build() {
   mkdir -p "$OUTPUT_DIR"
-  [[ $PLATFORM == macos ]] && \
-    limactl shell "$LIMA_INSTANCE" sudo kiwi-ng --type oem --profile "$KIWI_PROFILE" system build --description "$(pwd)/$KIWI_DESC_DIR" --target-dir "$(pwd)/$OUTPUT_DIR" || \
+  if [[ $PLATFORM == macos ]]; then
+    limactl shell "$LIMA_INSTANCE" sudo kiwi-ng --type oem --profile "$KIWI_PROFILE" system build --description "$(pwd)/$KIWI_DESC_DIR" --target-dir "$(pwd)/$OUTPUT_DIR"
+  else
     sudo kiwi-ng --type oem --profile "$KIWI_PROFILE" system build --description "$KIWI_DESC_DIR" --target-dir "$OUTPUT_DIR"
+  fi
 }
 
 setup_lima
