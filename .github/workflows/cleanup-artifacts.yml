@@ -16,7 +16,7 @@ on:
         description: Delete artifacts older than (days)
         required: false
         default: 30
-        type: string
+        type: number
 
 jobs:
   cleanup:
