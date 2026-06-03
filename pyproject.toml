@@ -25,6 +25,14 @@ tasks.build.args = [
 tasks.build.shell = "scripts/build.sh ${version} ${arch}"
 tasks.clean.help = "Remove all build artifacts"
 tasks.clean.cmd = "rm -rf output/ build/ .kiwi-* ./*.qcow2"
+tasks.lima-start.help = "Start Lima instance for building (macOS only)"
+tasks.lima-start.cmd = "limactl start --tty=false lima/kiwi-builder.yaml"
+tasks.lima-stop.help = "Stop Lima instance (macOS only)"
+tasks.lima-stop.args = [
+  { name = "command", positional = true, default = "stop", help = "Lima command to run (delete, stop)" },
+  { name = "flag", positional = true, help = "Flag to add, i.e. --force" },
+]
+tasks.lima-stop.cmd = "limactl ${command} kiwi-builder ${flag}"
 tasks.test.help = "Run Molecule QEMU test scenario"
 tasks.test.shell = '''set -euo pipefail
 policy_mode="${MOLECULE_POLICY_MODE:-strict}"
