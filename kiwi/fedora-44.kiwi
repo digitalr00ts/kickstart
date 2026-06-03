@@ -11,7 +11,7 @@ image:
     '@type': system
     author: Digital Roots
     contact: https://github.com/digitalr00ts/fedora-image-builder
-    specification: Minimal Fedora base image for QEMU platform
+    specification: Minimal Fedora base image
   packages:
   - '@type': image
     ignore:
@@ -20,15 +20,11 @@ image:
     - '@name': glibc-all-langpacks
     package:
     - '@name': '@core'
-    - '@name': openssh-server
-    - '@name': python3
-    - '@name': python3-pip
-    - '@name': dnf
-    - '@name': dnf-plugins-core
     - '@name': vim-minimal
     - '@name': glibc-langpack-en
     - '@name': kernel
     - '@name': efibootmgr
+    - '@name': dracut-kiwi-oem-repart  # required for oem-resize
   - '@type': image
     '@profiles': x86_64
     package:
@@ -45,13 +41,14 @@ image:
     package:
     - '@name': filesystem
     - '@name': basesystem
+    - '@name': coreutils
     - '@name': glibc
   preferences:
   - bootsplash-theme: none
     keytable: us
     locale: en_US
-    packagemanager: dnf4
-    rpm-check-signatures: 'false'
+    packagemanager: dnf5
+    rpm-check-signatures: 'true'
     rpm-excludedocs: 'true'
     timezone: America/Los_Angeles
     version: 44.1.7
@@ -68,7 +65,7 @@ image:
       bootloader:
         '@name': grub2
       oemconfig:
-        oem-resize: 'false'
+        oem-resize: 'true'
       size:
         '#text': '10'
         '@unit': G
@@ -86,7 +83,7 @@ image:
     '@priority': '2'
     '@type': rpm-md
     source:
-      '@path': https://download.fedoraproject.org/pub/fedora/linux/updates/44/$basearch/
+      '@path': https://download.fedoraproject.org/pub/fedora/linux/updates/44/Everything/$basearch/
   users:
     user:
       '@groups': wheel
