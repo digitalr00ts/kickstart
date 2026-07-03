@@ -1,27 +1,38 @@
 ---
 base: template:fedora
+vmType: vz
+mountType: virtiofs
+cpus: 4
+memory: 4GiB
+disk: 20GiB
+networks:
+  - lima: bridged
 env:
-  UV_PROJECT_ENVIRONMENT: /opt/.venv.kiwi-builder
-  OUTPUT_DIR: /opt/output
-disk: 50GiB
+  UV_PROJECT_ENVIRONMENT: /opt/kiwi-build/.venv
 mounts:
   - location: '~'
     writable: true
+user:
+  name: lima
 provision:
   - mode: system
     script: |
-      #!/bin/bash
+      #!/usr/bin/env bash
 
-      set -eux -o pipefail
+      set -euo pipefail
 
-      cat >> /etc/dnf/dnf.conf <<EOF
-      install_weak_deps=False
-      fastestmirror=True
-      repo_gpgcheck=True
-      timeout=10
-      max_parallel_downloads=8
-      EOF
+      nmcli device modify eth0 ipv4.route-metric 999
+      nmcli device modify lima0 ipv4.route-metric 100
 
-      dnf update -y
+      dnf config-manager setopt \
+        install_weak_deps=False \
+        fastestmirror=True \
+        repo_gpgcheck=True \
+        timeout=10 \
+        max_parallel_downloads=8
+
       dnf install -y dnf-plugin-versionlock kiwi-systemdeps uv
-      uv sync --group build --frozen
+
+      mkdir -p "${UV_PROJECT_ENVIRONMENT%/*}"
+      chown -R lima:lima "${UV_PROJECT_ENVIRONMENT%/*}"
+      chmod -R 755 "${UV_PROJECT_ENVIRONMENT%/*}"
