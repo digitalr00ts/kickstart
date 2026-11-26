@@ -1,5 +1,6 @@
 [project]
 site_name        = "Fedora Image Builder"
+site_url         = "https://digitalr00ts.github.io/kickstart/"
 site_description = "Build and validate minimal Fedora base images for Ansible-managed infrastructure."
 repo_url         = "https://github.com/digitalr00ts/kickstart"
 docs_dir         = "docs"
