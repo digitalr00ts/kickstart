@@ -41,13 +41,11 @@ repos:
         entry: mise exec -- ryl check --config-file .config/ryl.toml
         language: system
         files: \.(yaml|yml|kiwi)$
-        stages: [manual] # target-stage: pre-commit; existing document markers, indentation and KIWI merge-key shadowing
       - id: ryl-format
         name: Check YAML formatting (ryl)
         entry: mise exec -- ryl format --check --config-file .config/ryl.toml
         language: system
         files: \.(yaml|yml|kiwi)$
-        stages: [manual] # target-stage: pre-commit; existing YAML needs formatting
       - id: shuck
         name: Lint shell and workflow scripts (shuck)
         entry: mise exec -- shuck check
@@ -59,7 +57,7 @@ repos:
         entry: mise exec -- shuck format --check
         language: system
         types: [shell]
-        stages: [manual] # target-stage: pre-commit; existing shell needs formatting
+        stages: [manual]  # target-stage: pre-commit; existing shell needs formatting
       - id: jactionlint
         name: Validate GitHub Actions (jactionlint)
         entry: mise exec -- jactionlint --shellcheck= --ruff=ruff
@@ -70,7 +68,7 @@ repos:
         entry: mise exec -- zizmor --offline
         language: system
         files: ^\.github/workflows/.*\.ya?ml$
-        stages: [manual] # target-stage: pre-commit; checkout credentials and unpinned Fedora container
+        stages: [manual]  # target-stage: pre-commit; checkout credentials and unpinned Fedora container
       - id: tombi
         name: Lint TOML (Tombi)
         entry: mise exec -- tombi lint --offline
@@ -86,19 +84,18 @@ repos:
         entry: mise exec -- rumdl check --config .config/rumdl.toml
         language: system
         types: [markdown]
-        stages: [manual] # target-stage: pre-commit; existing tables and semantic line breaks
       - id: ruff
         name: Lint Python (Ruff)
         entry: mise exec -- ruff check
         language: system
         types: [python]
-        stages: [manual] # target-stage: pre-commit; existing strict Ruff findings
+        stages: [manual]  # target-stage: pre-commit; existing strict Ruff findings
       - id: ruff-format
         name: Check Python formatting (Ruff)
         entry: mise exec -- ruff format --check
         language: system
         types: [python]
-        stages: [manual] # target-stage: pre-commit; existing Python needs formatting
+        stages: [manual]  # target-stage: pre-commit; existing Python needs formatting
       - id: kiwi
         name: Validate KIWI image descriptions
         entry: sh -ec 'for ARCH in x86_64 aarch64; do kiwi-ng --profile $ARCH image info --description kiwi; done'
