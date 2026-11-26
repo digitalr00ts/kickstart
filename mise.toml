@@ -2,78 +2,78 @@ min_version = "2026.11.11"
 
 [settings]
 # Keep doctor and other task dispatch read-only with respect to tool installation.
-auto_install = false
-lockfile = true
-lockfile_platforms = ["linux-x64", "linux-arm64", "macos-arm64"]
+auto_install       = false
+lockfile           = true
+lockfile_platforms = [ "linux-x64", "linux-arm64", "macos-arm64" ]
 
 [tool_alias]
-qemu = "aqua:takumin/qemu-bin"
-ryl = "aqua:owenlamont/ryl"
+qemu  = "aqua:takumin/qemu-bin"
+ryl   = "aqua:owenlamont/ryl"
 shuck = "aqua:ewhauser/shuck"
 
 [tools]
-uv = "0.13.9"
-prek = "0.5.11"
-node = "26.13.1"
-ruff = "0.17.6"
+uv          = "0.13.9"
+prek        = "0.5.11"
+node        = "26.13.1"
+ruff        = "0.17.6"
 jactionlint = "2.6.0"
-tombi = "1.11.3"
-"aqua:crate-ci/typos" = "1.52.2"
-rumdl = "0.3.5"
-ryl = { version = "0.30.0", os = ["linux", "macos/arm64"] }
-shuck = { version = "0.2.11", os = ["linux", "macos/arm64"] }
-zizmor = "1.33.1"
-lima = { version = "2.3.0", os = ["macos/arm64"] }
-qemu = { version = "2026.10.22", os = ["linux"] }
+tombi       = "1.11.3"
+typos       = "1.52.2"
+rumdl       = "0.3.5"
+ryl         = { version = "0.30.0", os = [ "linux", "macos/arm64" ] }
+shuck       = { version = "0.2.11", os = [ "linux", "macos/arm64" ] }
+zizmor      = "1.33.1"
+lima        = { version = "2.3.0", os = [ "macos/arm64" ] }
+qemu        = { version = "2026.10.22", os = [ "linux" ] }
 
 [tasks.setup]
 description = "Sync frozen test dependencies and install Git hooks"
-run = ["uv sync --group test --frozen", "prek install"]
+run         = [ "uv sync --group test --frozen", "prek install" ]
 
 [tasks.build]
 description = "Build a native Fedora image (Lima on macOS, native on Linux)"
-run = "bash scripts/build.sh"
+run         = "bash scripts/build.sh"
 
 [tasks.test]
 description = "Test a disposable image with native QEMU"
-run = "uv run --group test --frozen molecule test -s qemu"
+run         = "uv run --group test --frozen molecule test -s qemu"
 
 [tasks.check]
 description = "Run Python regressions without building images or creating VMs"
-run = "uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'"
+run         = "uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'"
 
 [tasks.check-artifacts]
 description = "Run Node artifact helper regressions without VMs"
-run = "node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs"
+run         = "node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs"
 
 [tasks.check-workflows]
 description = "Run workflow helper regressions without VMs"
-run = "uv run --group test --frozen python -m unittest discover -s .github/workflows -p 'test_*.py'"
+run         = "uv run --group test --frozen python -m unittest discover -s .github/workflows -p 'test_*.py'"
 
 [tasks.check-all]
 description = "Run Python, Node artifact and workflow suites sequentially, without hooks or VMs"
-run = [{ task = "check" }, { task = "check-artifacts" }, { task = "check-workflows" }]
+run         = [ { task = "check" }, { task = "check-artifacts" }, { task = "check-workflows" } ]
 
 [tasks.lint]
 description = "Run active hooks on all tracked files"
-run = "prek run --all-files"
+run         = "prek run --all-files"
 
 [tasks.doctor]
 description = "Check host prerequisites without project dependency sync or launching guests"
-run = "uv run --no-project python scripts/doctor.py"
+run         = "uv run --no-project python scripts/doctor.py"
 
 [tasks.clean]
 description = "Remove default build artifacts (destroy test guests first)"
-run = "rm -rf output/ build/ .kiwi-* ./*.qcow2"
+run         = "rm -rf output/ build/ .kiwi-* ./*.qcow2"
 
 [tasks.lima-create]
 description = "Create and start the Fedora builder (macOS only)"
-run = 'limactl start --tty=false --name "${LIMA_INSTANCE:-kiwi-builder}" lima/kiwi-builder.yaml'
+run         = 'limactl start --tty=false --name "${LIMA_INSTANCE:-kiwi-builder}" lima/kiwi-builder.yaml'
 
 [tasks.lima-cmd]
 description = "Control the Lima builder (macOS only)"
-usage = '''
+usage       = '''
 arg "[command]" default="stop"
 arg "[instance]" env="LIMA_INSTANCE" default="kiwi-builder"
 '''
-run = 'limactl "${usage_command?}" "${usage_instance?}"'
+run         = 'limactl "${usage_command?}" "${usage_instance?}"'
