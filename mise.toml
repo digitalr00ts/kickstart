@@ -18,6 +18,7 @@ node = "26.13.1"
 ruff = "0.17.6"
 jactionlint = "2.6.0"
 tombi = "1.11.3"
+"aqua:crate-ci/typos" = "1.52.2"
 rumdl = "0.3.5"
 ryl = { version = "0.30.0", os = ["linux", "macos/arm64"] }
 shuck = { version = "0.2.11", os = ["linux", "macos/arm64"] }

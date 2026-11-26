@@ -15,7 +15,7 @@ mise run setup
 
 Use `mise.toml` for task definitions and tool version declarations; commit `mise.lock` for resolved tool pins.
 Run `mise install` to install the pinned `uv`, `prek`, Node.js, Ruff, `jactionlint`, `tombi`, `rumdl`,
-`aqua:owenlamont/ryl`, `aqua:ewhauser/shuck` and `zizmor` tools, plus `aqua:takumin/qemu-bin` on Linux
+`aqua:owenlamont/ryl`, `aqua:ewhauser/shuck`, `zizmor` and `aqua:crate-ci/typos` tools, plus `aqua:takumin/qemu-bin` on Linux
 and Lima on macOS only.
 Keep Python management in `uv`: `.python-version` selects the interpreter and `uv.lock` locks Python dependencies.
 The setup task runs `uv sync --group test --frozen`, then `prek install`.
@@ -56,6 +56,7 @@ Keep the current stages explicit:
 
 | Source | Active commit checks | Manual checks and promotion condition |
 | --- | --- | --- |
+| Text and source | `typos` spelling (check-only) | None |
 | Shell | Shuck lint | `shuck-format`: format existing scripts |
 | GitHub Actions | jactionlint correctness; Shuck embedded-shell lint | `zizmor`: resolve security findings |
 | TOML | Tombi lint | `tombi-format`: format existing TOML |
@@ -78,6 +79,9 @@ Run formatting checks without writes during adoption. Remove a hook's `stages: [
 run passes and the resulting policy/formatting changes have been reviewed.
 Configure Ruff through `pyproject.toml` and `.config/ruff.toml`; retain the supplied `.config/ryl.toml`,
 `.config/rumdl.toml` and `.config/tombi.toml` policies. Include `*.kiwi` in ryl's YAML globs.
+Run spelling checks with `mise exec -- prek run typos --all-files`.
+Use `.config/typos.toml` for narrow spelling exceptions and generated lockfile/image exclusions;
+run the CLI with `mise exec -- typos --config .config/typos.toml --force-exclude <paths>` without auto-fix flags.
 Shuck replaces ShellCheck for standalone and workflow shell; jactionlint uses Ruff for embedded Python.
 Use `.github/jactionlint.yaml` to keep its correctness profile aligned with the previous actionlint gate.
 Use these tasks for narrower feedback:

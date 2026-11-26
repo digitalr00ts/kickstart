@@ -31,6 +31,11 @@ repos:
   # Share mise pins with direct CLI runs instead of installing duplicate hook binaries.
   - repo: local
     hooks:
+      - id: typos
+        name: Check spelling (typos)
+        entry: mise exec -- typos --config .config/typos.toml --force-exclude
+        language: system
+        types: [text]
       - id: ryl
         name: Lint YAML (ryl)
         entry: mise exec -- ryl check --config-file .config/ryl.toml
