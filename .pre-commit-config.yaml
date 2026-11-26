@@ -10,7 +10,6 @@ repos:
     hooks:
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
-      # - id: check-symlinks
       - id: check-yaml
         args: [--allow-multiple-documents, --unsafe]
         files: \.(yaml|yml|kiwi)$
@@ -29,16 +28,73 @@ repos:
     hooks:
       - id: fix-smartquotes
 
-
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.38.0
-    hooks:
-      - id: yamllint
-        args: [-s]
-        files: \.(yaml|yml|kiwi)$
-
+  # Share mise pins with direct CLI runs instead of installing duplicate hook binaries.
   - repo: local
     hooks:
+      - id: ryl
+        name: Lint YAML (ryl)
+        entry: mise exec -- ryl check --config-file .config/ryl.toml
+        language: system
+        files: \.(yaml|yml|kiwi)$
+        stages: [manual] # target-stage: pre-commit; existing document markers, indentation and KIWI merge-key shadowing
+      - id: ryl-format
+        name: Check YAML formatting (ryl)
+        entry: mise exec -- ryl format --check --config-file .config/ryl.toml
+        language: system
+        files: \.(yaml|yml|kiwi)$
+        stages: [manual] # target-stage: pre-commit; existing YAML needs formatting
+      - id: shuck
+        name: Lint shell and workflow scripts (shuck)
+        entry: mise exec -- shuck check
+        language: system
+        types_or: [shell, yaml]
+        files: (\.sh$|^\.github/workflows/.*\.ya?ml$)
+      - id: shuck-format
+        name: Check shell formatting (shuck)
+        entry: mise exec -- shuck format --check
+        language: system
+        types: [shell]
+        stages: [manual] # target-stage: pre-commit; existing shell needs formatting
+      - id: jactionlint
+        name: Validate GitHub Actions (jactionlint)
+        entry: mise exec -- jactionlint --shellcheck= --ruff=ruff
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+      - id: zizmor
+        name: Audit GitHub Actions security (zizmor)
+        entry: mise exec -- zizmor --offline
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        stages: [manual] # target-stage: pre-commit; checkout credentials and unpinned Fedora container
+      - id: tombi
+        name: Lint TOML (Tombi)
+        entry: mise exec -- tombi lint --offline
+        language: system
+        files: (\.toml$)
+      - id: tombi-format
+        name: Check TOML formatting (Tombi)
+        entry: mise exec -- tombi format --check --offline
+        language: system
+        files: (\.toml$)
+        stages: [manual] # target-stage: pre-commit; existing TOML needs formatting
+      - id: rumdl
+        name: Check Markdown (rumdl)
+        entry: mise exec -- rumdl check --config .config/rumdl.toml
+        language: system
+        types: [markdown]
+        stages: [manual] # target-stage: pre-commit; existing tables and semantic line breaks
+      - id: ruff
+        name: Lint Python (Ruff)
+        entry: mise exec -- ruff check
+        language: system
+        types: [python]
+        stages: [manual] # target-stage: pre-commit; existing strict Ruff findings
+      - id: ruff-format
+        name: Check Python formatting (Ruff)
+        entry: mise exec -- ruff format --check
+        language: system
+        types: [python]
+        stages: [manual] # target-stage: pre-commit; existing Python needs formatting
       - id: kiwi
         name: Validate KIWI image descriptions
         entry: sh -ec 'for ARCH in x86_64 aarch64; do kiwi-ng --profile $ARCH image info --description kiwi; done'
@@ -54,26 +110,6 @@ repos:
         args: [--fix]
         stages: [manual]
 
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
-    hooks:
-      - id: shellcheck
-
-  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-    rev: v1.7.12.24
-    hooks:
-      - id: actionlint
-        additional_dependencies:
-          - pyflakes
-          - shellcheck-py
-
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.49.0
-    hooks:
-      - id: markdownlint
-        args: [--fix]
-        files: \.(md|markdown)$
-
 default_language_version:
   python: python3
 
@@ -85,5 +121,5 @@ exclude: |
     .*\.iso$|
     \.cline.*|
     openspec/.*|
-    uv\.lock
+    .*\.lock
   )$

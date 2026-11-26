@@ -1,0 +1,45 @@
+exclude = [
+  "AGENTS.md",
+]
+
+[files]
+yaml     = [ "*.y*ml", "*.kiwi" ]
+markdown = [ "*.md" ]
+
+[lint]
+strict           = true
+per-line-ignores = [
+  { path = "**/.github/workflows/*.y*ml", regex = "^on:", rules = [ "truthy" ] },
+]
+
+[lint.rules]
+anchors                                         = "enable"
+brackets                                        = "enable"
+colons                                          = "enable"
+commas                                          = "enable"
+empty-lines                                     = "enable"
+empty-values                                    = "enable"
+hyphens                                         = "enable"
+octal-values                                    = "enable"
+new-line-at-end-of-file                         = "enable"
+new-lines                                       = "enable"
+trailing-spaces                                 = "enable"
+truthy                                          = "enable"
+braces.max-spaces-inside                        = 1
+braces.max-spaces-inside-empty                  = 2
+braces.min-spaces-inside-empty                  = 0
+comments.min-spaces-from-content                = 1
+comments-indentation.allow-any-open-indent      = true
+document-end.present                            = false
+document-start.present                          = false
+float-values.require-numeral-before-decimal     = true
+indentation.spaces                              = 2
+indentation.indent-sequences                    = true
+key-duplicates.forbid-duplicated-merge-keys     = true
+key-duplicates.check-canonical                  = true
+key-duplicates.forbid-merge-key-shadowing       = true
+line-length.max                                 = 120
+quoted-strings.quote-type                       = "single"
+quoted-strings.required                         = "only-when-needed"
+quoted-strings.allow-quoted-quotes              = true
+quoted-strings.allow-double-quotes-for-escaping = true

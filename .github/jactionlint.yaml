@@ -1,0 +1,3 @@
+---
+# Preserve actionlint's correctness gate; run the broader security audit with zizmor.
+profile: correctness
