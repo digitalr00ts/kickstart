@@ -1,0 +1,78 @@
+---
+- name: Verify unprivileged SSH identity
+  ansible.builtin.command: id -un
+  become: false
+  register: ssh_identity
+  changed_when: false
+
+- name: Verify privileged identity
+  ansible.builtin.command: id -un
+  register: privileged_identity
+  changed_when: false
+
+- name: Verify completed system boot
+  ansible.builtin.command: systemctl is-system-running --wait
+  register: boot_status
+  changed_when: false
+  failed_when: boot_status.rc not in [0, 1]
+
+- name: List failed system services
+  ansible.builtin.command: systemctl --failed --no-legend --plain --no-pager
+  register: failed_services
+  changed_when: false
+
+- name: Verify EFI boot
+  ansible.builtin.stat:
+    path: /sys/firmware/efi
+  register: efi_boot
+
+- name: Probe root filesystem
+  ansible.builtin.command: findmnt -n -o FSTYPE /
+  register: root_filesystem
+  changed_when: false
+
+- name: Verify Python
+  ansible.builtin.command: python3 --version
+  register: python_version
+  changed_when: false
+
+- name: Verify offline package manager execution
+  ansible.builtin.command: dnf --version
+  changed_when: false
+
+- name: Gather services
+  ansible.builtin.service_facts: {}
+
+- name: Gather installed packages without installing anything
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Assert boot, SSH, filesystem and services
+  ansible.builtin.assert:
+    that:
+      - ssh_identity.stdout | trim == 'admin'
+      - privileged_identity.stdout | trim == 'root'
+      - boot_status.stdout | trim == 'running'
+      - failed_services.stdout | trim == ''
+      - efi_boot.stat.exists
+      - ansible_facts.distribution == 'Fedora'
+      - root_filesystem.stdout | trim == 'btrfs'
+      - "'Python 3' in (python_version.stdout + python_version.stderr)"
+      - ansible_facts.services.get('sshd.service', {}).get('state', '') == 'running'
+      - ansible_facts.services.get('NetworkManager.service', {}).get('state', '') == 'running'
+      - ansible_facts.services.get('firewalld.service', {}).get('state', '') == 'running'
+
+- name: Assert packages supplied by the image
+  ansible.builtin.assert:
+    that: item in ansible_facts.packages
+    fail_msg: 'Required image package missing: {{ item }}'
+  loop:
+    - vim-minimal
+    - python3
+    - sudo
+    - openssh-server
+    - NetworkManager
+    - firewalld
+    - kernel-core
+    - btrfs-progs
+    - dnf5

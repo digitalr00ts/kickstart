@@ -1,34 +1,38 @@
 ---
 dependency:
   name: galaxy
+  enabled: false
 driver:
-  name: delegated
+  name: default
+  options:
+    managed: true
+    ansible_connection_options:
+      ansible_ssh_common_args: >-
+        -F /dev/null -o IdentitiesOnly=yes -o StrictHostKeyChecking=no
+        -o UserKnownHostsFile=/dev/null
 platforms:
   - name: instance
+    groups:
+      - molecule
 provisioner:
   name: ansible
-  env:
-    VM_PLATFORM: auto
-    VM_VARIANT: server
-    VM_SSH_PORT: '2222'
   playbooks:
-    create: ../shared/create.yml
-    converge: ../shared/converge.yml
-    destroy: ../shared/destroy.yml
+    create: ../default/create.yml
+    converge: ../default/converge.yml
+    verify: ../default/verify.yml
+    destroy: ../default/destroy.yml
   inventory:
-    host_vars:
-      instance:
-        ansible_host: 127.0.0.1
-        ansible_port: 2222
-        ansible_user: root
-        ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+    group_vars:
+      molecule:
+        ansible_user: admin
+        ansible_become_method: sudo
+        ansible_python_interpreter: /usr/bin/python3
 verifier:
   name: ansible
-  enabled: true
-  playbooks:
-    verify: ../shared/verify.yml
 scenario:
   test_sequence:
+    - destroy
+    - syntax
     - create
     - converge
     - verify

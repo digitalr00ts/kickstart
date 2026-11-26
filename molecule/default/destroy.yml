@@ -1,0 +1,13 @@
+---
+- name: Destroy disposable QEMU guest
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Stop owned guest before removing overlay and credentials
+      ansible.builtin.command:
+        argv:
+          - '{{ ansible_playbook_python }}'
+          - "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/scripts/vm-test.py"
+          - destroy
+      changed_when: true

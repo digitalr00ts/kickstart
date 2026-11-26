@@ -1,0 +1,16 @@
+---
+- name: Verify built image behavior
+  hosts: molecule
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Wait for guest connection before gathering facts
+      ansible.builtin.wait_for_connection:
+        timeout: 240
+        sleep: 3
+
+    - name: Gather guest facts
+      ansible.builtin.setup: {}
+
+    - name: Verify image contracts
+      ansible.builtin.include_tasks: verify-common.yml

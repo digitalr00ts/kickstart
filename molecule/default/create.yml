@@ -1,0 +1,13 @@
+---
+- name: Start disposable QEMU guest
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Start native QEMU with private test credentials
+      ansible.builtin.command:
+        argv:
+          - '{{ ansible_playbook_python }}'
+          - "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/scripts/vm-test.py"
+          - start
+      changed_when: true

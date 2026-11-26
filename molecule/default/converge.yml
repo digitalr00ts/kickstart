@@ -1,0 +1,19 @@
+---
+- name: Check built image readiness without installing packages
+  hosts: molecule
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Wait for SSH and Python
+      ansible.builtin.wait_for_connection:
+        timeout: 240
+        sleep: 3
+
+    - name: Confirm passwordless test-only privilege escalation
+      ansible.builtin.command: id -un
+      register: privileged_identity
+      changed_when: false
+
+    - name: Assert privilege escalation
+      ansible.builtin.assert:
+        that: privileged_identity.stdout | trim == 'root'
