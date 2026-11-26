@@ -7,199 +7,137 @@ on:
     paths:
       - kiwi/**
       - scripts/build.sh
+      - scripts/export-image.sh
+      - pyproject.toml
+      - uv.lock
       - .github/workflows/build.yml
   pull_request:
     branches: [main]
     paths:
       - kiwi/**
-      - ansible/**
+      - scripts/build.sh
+      - scripts/export-image.sh
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/build.yml
   workflow_dispatch:
     inputs:
       version:
         description: Fedora version
-        required: false
         default: '44'
         type: choice
-        options:
-          - '44'
+        options: ['44']
       arch:
-        description: Architecture
-        required: false
+        description: Native architecture (not a cross-build)
         default: x86_64
         type: choice
-        options:
-          - x86_64
-          - aarch64
-      debug:
-        description: Enable debug mode
-        required: false
-        default: false
-        type: boolean
+        options: [x86_64, aarch64]
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
+    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 120
+    # Unverified on hosted runners: privileged mode shares the host kernel and
+    # still requires usable loop devices/mounts. This is not Fedora VM isolation.
+    container:
+      image: fedora:44
+      options: --privileged
+    defaults:
+      run:
+        shell: bash
+    env:
+      FEDORA_VERSION: ${{ inputs.version || '44' }}
+      BUILD_ARCH: ${{ inputs.arch || 'x86_64' }}
 
     steps:
+      - name: Install Fedora build dependencies
+        run: dnf install -y git sudo tar zstd findutils kiwi-systemdeps jing python3
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install the latest version of uv
+      - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
-      - name: Free up disk space
+      - name: Check native architecture and loop support
         run: |
-          echo "Before cleanup:"
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          echo "After cleanup:"
-          df -h
-
-      - name: Install Kiwi NG dependencies
-        run: sudo dnf install -y kiwi-systemdeps jing
-
-      - name: Install Python build dependencies
-        run: uv sync --group build --frozen
-
-      - name: Cache Kiwi packages
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        with:
-          path: |
-            ~/.cache/kiwi
-          key: kiwi-packages-${{ github.run_id }}
-          restore-keys: |
-            kiwi-packages-
-
-      - name: Set variables
-        id: vars
-        run: |
-          VERSION="${{ github.event.inputs.version || '44' }}"
-          ARCH="${{ github.event.inputs.arch || 'x86_64' }}"
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-
-          {
-            echo "version=$VERSION"
-            echo "arch=$ARCH"
-            echo "short_sha=$SHORT_SHA"
-            echo "timestamp=$TIMESTAMP"
-            echo "artifact_name=fedora-${VERSION}-${ARCH}-${SHORT_SHA}"
-          } >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          test "$(uname -m)" = "$BUILD_ARCH"
+          # Do not detach host loops or remove runner tools to make space.
+          losetup --find
+          df -h .
 
       - name: Build image
-        run: uv run poe build "${{ steps.vars.outputs.version }}" "${{ steps.vars.outputs.arch }}"
-        env:
-          KIWI_DEBUG: ${{ github.event.inputs.debug }}
+        run: bash scripts/build.sh "$FEDORA_VERSION" "$BUILD_ARCH"
 
-      - name: Get image info
-        id: image_info
+      - name: Package exactly one image and optional package manifests
+        id: package
         run: |
-          ARCH="${{ steps.vars.outputs.arch }}"
-          IMAGE=$(find "output/kiwi-$ARCH" -name "*.qcow2" | head -n 1)
-          if [ -z "$IMAGE" ]; then
-            echo "Error: No image found"
+          set -euo pipefail
+          shopt -s nullglob
+          images=("output/$BUILD_ARCH/"*.qcow2)
+          if (( ${#images[@]} != 1 )); then
+            printf 'Expected one QCOW2 in output/%s, found %s\n' "$BUILD_ARCH" "${#images[@]}" >&2
             exit 1
           fi
+          image=${images[0]}
+          artifact="fedora-${FEDORA_VERSION}-${BUILD_ARCH}-${GITHUB_SHA:0:8}"
+          manifests=("output/$BUILD_ARCH/"*.packages)
+          members=("$(basename "$image")")
+          for manifest in "${manifests[@]}"; do
+            members+=("$(basename "$manifest")")
+          done
+          tar -C "output/$BUILD_ARCH" -I 'zstd -T0 -3' -cf "$artifact.tar.zst" -- "${members[@]}"
+          echo "artifact=$artifact" >> "$GITHUB_OUTPUT"
+          export IMAGE_FILE="$image" ARTIFACT_NAME="$artifact"
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+          from pathlib import Path
 
-          SIZE=$(du -h "$IMAGE" | cut -f1)
-          SIZE_BYTES=$(stat -c%s "$IMAGE" 2>/dev/null || stat -f%z "$IMAGE")
-
-          {
-            echo "image_path=$IMAGE"
-            echo "image_size=$SIZE"
-            echo "image_size_bytes=$SIZE_BYTES"
-            echo "image_name=$(basename "$IMAGE")"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Compress image
-        run: |
-          ARCH="${{ steps.vars.outputs.arch }}"
-          ARTIFACT="${{ steps.vars.outputs.artifact_name }}"
-          cd "output/kiwi-$ARCH"
-          tar -I "zstd -19 -T0" -cf \
-            "../../${ARTIFACT}.tar.zst" \
-            -- *.qcow2 *.packages
-
-      - name: Get compressed size
-        id: compressed
-        run: |
-          ARTIFACT="${{ steps.vars.outputs.artifact_name }}"
-          ARCHIVE="${ARTIFACT}.tar.zst"
-          COMPRESSED_SIZE=$(du -h "$ARCHIVE" | cut -f1)
-          COMPRESSED_BYTES=$(stat -c%s "$ARCHIVE" 2>/dev/null || stat -f%z "$ARCHIVE")
-          IMAGE_SIZE_BYTES="${{ steps.image_info.outputs.image_size_bytes }}"
-          RATIO=$(echo "scale=2; $IMAGE_SIZE_BYTES / $COMPRESSED_BYTES" | bc)
-
-          {
-            echo "compressed_size=$COMPRESSED_SIZE"
-            echo "ratio=${RATIO}x"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Create build metadata
-        run: |
-          cat > build-metadata.json <<EOF
-          {
-            "fedora_version": "${{ steps.vars.outputs.version }}",
-            "architecture": "${{ steps.vars.outputs.arch }}",
-            "commit_sha": "${{ github.sha }}",
-            "short_sha": "${{ steps.vars.outputs.short_sha }}",
-            "build_time": "$(date -Iseconds)",
-            "builder": "kiwi-ng",
-            "image_name": "${{ steps.image_info.outputs.image_name }}",
-            "image_size": "${{ steps.image_info.outputs.image_size }}",
-            "image_size_bytes": ${{ steps.image_info.outputs.image_size_bytes }},
-            "compressed_size": "${{ steps.compressed.outputs.compressed_size }}",
-            "compression_ratio": "${{ steps.compressed.outputs.ratio }}",
-            "artifact_name": "${{ steps.vars.outputs.artifact_name }}.tar.zst",
-            "workflow_run_id": "${{ github.run_id }}",
-            "workflow_run_number": "${{ github.run_number }}"
+          image = Path(os.environ['IMAGE_FILE'])
+          metadata = {
+              'fedora_version': os.environ['FEDORA_VERSION'],
+              'architecture': os.environ['BUILD_ARCH'],
+              'commit_sha': os.environ['GITHUB_SHA'],
+              'workflow_run_id': os.environ['GITHUB_RUN_ID'],
+              'build_time': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'image_name': image.name,
+              'image_size_bytes': image.stat().st_size,
+              'artifact_name': os.environ['ARTIFACT_NAME'],
+              'builder_environment': 'privileged fedora:44 container',
           }
-          EOF
+          Path('build-metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
+          PY
 
       - name: Upload image artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: ${{ steps.vars.outputs.artifact_name }}
-          path: ${{ steps.vars.outputs.artifact_name }}.tar.zst
+          name: ${{ steps.package.outputs.artifact }}
+          path: ${{ steps.package.outputs.artifact }}.tar.zst
+          if-no-files-found: error
           retention-days: 30
           compression-level: 0
 
       - name: Upload build metadata
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: build-metadata-${{ steps.vars.outputs.short_sha }}
+          name: build-metadata-${{ env.BUILD_ARCH }}-${{ github.sha }}
           path: build-metadata.json
+          if-no-files-found: error
           retention-days: 90
 
-      - name: Generate summary
+      - name: Report build status
+        if: always()
+        env:
+          BUILD_STATUS: ${{ job.status }}
         run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
-          # 🚀 Kiwi NG Build Complete
-
-          ## Build Information
-          - **Fedora Version**: ${{ steps.vars.outputs.version }}
-          - **Architecture**: ${{ steps.vars.outputs.arch }}
-          - **Commit**: \`${{ steps.vars.outputs.short_sha }}\`
-          - **Timestamp**: ${{ steps.vars.outputs.timestamp }}
-
-          ## Image Details
-          - **Image**: \`${{ steps.image_info.outputs.image_name }}\`
-          - **Size (uncompressed)**: ${{ steps.image_info.outputs.image_size }}
-          - **Size (compressed)**: ${{ steps.compressed.outputs.compressed_size }}
-          - **Compression ratio**: ${{ steps.compressed.outputs.ratio }}
-
-          ## Artifact
-          - **Name**: \`${{ steps.vars.outputs.artifact_name }}.tar.zst\`
-          - **Retention**: 30 days
-
-          ## Next Steps
-          - Download artifact from Actions tab
-          - Run provisioning: \`uv run poe provision-image <image>\`
-          - Run tests: \`uv run poe test qemu\`
-          EOF
+          {
+            printf '## Build\n\nStatus: %s\n\nNative architecture: %s\n' "$BUILD_STATUS" "$BUILD_ARCH"
+            printf '\nEnvironment: privileged Fedora 44 container.\n'
+            printf 'Hosted-runner loop-device compatibility requires runtime validation.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
