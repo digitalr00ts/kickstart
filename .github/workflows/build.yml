@@ -65,12 +65,12 @@ jobs:
         run: dnf install -y git sudo tar zstd findutils kiwi-systemdeps jing python3
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Install build tools
-        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78  # v5.3.0
         with:
-          version: '2026.11.14'
+          version: 2026.11.14
           install_args: uv
 
       - name: Check native architecture and loop support
@@ -126,7 +126,7 @@ jobs:
           PY
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: ${{ steps.package.outputs.artifact }}
           path: ${{ steps.package.outputs.artifact }}.tar.zst
@@ -135,7 +135,7 @@ jobs:
           compression-level: 0
 
       - name: Upload build metadata
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: build-metadata-${{ env.BUILD_ARCH }}-${{ github.sha }}
           path: build-metadata.json

@@ -25,11 +25,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       - name: Install regression tools
-        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78  # v5.3.0
         with:
-          version: '2026.11.14'
+          version: 2026.11.14
           install_args: uv node
       - name: Test host and workflow helpers (no image build or VM)
         run: mise run check-all
@@ -39,15 +39,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       - name: Install Jing  # RELAX NG validator for KIWI image descriptions
         run: |
           sudo apt-get update
           sudo apt-get install -y jing
       - name: Install lint tools
-        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78  # v5.3.0
         with:
-          version: '2026.11.14'
+          version: 2026.11.14
           install_args: uv prek ruff node jactionlint tombi rumdl ryl shuck zizmor typos
       - name: Run pre-commit
         run: mise run lint
