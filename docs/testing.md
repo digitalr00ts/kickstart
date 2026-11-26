@@ -30,6 +30,8 @@ What it does:
 - Check EFI boot, Fedora, Btrfs root, required packages, running services and absence of failed services.
 - Stop the owned guest, then remove the overlay and temporary credentials.
 
+Select `-s qemu` for explicit lifecycle commands; it is the only runnable scenario. Keep shared playbooks under
+`molecule/default/`; that directory no longer defines a default scenario.
 Bound the completed-boot check to 240 seconds; a guest that remains activating fails verification.
 Gather only distribution facts through setup; gather packages and services separately.
 

@@ -16,9 +16,16 @@ DEFAULT = ROOT / "molecule/default"
 
 class MoleculeTests(unittest.TestCase):
     def scenarios(self):
-        for scenario in ("default", "qemu"):
+        for scenario in ("qemu",):
             path = ROOT / "molecule" / scenario / "molecule.yml"
             yield path, yaml.safe_load(path.read_text())
+
+    def test_qemu_is_the_only_runnable_scenario(self):
+        self.assertEqual(
+            sorted(path.relative_to(ROOT / "molecule").as_posix()
+                   for path in (ROOT / "molecule").rglob("molecule.yml")),
+            ["qemu/molecule.yml"],
+        )
 
     def test_boot_wait_is_bounded_and_requires_running_state(self):
         tasks = yaml.safe_load((DEFAULT / "verify-common.yml").read_text())
