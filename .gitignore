@@ -40,11 +40,7 @@ __pycache__/
 # Molecule
 .molecule/
 
-# Pre-commit
-.pre-commit-cache/
-
 # Tool caches
-.ruff_cache/
-.rumdl_cache/
-.ryl_cache/
-.shuck_cache/
+.*cache/
+
+.venv*/
