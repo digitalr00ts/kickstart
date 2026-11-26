@@ -58,7 +58,8 @@ for the latest matching unexpired image artifact. Reject ambiguous matches and e
 Download from the selected run using its run ID, not from the current Test workflow run.
 
 Extract exactly one image with the workflow's safe archive helper. Check that it is standalone QCOW2 without external
-backing/data files, then run `qemu-img check`. Install QEMU, EFI firmware, libguestfs and project test dependencies;
+backing/data files, then run `qemu-img check`. Install pinned QEMU and `uv` through mise;
+install EFI firmware and libguestfs through the system package manager, then sync project test dependencies;
 run the real Molecule `qemu` scenario, not a placeholder validation command.
 Use KVM when accessible; the workflow explicitly requests TCG otherwise. TCG can be substantially slower.
 

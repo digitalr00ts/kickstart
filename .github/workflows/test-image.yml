@@ -58,17 +58,16 @@ jobs:
           name: ${{ steps.artifact.outputs.name }}
           path: artifacts/
 
-      - name: Install QEMU, firmware and guest tools
+      - name: Install firmware and guest tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-system-arm qemu-utils ovmf \
-            qemu-efi-aarch64 libguestfs-tools zstd openssh-client
+          sudo apt-get install -y ovmf qemu-efi-aarch64 libguestfs-tools zstd openssh-client
 
       - name: Install test tools
         uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
           version: '2026.11.14'
-          install_args: uv
+          install_args: uv qemu
 
       - name: Install project test dependencies
         run: uv sync --group test --frozen
