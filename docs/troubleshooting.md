@@ -120,6 +120,7 @@ Symptom:
 Fix:
 
 - Inspect the failing phase and guest logs before removing state.
+- For a completed-boot timeout, inspect the console for units that remain activating; do not repair the base during verification.
 - Confirm packages and services are supplied by the image; converge does not repair missing packages.
 - Destroy test resources, then retry without deleting the source image:
 

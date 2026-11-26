@@ -20,6 +20,20 @@ class MoleculeTests(unittest.TestCase):
             path = ROOT / "molecule" / scenario / "molecule.yml"
             yield path, yaml.safe_load(path.read_text())
 
+    def test_boot_wait_is_bounded_and_requires_running_state(self):
+        tasks = yaml.safe_load((DEFAULT / "verify-common.yml").read_text())
+        boot_task, = [task for task in tasks
+                      if task.get("ansible.builtin.command") == "systemctl is-system-running --wait"]
+        self.assertIsInstance(boot_task["timeout"], int)
+        self.assertGreater(boot_task["timeout"], 0)
+        self.assertLessEqual(boot_task["timeout"], 240)
+        self.assertEqual(boot_task["register"], "boot_status")
+        self.assertFalse(boot_task["changed_when"])
+        self.assertEqual(boot_task["failed_when"], "boot_status.rc not in [0, 1]")
+        assertions = [condition for task in tasks if "ansible.builtin.assert" in task
+                      for condition in task["ansible.builtin.assert"]["that"]]
+        self.assertIn("boot_status.stdout | trim == 'running'", assertions)
+
     def test_installed_schema_and_default_driver(self):
         for path, config in self.scenarios():
             with self.subTest(scenario=path.parent.name):

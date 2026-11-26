@@ -12,6 +12,7 @@
 
 - name: Verify completed system boot
   ansible.builtin.command: systemctl is-system-running --wait
+  timeout: 240
   register: boot_status
   changed_when: false
   failed_when: boot_status.rc not in [0, 1]

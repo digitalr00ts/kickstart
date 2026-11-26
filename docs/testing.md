@@ -30,6 +30,8 @@ What it does:
 - Check EFI boot, Fedora, Btrfs root, required packages, running services and absence of failed services.
 - Stop the owned guest, then remove the overlay and temporary credentials.
 
+Bound the completed-boot check to 240 seconds; a guest that remains activating fails verification.
+
 Converge checks readiness rather than installing missing packages or repairing the image.
 The source image remains unchanged; test credentials are never exported into it.
 SSH host-key checking is disabled only for the disposable loopback guest with its private transient identity.
