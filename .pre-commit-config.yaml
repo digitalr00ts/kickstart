@@ -98,9 +98,8 @@ repos:
         stages: [manual]  # target-stage: pre-commit; existing Python needs formatting
       - id: kiwi
         name: Validate KIWI image descriptions
-        entry: sh -ec 'for ARCH in x86_64 aarch64; do kiwi-ng --profile $ARCH image info --description kiwi; done'
-        language: python
-        additional_dependencies: ['kiwi[markup]']
+        entry: mise run check-kiwi
+        language: system
         files: kiwi/.*\.kiwi$
         pass_filenames: false
 

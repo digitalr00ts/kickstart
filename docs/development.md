@@ -54,7 +54,9 @@ Keep hooks separate from helper regressions: they may initialize isolated enviro
 validate KIWI descriptions and apply formatting fixes; review the diff.
 Run mise-managed tool hooks as system hooks through `mise exec` to share `mise.toml`/`mise.lock` pins without duplicate
 hook-local tool installs.
-Retain isolated environments for KIWI and Ansible hooks.
+Run the KIWI system hook through `mise run check-kiwi` to share the `uv.lock`-pinned build dependency group.
+This task validates both architecture profiles and may synchronize `.venv`; Java/Jing remains a host prerequisite.
+Retain the isolated environment for the Ansible hook.
 Keep the current stages explicit:
 
 | Source             | Active commit checks                               | Manual checks and promotion condition                                                        |
@@ -63,7 +65,7 @@ Keep the current stages explicit:
 | Shell              | Shuck lint                                         | `shuck-format`: format existing scripts                                                      |
 | GitHub Actions     | jactionlint correctness; Shuck embedded-shell lint | `zizmor`: resolve security findings                                                          |
 | TOML               | Tombi lint                                         | `tombi-format`: format existing TOML                                                         |
-| YAML and KIWI YAML | YAML parsing; isolated KIWI validation             | `ryl`, `ryl-format`: reconcile document markers, indentation, merge overrides and formatting |
+| YAML and KIWI YAML | YAML parsing; uv-managed KIWI validation           | `ryl`, `ryl-format`: reconcile document markers, indentation, merge overrides and formatting |
 | Markdown           | Generic whitespace and smartquote hooks            | `rumdl`: reconcile tables and semantic line breaks                                           |
 | Python             | Generic integrity hooks                            | `ruff`, `ruff-format`: resolve strict-rule and formatting debt                               |
 | Ansible            | Shared YAML checks                                 | Existing `ansible-lint` manual hook                                                          |
@@ -96,6 +98,7 @@ Use these tasks for narrower feedback:
 | `mise run check`           | Python helper regressions in `tests/`                    |
 | `mise run check-artifacts` | Node artifact-cleanup and artifact-selection regressions |
 | `mise run check-workflows` | Python workflow helper regressions                       |
+| `mise run check-kiwi`      | KIWI descriptions for both architecture profiles         |
 
 For direct Python execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 The runner is stdlib `unittest`, but schema checks require Molecule from the test group even without a VM.

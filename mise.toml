@@ -50,6 +50,13 @@ run         = "node --test tests/test_artifact_cleanup.cjs tests/test_select_art
 description = "Run workflow helper regressions without VMs"
 run         = "uv run --group test --frozen python -m unittest discover -s .github/workflows -p 'test_*.py'"
 
+[tasks.check-kiwi]
+description = "Validate KIWI descriptions for x86_64 and aarch64"
+run         = [
+  "uv run --group build --frozen kiwi-ng --profile x86_64 image info --description kiwi",
+  "uv run --group build --frozen kiwi-ng --profile aarch64 image info --description kiwi",
+]
+
 [tasks.check-all]
 description = "Run Python, Node artifact and workflow suites sequentially, without hooks or VMs"
 run         = [ { task = "check" }, { task = "check-artifacts" }, { task = "check-workflows" } ]
