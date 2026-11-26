@@ -21,13 +21,14 @@ mise run build
 mise run test
 ```
 
-On Fedora Linux, install the [build and test dependencies](docs/building.md#prerequisites), then run the same
-build and test commands. Fedora 44 is the current image description.
+On Fedora Linux, install the [build and test dependencies](docs/building.md#prerequisites),
+then run the same build and test commands.
+Fedora 44 is the current image description.
 
 ## No-VM Contributor Quickstart
 
-Install [mise](https://mise.jdx.dev/getting-started.html), then run helper regressions without building an image
-or launching a guest:
+Install [mise](https://mise.jdx.dev/getting-started.html),
+then run helper regressions without building an image or launching a guest:
 
 ```bash
 mise install
@@ -37,19 +38,19 @@ mise run check-all
 
 `check-all` aggregates the existing Python, Node artifact and workflow test suites; it does not run hooks.
 Keep `mise run check` for Python-only regressions.
-See the [Development Guide](docs/development.md) for aggregate checks, hook setup, Java/Jing prerequisites
-and hook-applied formatting changes.
+See the [Development Guide](docs/development.md) for aggregate checks, hook setup,
+Java/Jing prerequisites and hook-applied formatting changes.
 
 ## Ownership
 
-| Concern | Owner |
-| --- | --- |
-| Boot, EFI/Btrfs layout, networking and Ansible prerequisites | This repository |
-| Secure base policy: locked passwords, SSH restrictions, SELinux and firewall | This repository |
-| Image assembly, QCOW2 export and non-repairing base verification | This repository |
-| Applications, machine roles and site-specific configuration | [`drts.casc`](https://github.com/drts01/ansible-collection) |
-| Deployment identity and access provisioning | Operator-owned prerequisite; not implemented here |
-| Collection compatibility validation | Proposed separate stage; not implemented here |
+| Concern                                                                      | Owner                                                       |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Boot, EFI/Btrfs layout, networking and Ansible prerequisites                 | This repository                                             |
+| Secure base policy: locked passwords, SSH restrictions, SELinux and firewall | This repository                                             |
+| Image assembly, QCOW2 export and non-repairing base verification             | This repository                                             |
+| Applications, machine roles and site-specific configuration                  | [`drts.casc`](https://github.com/drts01/ansible-collection) |
+| Deployment identity and access provisioning                                  | Operator-owned prerequisite; not implemented here           |
+| Collection compatibility validation                                          | Proposed separate stage; not implemented here               |
 
 Justify base package and service additions against boot, networking, Ansible prerequisites or the secure baseline.
 Route role-specific additions to the collection instead.
@@ -83,26 +84,32 @@ Use `mise run lint` for `prek run --all-files`; review hook-applied changes.
 Use `lima-create` and `lima-cmd` only on macOS.
 See [toolchain setup](docs/development.md#setup) for tool pins and hook environments.
 
-Use `mise run doctor [--scope build|test|all]` for read-only host prerequisite diagnostics
-(default: `all`). It does not install tools or launch/start guests; diagnostics are not build or runtime proof.
+Use `mise run doctor [--scope build|test|all]` for read-only host prerequisite diagnostics (default: `all`).
+It does not install tools or launch/start guests; diagnostics are not build or runtime proof.
 
 ## Handoff and Limits
 
 - Build only the host architecture: `x86_64` or `aarch64` (`amd64`/`arm64` aliases are normalized).
-- Find images in host `output/<arch>/`; set `OUTPUT_DIR` to change the output root.
-  macOS exports only the QCOW2 image and optional package manifests from the builder.
+- Find images in host `output/<arch>/`;
+  set `OUTPUT_DIR` to change the output root. macOS exports only the QCOW2 image
+  and optional package manifests from the builder.
 - Test with Linux KVM or macOS HVF; explicitly set `QEMU_ACCEL=tcg` for slower software emulation.
 - Keep deployment credentials separate: shipped `admin` and `root` passwords are locked and password SSH is disabled.
-  Deployment access provisioning is not implemented; arrange a controlled access-provisioning process before applying
-  `drts.casc`. No cloud-init is configured. See the [handoff contract](docs/building.md#handoff-to-drtscasc).
-- Treat QCOW2 as the VM artifact. Physical-hardware deployment needs a future raw/installer workflow and hardware validation;
+  Deployment access provisioning is not implemented;
+  arrange a controlled access-provisioning process before applying `drts.casc`.
+  No cloud-init is configured.
+  See the [handoff contract](docs/building.md#handoff-to-drtscasc).
+- Treat QCOW2 as the VM artifact.
+  Physical-hardware deployment needs a future raw/installer workflow and hardware validation;
   no install-to-physical implementation is provided.
-- Select architecture by CPU, not GUI requirements. Desktop composition is a separate image decision.
+- Select architecture by CPU, not GUI requirements.
+  Desktop composition is a separate image decision.
 
 ## Documentation
 
-Build the documentation site with `mise run docs-build`, or preview at <http://127.0.0.1:8000> with
-`mise run docs-serve`. See [Documentation Site](docs/development.md#documentation-site) for configuration and dependency details.
+Build the documentation site with `mise run docs-build`,
+or preview at <http://127.0.0.1:8000> with `mise run docs-serve`.
+See [Documentation Site](docs/development.md#documentation-site) for configuration and dependency details.
 
 - [Docs Start Here](docs/README.md)
 - [Building Guide](docs/building.md)
@@ -113,4 +120,5 @@ Build the documentation site with `mise run docs-build`, or preview at <http://1
 
 ## License
 
-This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+This project is licensed under the Apache License 2.0.
+See [LICENSE](LICENSE) for details.

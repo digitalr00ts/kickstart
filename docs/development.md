@@ -1,7 +1,8 @@
 # Development Guide
 
-Change the minimal Fedora base here; keep applications, machine roles and site-specific configuration in
-[`drts.casc`](https://github.com/drts01/ansible-collection). Read the [ownership boundary](https://github.com/digitalr00ts/kickstart/blob/trunk/README.md#ownership)
+Change the minimal Fedora base here; keep applications,
+machine roles and site-specific configuration in [`drts.casc`](https://github.com/drts01/ansible-collection).
+Read the [ownership boundary](https://github.com/digitalr00ts/kickstart/blob/trunk/README.md#ownership)
 before adding packages or services.
 
 ## Setup
@@ -15,8 +16,8 @@ mise run setup
 
 Use `mise.toml` for task definitions and tool version declarations; commit `mise.lock` for resolved tool pins.
 Run `mise install` to install the pinned `uv`, `prek`, Node.js, Ruff, `jactionlint`, `tombi`, `rumdl`,
-`aqua:owenlamont/ryl`, `aqua:ewhauser/shuck`, `zizmor` and `aqua:crate-ci/typos` tools, plus `aqua:takumin/qemu-bin` on Linux
-and Lima on macOS only.
+`aqua:owenlamont/ryl`, `aqua:ewhauser/shuck`, `zizmor` and `aqua:crate-ci/typos` tools,
+plus `aqua:takumin/qemu-bin` on Linux and Lima on macOS only.
 Keep Python management in `uv`: `.python-version` selects the interpreter and `uv.lock` locks Python dependencies.
 The setup task runs `uv sync --group test --frozen`, then `prek install`.
 Tasks do not auto-install missing tools; run `mise install` explicitly before task execution.
@@ -37,7 +38,8 @@ Full hook runs include KIWI description validation, which requires Java/Jing; CI
 2. Make focused changes and add helper regressions for error paths before using privileged builds or guests.
 3. Run `mise run check-all`, then run hooks and review formatting changes.
 4. Build and boot an image when changing image contents, assembly or guest runtime behavior.
-5. Report helper tests, builds and guest boots separately in the pull request; VM tests do not validate physical hardware.
+5. Report helper tests, builds and guest boots separately in the pull request;
+   VM tests do not validate physical hardware.
 
 ## Local Validation Commands
 
@@ -48,23 +50,24 @@ mise run lint
 
 Run `check-all` to execute Python, Node artifact and workflow suites in sequence, stopping on a failure.
 Run `mise run lint` for `prek run --all-files`, using `.pre-commit-config.yaml`.
-Keep hooks separate from helper regressions: they may initialize isolated environments, validate KIWI descriptions and
-apply formatting fixes; review the diff.
+Keep hooks separate from helper regressions: they may initialize isolated environments,
+validate KIWI descriptions and apply formatting fixes; review the diff.
 Run mise-managed tool hooks as system hooks through `mise exec` to share `mise.toml`/`mise.lock` pins without duplicate
-hook-local tool installs. Retain isolated environments for KIWI and Ansible hooks.
+hook-local tool installs.
+Retain isolated environments for KIWI and Ansible hooks.
 Keep the current stages explicit:
 
-| Source | Active commit checks | Manual checks and promotion condition |
-| --- | --- | --- |
-| Text and source | `typos` spelling (check-only) | None |
-| Shell | Shuck lint | `shuck-format`: format existing scripts |
-| GitHub Actions | jactionlint correctness; Shuck embedded-shell lint | `zizmor`: resolve security findings |
-| TOML | Tombi lint | `tombi-format`: format existing TOML |
-| YAML and KIWI YAML | YAML parsing; isolated KIWI validation | `ryl`, `ryl-format`: reconcile document markers, indentation, merge overrides and formatting |
-| Markdown | Generic whitespace and smartquote hooks | `rumdl`: reconcile tables and semantic line breaks |
-| Python | Generic integrity hooks | `ruff`, `ruff-format`: resolve strict-rule and formatting debt |
-| Ansible | Shared YAML checks | Existing `ansible-lint` manual hook |
-| JavaScript | Node artifact regression tests | No dedicated linter/formatter in this migration |
+| Source             | Active commit checks                               | Manual checks and promotion condition                                                        |
+| ------------------ | -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Text and source    | `typos` spelling (check-only)                      | None                                                                                         |
+| Shell              | Shuck lint                                         | `shuck-format`: format existing scripts                                                      |
+| GitHub Actions     | jactionlint correctness; Shuck embedded-shell lint | `zizmor`: resolve security findings                                                          |
+| TOML               | Tombi lint                                         | `tombi-format`: format existing TOML                                                         |
+| YAML and KIWI YAML | YAML parsing; isolated KIWI validation             | `ryl`, `ryl-format`: reconcile document markers, indentation, merge overrides and formatting |
+| Markdown           | Generic whitespace and smartquote hooks            | `rumdl`: reconcile tables and semantic line breaks                                           |
+| Python             | Generic integrity hooks                            | `ruff`, `ruff-format`: resolve strict-rule and formatting debt                               |
+| Ansible            | Shared YAML checks                                 | Existing `ansible-lint` manual hook                                                          |
+| JavaScript         | Node artifact regression tests                     | No dedicated linter/formatter in this migration                                              |
 
 Run a quarantined check with `mise exec -- prek run <hook-id> --all-files --hook-stage manual`.
 Use the hook IDs in the table; for example:
@@ -75,10 +78,12 @@ mise exec -- prek run rumdl --all-files --hook-stage manual
 mise exec -- prek run zizmor --all-files --hook-stage manual
 ```
 
-Run formatting checks without writes during adoption. Remove a hook's `stages: [manual]` only after its full tracked-file
-run passes and the resulting policy/formatting changes have been reviewed.
+Run formatting checks without writes during adoption.
+Remove a hook's `stages: [manual]` only after its full tracked-file run passes
+and the resulting policy/formatting changes have been reviewed.
 Configure Ruff through `pyproject.toml` and `.config/ruff.toml`; retain the supplied `.config/ryl.toml`,
-`.config/rumdl.toml` and `.config/tombi.toml` policies. Include `*.kiwi` in ryl's YAML globs.
+`.config/rumdl.toml` and `.config/tombi.toml` policies.
+Include `*.kiwi` in ryl's YAML globs.
 Run spelling checks with `mise exec -- prek run typos --all-files`.
 Use `.config/typos.toml` for narrow spelling exceptions and generated lockfile/image exclusions;
 run the CLI with `mise exec -- typos --config .config/typos.toml --force-exclude <paths>` without auto-fix flags.
@@ -86,11 +91,11 @@ Shuck replaces ShellCheck for standalone and workflow shell; jactionlint uses Ru
 Use `.github/jactionlint.yaml` to keep its correctness profile aligned with the previous actionlint gate.
 Use these tasks for narrower feedback:
 
-| Task | Scope |
-| --- | --- |
-| `mise run check` | Python helper regressions in `tests/` |
+| Task                       | Scope                                                    |
+| -------------------------- | -------------------------------------------------------- |
+| `mise run check`           | Python helper regressions in `tests/`                    |
 | `mise run check-artifacts` | Node artifact-cleanup and artifact-selection regressions |
-| `mise run check-workflows` | Python workflow helper regressions |
+| `mise run check-workflows` | Python workflow helper regressions                       |
 
 For direct Python execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 The runner is stdlib `unittest`, but schema checks require Molecule from the test group even without a VM.
@@ -112,8 +117,9 @@ Preview at <http://127.0.0.1:8000>; stop the preview with Ctrl+C.
 Both tasks sync the docs dependency group automatically; `mise run setup` remains unchanged.
 Configure site metadata and navigation in `zensical.toml`; retain `docs/README.md` as the homepage.
 Keep relative links between documentation pages and use GitHub URLs for files outside `docs/`.
-Use the separate [documentation workflow](github-actions.md#documentation-publishing) to check pull requests and publish
-`trunk` to GitHub Pages. Set `project.site_url` to `https://digitalr00ts.github.io/kickstart/` for the project-site base path.
+Use the separate [documentation workflow](github-actions.md#documentation-publishing) to check pull requests
+and publish `trunk` to GitHub Pages.
+Set `project.site_url` to `https://digitalr00ts.github.io/kickstart/` for the project-site base path.
 Enable GitHub Actions as the Pages source before the first deployment.
 
 ## Host Prerequisite Diagnostics
@@ -126,18 +132,22 @@ mise run doctor --scope build
 mise run doctor --scope test
 ```
 
-Use the default `all` scope to check both build and test prerequisites. Fix reported failures, then rerun the doctor.
-The checker reports supported OS/CPU, executable availability, macOS checkout/image path constraints, EFI firmware lookup,
-valid acceleration selection and Linux KVM permissions. On macOS, the test scope queries QEMU's accelerator list with a
-bounded `-accel help` command; it does not boot a guest. No built image is required.
+Use the default `all` scope to check both build and test prerequisites.
+Fix reported failures, then rerun the doctor.
+The checker reports supported OS/CPU, executable availability, macOS checkout/image path constraints,
+EFI firmware lookup, valid acceleration selection and Linux KVM permissions.
+On macOS, the test scope queries QEMU's accelerator list with a bounded `-accel help` command; it does not boot a guest.
+No built image is required.
 
 The doctor does not install packages, invoke sudo, start Lima, run guest commands or change image/runtime files.
 The doctor task uses `uv run --no-project`, avoiding project dependency synchronization.
-Other tasks using `uv run --frozen` can still synchronize the Python environment.
-uv can acquire the interpreter selected by `.python-version` if it is not already available.
-Keep the Python 3.15 pin aligned with `pyproject.toml`; the lockfile uses Ansible Core 2.22 for controller compatibility.
+Other tasks using `uv run --frozen` can still synchronize the Python environment. uv can acquire the interpreter
+selected by `.python-version` if it is not already available.
+Keep the Python 3.15 pin aligned with `pyproject.toml`;
+the lockfile uses Ansible Core 2.22 for controller compatibility.
 Passing diagnostics does not prove complete KIWI system dependencies, matching firmware contents, Lima guest readiness,
-usable acceleration or a successful build/boot. Follow the build/test guides for runtime proof.
+usable acceleration or a successful build/boot.
+Follow the build/test guides for runtime proof.
 
 ## Image Validation
 
@@ -148,8 +158,8 @@ mise run build
 mise run test
 ```
 
-For explicit Molecule lifecycle commands, use `uv run --group test --frozen molecule test -s qemu` and
-`uv run --group test --frozen molecule destroy -s qemu`.
+For explicit Molecule lifecycle commands,
+use `uv run --group test --frozen molecule test -s qemu` and `uv run --group test --frozen molecule destroy -s qemu`.
 See the [Testing Guide](testing.md) for image selection and acceleration.
 
 ## Code Areas
@@ -165,6 +175,6 @@ See the [Testing Guide](testing.md) for image selection and acceleration.
 - keep shell scripts strict with `set -euo pipefail`
 - keep docs aligned with executable commands
 - avoid committing generated artifacts under `output/`
-- keep base verification non-repairing and collection compatibility separate; use the
-  [proposed collection acceptance criteria](testing.md#proposed-collection-compatibility-stage-not-implemented)
+- keep base verification non-repairing and collection compatibility separate;
+  use the [proposed collection acceptance criteria](testing.md#proposed-collection-compatibility-stage-not-implemented)
 - review optional KIWI `*.packages` manifests when changing image packages; justify growth against the base purpose
