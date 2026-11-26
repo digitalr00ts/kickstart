@@ -38,6 +38,32 @@ case "$(uname -s)" in
       --description "$ROOT/kiwi" --target-dir "$OUTPUT_DIR/$ARCH"
     ;;
   Darwin)
+    final_output="$OUTPUT_DIR/$ARCH"
+    check_output() {
+      [[ ! -L $final_output ]] || err "Output is a symlink: $final_output."
+      if [[ -e $final_output ]]; then
+        [[ -d $final_output ]] || err "Output is not a directory: $final_output."
+        local entries
+        shopt -s nullglob dotglob
+        entries=("$final_output"/*)
+        shopt -u nullglob dotglob
+        (( ${#entries[@]} == 0 )) || err "Output is not empty: $final_output."
+      fi
+    }
+    check_output
+    host_output=$(mktemp -d "$OUTPUT_DIR/.$ARCH.XXXXXXXX")
+    guest_output=
+    cleanup() {
+      local status=$?
+      trap - EXIT
+      rm -rf -- "$host_output"
+      if (( status != 0 )) && [[ -n $guest_output ]]; then
+        printf 'Guest output retained at %s\n' "$guest_output" >&2
+      fi
+      exit "$status"
+    }
+    trap cleanup EXIT
+    mkdir -- "$host_output/$ARCH"
     command -v limactl >/dev/null || err 'limactl not found; install Lima.'
     # The guest must see source paths at the same absolute location.
     case "$ROOT/" in "$HOME/"*) ;; *) err 'Place the repository under home for the Lima shared mount.' ;; esac
@@ -56,12 +82,15 @@ case "$(uname -s)" in
     limactl shell --workdir "$ROOT" "$LIMA_INSTANCE" env \
       "OUTPUT_DIR=$guest_output" UV_PROJECT_ENVIRONMENT=/opt/kiwi-build/.venv \
       bash "$ROOT/scripts/build.sh" "$VERSION" "$ARCH"
-    mkdir -p -- "$OUTPUT_DIR/$ARCH"
-    [[ -z $(find "$OUTPUT_DIR/$ARCH" -mindepth 1 -maxdepth 1 -print -quit) ]] || \
-      err "Output is not empty: $OUTPUT_DIR/$ARCH. Guest output retained at $guest_output."
     limactl shell "$LIMA_INSTANCE" sudo bash "$ROOT/scripts/export-image.sh" "$guest_output/$ARCH" | \
-      tar -xf - -C "$OUTPUT_DIR/$ARCH"
+      tar -xf - -C "$host_output/$ARCH"
+    check_output
+    if [[ -d $final_output ]]; then rmdir -- "$final_output"; fi
+    # Move into the parent so a competing destination is never treated as a container.
+    mv -n -- "$host_output/$ARCH" "$OUTPUT_DIR/"
+    [[ ! -d $host_output/$ARCH ]] || err "Output was not published: $final_output."
     limactl shell "$LIMA_INSTANCE" sudo rm -rf -- "$guest_output"
+    guest_output=
     ;;
   *) err 'Only Linux and macOS build hosts are supported.' ;;
 esac

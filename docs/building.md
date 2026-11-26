@@ -87,7 +87,14 @@ On Linux, KIWI builds directly into the architecture directory. On macOS, build 
 and optional `*.packages` manifests to the host output architecture directory. Do not export the KIWI build root or
 intermediate disks. The macOS wrapper requires the host architecture output directory to be empty before export;
 if it is not, preserve or move existing artifacts and retry. Failed exports retain guest staging for investigation.
+Reject occupied macOS output before starting Lima or building. Extract exports into private host staging beside the
+architecture directory and publish only after the complete transfer succeeds. On failure, remove only that host staging;
+retain and report the guest staging path for recovery. A failed guest cleanup still reports failure even if publication succeeded.
 This keeps privileged image assembly off the shared macOS filesystem while retaining host-visible deliverables.
+
+Keep sparse-export changes measurement-driven: compare logical size, allocated size and archive bytes in the Fedora builder,
+then verify GNU tar sparse archives extract correctly with macOS tar before changing export options.
+No existing QCOW2 was available during the export-safety review, so sparse export remains unvalidated and unchanged.
 
 Inspect the output directory directly. Remove default local build artifacts only after destroying test guests:
 
