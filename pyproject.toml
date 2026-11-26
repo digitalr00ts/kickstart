@@ -33,10 +33,9 @@ tasks.lima-cmd.args = [
   { name = "command", positional = true, default = "stop", help = "Lima command to run (start, delete, stop)" },
   { name = "instance", positional = true, default = "${LIMA_INSTANCE}", help = "Lima VM name" },
 ]
-tasks.lima-cmd.cmd = "limactl ${command} ${instance} ${flag}"
+tasks.lima-cmd.cmd = "limactl ${command} ${instance}"
 tasks.lima-cmd.help = "Control Lima instance (macOS only)"
-tasks.test.shell = '''set -euo pipefail
-policy_mode="${MOLECULE_POLICY_MODE:-strict}"
-MOLECULE_POLICY_MODE="$policy_mode" molecule test -s "qemu"
-'''
-tasks.test.help = "Run Molecule QEMU test scenario"
+tasks.test.cmd = "uv run --group test --frozen molecule test -s qemu"
+tasks.test.help = "Test a disposable image with native QEMU (Linux and macOS)"
+tasks.check.cmd = "uv run --group test --frozen python -m unittest discover -s tests -p test_*.py"
+tasks.check.help = "Run regression tests without creating VMs"
