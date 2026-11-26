@@ -81,7 +81,6 @@ repos:
         entry: mise exec -- tombi format --check --offline
         language: system
         files: (\.toml$)
-        stages: [manual] # target-stage: pre-commit; existing TOML needs formatting
       - id: rumdl
         name: Check Markdown (rumdl)
         entry: mise exec -- rumdl check --config .config/rumdl.toml
