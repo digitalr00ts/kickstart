@@ -7,7 +7,7 @@ Workflow definitions are not evidence of a successful end-to-end image build or 
 
 | Workflow | Trigger | Responsibility |
 | --- | --- | --- |
-| `ci.yaml` | Push and pull request | Native Linux/macOS no-VM regressions; separate Linux pre-commit hooks through `prek` |
+| `ci.yaml` | Push and pull request | Native Linux/macOS no-VM regressions; separate Linux docs build and pre-commit hooks through `prek` |
 | `build.yml` | Selected source changes; manual dispatch | Native Fedora 44 image build and artifact upload |
 | `test-image.yml` | Successful trusted `main` push build; manual dispatch | Artifact retrieval, integrity checks and real Molecule VM validation |
 | `cleanup-artifacts.yml` | Weekly schedule; manual dispatch | Expiry-aware artifact cleanup or preview |
@@ -35,6 +35,13 @@ Retain `mise run check` for the Python-only suite; it installs the test dependen
 For direct execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 CI runs helper regressions on `ubuntu-24.04` and `macos-latest`; these mocked/schema checks do not validate
 image assembly, KVM/HVF boot or physical hardware. The pre-commit job runs separately on Linux.
+
+## Documentation Checks
+
+Run `mise run docs-build` to build the Zensical site with frozen docs dependencies and fail on warnings.
+The separate Linux docs job in `ci.yaml` runs on pushes and pull requests, without building images or launching VMs.
+Keep generated `site/` output untracked; this job does not upload or publish the site.
+See [Documentation Site](development.md#documentation-site) for local preview and configuration.
 
 ## Native Image Builds
 
