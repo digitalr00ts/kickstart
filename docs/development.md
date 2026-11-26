@@ -15,7 +15,8 @@ mise run setup
 
 Use `mise.toml` for task definitions and tool version declarations; commit `mise.lock` for resolved tool pins.
 Run `mise install` to install the pinned `uv`, `prek`, Node.js, Ruff, `jactionlint`, `tombi`, `rumdl`,
-`aqua:owenlamont/ryl`, `aqua:ewhauser/shuck` and `zizmor` tools, plus Lima on macOS only.
+`aqua:owenlamont/ryl`, `aqua:ewhauser/shuck` and `zizmor` tools, plus `aqua:takumin/qemu-bin` on Linux
+and Lima on macOS only.
 Keep Python management in `uv`: `.python-version` selects the interpreter and `uv.lock` locks Python dependencies.
 The setup task runs `uv sync --group test --frozen`, then `prek install`.
 Tasks do not auto-install missing tools; run `mise install` explicitly before task execution.

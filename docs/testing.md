@@ -37,7 +37,11 @@ Do not reuse that SSH configuration for deployments.
 
 ## Host Runtime and Overrides
 
-On Linux, run `virt-customize` on the host and use QEMU KVM by default.
+On Linux, install pinned QEMU with `mise install`, run `virt-customize` on the host and use QEMU KVM by default.
+Keep firmware, libguestfs and KVM permissions as host prerequisites; use Homebrew QEMU on macOS.
+The pinned `takumin/qemu-bin` release supports glibc Linux hosts (minimum glibc 2.27).
+Upstream does not test its ARM64 binary. Require native Linux `x86_64` and `aarch64` KVM image boots before treating
+this toolchain as runtime-validated; helper regressions and successful installation alone do not establish compatibility.
 On macOS, run QEMU on the host with HVF; run offline customization via `sudo virt-customize` in the running
 Fedora Lima VM selected by `LIMA_INSTANCE` (default `kiwi-builder`), matching the build wrapper.
 Keep source images under your home directory so the builder can access both the

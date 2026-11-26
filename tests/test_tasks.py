@@ -101,6 +101,30 @@ class TaskTests(unittest.TestCase):
         self.assertFalse(any(tool.startswith("cargo:") for tool in tools))
         self.assertEqual(tools["lima"]["os"], ["macos/arm64"])
 
+    def test_qemu_is_linux_only_with_both_native_downloads_locked(self):
+        self.assertEqual(self.config["tool_alias"]["qemu"], "aqua:takumin/qemu-bin")
+        tool = self.config["tools"]["qemu"]
+        self.assertEqual(tool["os"], ["linux"])
+        with (ROOT / "mise.lock").open("rb") as config:
+            locked = tomllib.load(config)["tools"]["qemu"]
+        self.assertEqual(len(locked), 1)
+        self.assertEqual(locked[0]["version"], tool["version"])
+        self.assertEqual(locked[0]["backend"], self.config["tool_alias"]["qemu"])
+        platforms = {
+            key.removeprefix("platforms."): value
+            for key, value in locked[0].items()
+            if key.startswith("platforms.")
+        }
+        self.assertEqual(set(platforms), {"linux-x64", "linux-arm64"})
+        for platform, metadata in platforms.items():
+            with self.subTest(platform=platform):
+                self.assertRegex(metadata["checksum"], r"^sha256:[0-9a-f]{64}$")
+                self.assertTrue(
+                    metadata["url"].startswith(
+                        f"https://github.com/takumin/qemu-bin/releases/download/v{tool['version']}/"
+                    )
+                )
+
     def test_uv_owns_python_and_frozen_guest_test_dependencies(self):
         self.assertFalse(any("python" in tool.lower() for tool in self.config["tools"]))
         self.assertEqual(

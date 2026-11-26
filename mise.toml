@@ -7,6 +7,7 @@ lockfile = true
 lockfile_platforms = ["linux-x64", "linux-arm64", "macos-arm64"]
 
 [tool_alias]
+qemu = "aqua:takumin/qemu-bin"
 ryl = "aqua:owenlamont/ryl"
 shuck = "aqua:ewhauser/shuck"
 
@@ -22,6 +23,7 @@ ryl = { version = "0.30.0", os = ["linux", "macos/arm64"] }
 shuck = { version = "0.2.11", os = ["linux", "macos/arm64"] }
 zizmor = "1.33.1"
 lima = { version = "2.3.0", os = ["macos/arm64"] }
+qemu = { version = "2026.10.22", os = ["linux"] }
 
 [tasks.setup]
 description = "Sync frozen test dependencies and install Git hooks"

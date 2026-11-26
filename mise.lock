@@ -59,6 +59,23 @@ url = "https://github.com/j178/prek/releases/download/v0.5.11/prek-aarch64-apple
 url_api = "https://api.github.com/repos/j178/prek/releases/assets/753780046"
 provenance = "github-attestations"
 
+[[tools.qemu]]
+version = "2026.10.22"
+backend = "aqua:takumin/qemu-bin"
+specifiers = ["2026.10.22"]
+
+[tools.qemu."platforms.linux-arm64"]
+checksum = "sha256:d819d5923ecf69873d1cbd8ea09288376937f43fef398df8bfb19a48c8bfa2a1"
+url = "https://github.com/takumin/qemu-bin/releases/download/v2026.10.22/qemu-aarch64-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/takumin/qemu-bin/releases/assets/664437432"
+provenance = "github-attestations"
+
+[tools.qemu."platforms.linux-x64"]
+checksum = "sha256:57524261a242b4816f3790e5118a312bae9ccf7d23eee8a53c1b8a9a3001ddd7"
+url = "https://github.com/takumin/qemu-bin/releases/download/v2026.10.22/qemu-x86_64-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/takumin/qemu-bin/releases/assets/664437425"
+provenance = "github-attestations"
+
 [[tools.ruff]]
 version = "0.17.6"
 backend = "aqua:astral-sh/ruff"

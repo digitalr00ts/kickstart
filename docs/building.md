@@ -19,13 +19,14 @@ mise install
 mise run setup
 ```
 
-For local VM tests, also install QEMU, matching EFI firmware, libguestfs and SSH clients. For example:
+Let `mise install` provide pinned QEMU binaries on Linux. For local VM tests, also install matching EFI firmware,
+libguestfs and SSH clients. For example:
 
 ```bash
-sudo dnf install qemu-img qemu-system-x86-core edk2-ovmf libguestfs-tools-c openssh-clients
+sudo dnf install edk2-ovmf libguestfs-tools-c openssh-clients
 ```
 
-On `aarch64`, use `qemu-system-aarch64-core` and `edk2-aarch64` instead of the x86 QEMU/firmware packages.
+On `aarch64`, use `edk2-aarch64` instead of `edk2-ovmf`.
 Confirm package availability for your Fedora release and enabled repositories; names can vary.
 Enable read/write access to `/dev/kvm` for the testing user, or explicitly request `QEMU_ACCEL=tcg`.
 
@@ -38,6 +39,7 @@ mise run setup
 ```
 
 Let `mise install` install Lima on macOS; keep QEMU and EFI firmware as system prerequisites.
+The mise QEMU package supports Linux only; retain Homebrew QEMU on macOS.
 Keep the checkout and test images under your home directory, which the builder shares writable.
 The build wrapper creates or starts `kiwi-builder` using `lima/kiwi-builder.yaml`.
 KIWI runs inside Fedora, not on the macOS host. Existing builders may need the test customization dependency:
