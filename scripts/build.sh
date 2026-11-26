@@ -1,55 +1,68 @@
 #!/usr/bin/env bash
+# Detect the native architecture and use Linux directly or a Lima builder on macOS.
 set -euo pipefail
 
+ROOT=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 VERSION=${1:-44}
 ARCH=${2:-$(uname -m)}
-KIWI_DESC=kiwi/fedora-${VERSION}.kiwi
-KIWI_DESC_DIR=${KIWI_DESC%/*}
-OUTPUT_DIR=${OUTPUT_DIR:-output}
-PLATFORM="$(uname -s | tr '[:upper:]' '[:lower:]')"
+NATIVE_ARCH=$(uname -m)
+OUTPUT_DIR=${OUTPUT_DIR:-"$ROOT/output"}
+LIMA_INSTANCE=${LIMA_INSTANCE:-kiwi-builder}
 
 err() { echo "Error: $*" >&2; exit 1; }
-
-check-lima(){
-  [[ ! $PLATFORM == darwin ]] && return
-  local status
-  status="$(poe lima-cmd list -- --format '{{.Status}}')" || true
-  [[ -n "${status}" ]] || { poe lima-create; return; }
-  [[ "${status}" = "Stopped" ]] && poe lima-cmd start || true
-  OUTPUT_DIR=/opt/kiwi-build/output/
+normalize_arch() {
+  case "$1" in
+    arm64|aarch64) echo aarch64 ;;
+    amd64|x86_64) echo x86_64 ;;
+    *) err "Unsupported architecture '$1'. Use x86_64 or aarch64." ;;
+  esac
 }
+ARCH=$(normalize_arch "$ARCH")
+NATIVE_ARCH=$(normalize_arch "$NATIVE_ARCH")
+[[ $ARCH == "$NATIVE_ARCH" ]] || err "Cross-architecture builds are not supported; use a native $ARCH host."
+[[ $VERSION =~ ^[0-9]+$ ]] || err 'Version must be numeric.'
+[[ -f "$ROOT/kiwi/fedora-$VERSION.kiwi" ]] || err "Missing: kiwi/fedora-$VERSION.kiwi"
+mkdir -p -- "$OUTPUT_DIR"
+OUTPUT_DIR=$(CDPATH='' cd -- "$OUTPUT_DIR" && pwd)
 
-prefix() {
-  [[ ! $PLATFORM == darwin ]] && return
-  command -v limactl >/dev/null || err limactl not found.
-  echo "poe lima-cmd shell --"
-}
-
-build() {
-  local cmd_prefix
-  cmd_prefix=$($1)
-
-  # shellcheck disable=SC2068
-  ${cmd_prefix[@]} mkdir -p "$OUTPUT_DIR"
-  # shellcheck disable=SC2068
-  ${cmd_prefix[@]} uv sync --group build --frozen
-  # shellcheck disable=SC2068
-  ${cmd_prefix[@]} sudo uv run kiwi-ng \
-    --type oem \
-    --profile "$ARCH" \
-    system build \
-    --description "$KIWI_DESC_DIR" \
-    --target-dir "$OUTPUT_DIR/$ARCH"
-}
-
-[[ $ARCH == arm64 ]] && ARCH=aarch64
-[[ $ARCH == amd64 ]] && ARCH=x86_64
-[[ -f $KIWI_DESC ]] || err "Missing: $KIWI_DESC"
-
-case "$ARCH" in
-  x86_64|aarch64) ;;
-  *) err "Unsupported architecture '$ARCH'. Use x86_64 or aarch64." ;;
+case "$(uname -s)" in
+  Linux)
+    cd -- "$ROOT"
+    command -v uv >/dev/null || err 'uv not found.'
+    export UV_PROJECT_ENVIRONMENT=${UV_PROJECT_ENVIRONMENT:-"$ROOT/.venv"}
+    [[ $UV_PROJECT_ENVIRONMENT == /* ]] || UV_PROJECT_ENVIRONMENT="$ROOT/$UV_PROJECT_ENVIRONMENT"
+    uv sync --group build --frozen
+    kiwi=("$UV_PROJECT_ENVIRONMENT/bin/kiwi-ng")
+    if [[ ${EUID:-$(id -u)} != 0 ]]; then kiwi=(sudo -- "${kiwi[@]}"); fi
+    "${kiwi[@]}" --type oem --profile "$ARCH" system build \
+      --description "$ROOT/kiwi" --target-dir "$OUTPUT_DIR/$ARCH"
+    ;;
+  Darwin)
+    command -v limactl >/dev/null || err 'limactl not found; install Lima.'
+    # The guest must see source paths at the same absolute location.
+    case "$ROOT/" in "$HOME/"*) ;; *) err 'Place the repository under home for the Lima shared mount.' ;; esac
+    listing=$(limactl list --format '{{.Name}} {{.Status}}')
+    status=
+    while read -r name state; do
+      if [[ $name == "$LIMA_INSTANCE" ]]; then status=$state; fi
+    done <<< "$listing"
+    case "$status" in
+      '') limactl start --tty=false --name "$LIMA_INSTANCE" "$ROOT/lima/kiwi-builder.yaml" ;;
+      Stopped) limactl start --tty=false "$LIMA_INSTANCE" ;;
+      Running) ;;
+      *) err "Builder has unsupported status '$status'." ;;
+    esac
+    guest_output=$(limactl shell "$LIMA_INSTANCE" mktemp -d /opt/kiwi-build/output/build.XXXXXXXX)
+    limactl shell --workdir "$ROOT" "$LIMA_INSTANCE" env \
+      "OUTPUT_DIR=$guest_output" UV_PROJECT_ENVIRONMENT=/opt/kiwi-build/.venv \
+      bash "$ROOT/scripts/build.sh" "$VERSION" "$ARCH"
+    mkdir -p -- "$OUTPUT_DIR/$ARCH"
+    [[ -z $(find "$OUTPUT_DIR/$ARCH" -mindepth 1 -maxdepth 1 -print -quit) ]] || \
+      err "Output is not empty: $OUTPUT_DIR/$ARCH. Guest output retained at $guest_output."
+    limactl shell "$LIMA_INSTANCE" sudo bash "$ROOT/scripts/export-image.sh" "$guest_output/$ARCH" | \
+      tar -xf - -C "$OUTPUT_DIR/$ARCH"
+    limactl shell "$LIMA_INSTANCE" sudo rm -rf -- "$guest_output"
+    ;;
+  *) err 'Only Linux and macOS build hosts are supported.' ;;
 esac
-
-check-lima
-build prefix
+printf 'Artifacts: %s/%s\n' "$OUTPUT_DIR" "$ARCH"

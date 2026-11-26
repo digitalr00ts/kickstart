@@ -4,9 +4,7 @@ vmType: vz
 mountType: virtiofs
 cpus: 4
 memory: 4GiB
-disk: 20GiB
-networks:
-  - lima: bridged
+disk: 40GiB
 env:
   UV_PROJECT_ENVIRONMENT: /opt/kiwi-build/.venv
 mounts:
@@ -21,18 +19,8 @@ provision:
 
       set -euo pipefail
 
-      nmcli device modify eth0 ipv4.route-metric 999
-      nmcli device modify lima0 ipv4.route-metric 100
 
-      dnf config-manager setopt \
-        install_weak_deps=False \
-        fastestmirror=True \
-        repo_gpgcheck=True \
-        timeout=10 \
-        max_parallel_downloads=8
+      dnf install -y kiwi-systemdeps uv libguestfs-tools-c
 
-      dnf install -y dnf-plugin-versionlock kiwi-systemdeps uv
-
-      mkdir -p "${UV_PROJECT_ENVIRONMENT%/*}"
-      chown -R lima:lima "${UV_PROJECT_ENVIRONMENT%/*}"
-      chmod -R 755 "${UV_PROJECT_ENVIRONMENT%/*}"
+      # Keep Linux environments and disk staging off the macOS shared filesystem.
+      install -d -o lima -g lima -m 0755 /opt/kiwi-build /opt/kiwi-build/output
