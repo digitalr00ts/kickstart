@@ -6,6 +6,10 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+# Keep task execution within each job's explicit tool selection.
+env:
+  MISE_AUTO_INSTALL: 'false'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name || github.sha }}
   cancel-in-progress: true
@@ -22,14 +26,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - name: Install uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-      - name: Test host mocks and schema (no image build or VM)
-        run: uv run --group test --frozen poe check
-      - name: Test workflow helpers (no image build or VM)
-        run: |
-          node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs
-          uv run --group test --frozen python -B -m unittest discover -s .github/workflows -p 'test_*.py'
+      - name: Install regression tools
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          version: '2026.11.14'
+          install_args: uv node
+      - name: Test host and workflow helpers (no image build or VM)
+        run: mise run check-all
 
   prek:
     runs-on: ubuntu-latest
@@ -40,5 +43,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y jing
+      - name: Install lint tools
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          version: '2026.11.14'
+          install_args: uv prek ruff node jactionlint tombi rumdl ryl shuck zizmor
       - name: Run pre-commit
-        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2
+        run: mise run lint
