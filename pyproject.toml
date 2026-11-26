@@ -13,7 +13,7 @@ classifiers     = [
 [dependency-groups]
 build = [ "kiwi[markup]~=11.1" ]
 docs  = [ "zensical>=0.1.3" ]
-lint  = [ "ansible-lint==26.6.0" ]
+lint  = [ "ansible-lint==26.11.0" ]
 test  = [ "molecule>=26.4" ]
 
 [tool.ruff]
