@@ -4,133 +4,121 @@ name: Test Kiwi NG Image
 on:
   workflow_dispatch:
     inputs:
+      arch:
+        description: Native architecture of the image
+        default: x86_64
+        type: choice
+        options: [x86_64, aarch64]
       artifact_name:
-        description: Artifact name to test (leave empty for latest)
+        description: Exact image artifact name (empty selects the sole matching image)
         required: false
+        type: string
       run_id:
-        description: Workflow run ID (leave empty for latest)
+        description: Successful Build run ID (empty finds the latest matching successful run)
         required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: read
+    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 90
+    env:
+      IMAGE_ARCH: ${{ inputs.arch || 'x86_64' }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Install dependencies
+      - name: Select image from a successful Build run in this repository
+        id: artifact
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          REQUESTED_RUN: ${{ inputs.run_id }}
+          REQUESTED_ARTIFACT: ${{ inputs.artifact_name }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const selectArtifact = require('./scripts/select-artifact.cjs');
+            await selectArtifact({ github, context, core });
+
+      - name: Download selected artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.artifact.outputs.run_id }}
+          name: ${{ steps.artifact.outputs.name }}
+          path: artifacts/
+
+      - name: Install QEMU, firmware and guest tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils python3-pip
-
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.11'
+          sudo apt-get install -y qemu-system-x86 qemu-system-arm qemu-utils ovmf \
+            qemu-efi-aarch64 libguestfs-tools zstd openssh-client
 
       - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
+      - name: Install project test dependencies
+        run: uv sync --group test --frozen
+
+      - name: Extract exactly one standalone image safely
+        run: python3 .github/workflows/extract-image.py
+
+      - name: Verify QCOW2 format and integrity
+        id: integrity
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          qemu-img info --output=json "$IMAGE_PATH" > artifacts/image-info.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
 
-      - name: Install project dependencies
-        run: |
-          uv sync
-
-      - name: Download artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: ${{ github.event.inputs.artifact_name }}
-          path: artifacts/
-        if: github.event.inputs.artifact_name != ''
-
-      - name: Download latest artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          path: artifacts/
-        if: github.event.inputs.artifact_name == ''
-
-      - name: Extract image
-        run: |
-          cd artifacts
-          ARCHIVE=$(find . -name "*.tar.zst" | head -n 1)
-          if [ -z "$ARCHIVE" ]; then
-            echo "Error: No archive found"
-            exit 1
-          fi
-
-          echo "Extracting $ARCHIVE..."
-          tar -I zstd -xf "$ARCHIVE"
-
-          IMAGE=$(find . -name "*.qcow2" | head -n 1)
-          if [ -z "$IMAGE" ]; then
-            echo "Error: No image found after extraction"
-            exit 1
-          fi
-
-          echo "IMAGE_PATH=$(realpath "$IMAGE")" >> "$GITHUB_ENV"
-
-      - name: Verify image format
-        run: |
-          qemu-img info "$IMAGE_PATH"
+          info = json.loads(Path('artifacts/image-info.json').read_text())
+          if info.get('format') != 'qcow2' or info.get('backing-filename') or info.get('data-file'):
+              raise SystemExit('Require a standalone QCOW2 image without external backing/data files')
+          specific = info.get('format-specific', {}).get('data', {})
+          if specific.get('data-file'):
+              raise SystemExit('External QCOW2 data files are not allowed')
+          PY
           qemu-img check "$IMAGE_PATH"
 
-      - name: Quick boot test
-        timeout-minutes: 5
+      - name: Select native QEMU accelerator
         run: |
-          # Start QEMU in background
-          qemu-system-x86_64 \
-            -m 2048 \
-            -smp 2 \
-            -drive file="$IMAGE_PATH",if=virtio,format=qcow2 \
-            -netdev user,id=net0 \
-            -device virtio-net-pci,netdev=net0 \
-            -nographic \
-            -serial mon:stdio &
+          set -euo pipefail
+          test "$(uname -m)" = "$IMAGE_ARCH"
+          # The Molecule runtime must honor QEMU_ACCEL, including the TCG fallback.
+          if [[ -r /dev/kvm && -w /dev/kvm ]]; then
+            echo 'QEMU_ACCEL=kvm' >> "$GITHUB_ENV"
+          else
+            echo 'QEMU_ACCEL=tcg' >> "$GITHUB_ENV"
+            echo 'KVM unavailable to this user; request QEMU TCG (slower).'
+          fi
 
-          QEMU_PID=$!
+      - name: Run Molecule image tests
+        id: molecule
+        run: uv run --group test poe test
 
-          # Wait for boot (look for login prompt)
-          timeout 180 bash -c 'until grep -q "login:" <(tail -f /dev/null); do sleep 2; done' || true
+      - name: Destroy Molecule resources
+        id: cleanup
+        if: always() && steps.molecule.outcome != 'skipped'
+        run: uv run --group test molecule destroy -s qemu
 
-          # Cleanup
-          kill $QEMU_PID || true
-
-          echo "✅ Image boots successfully"
-
-      - name: Run Molecule tests
-        run: |
-          # This will be implemented when Molecule scenario is ready
-          echo "⚠️  Full Molecule tests not yet implemented"
-          echo "TODO: Create molecule/qemu-kiwi/ scenario"
-        continue-on-error: true
-
-      - name: Generate test report
+      - name: Report actual test outcomes
         if: always()
+        env:
+          RUN_ID: ${{ steps.artifact.outputs.run_id }}
+          ARTIFACT_NAME: ${{ steps.artifact.outputs.name }}
+          INTEGRITY_RESULT: ${{ steps.integrity.outcome }}
+          MOLECULE_RESULT: ${{ steps.molecule.outcome }}
+          CLEANUP_RESULT: ${{ steps.cleanup.outcome }}
         run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
-          # 🧪 Image Test Results
-
-          ## Image Information
-          - **Image**: \`$(basename "$IMAGE_PATH")\`
-          - **Format**: QCOW2
-          - **Size**: $(du -h "$IMAGE_PATH" | cut -f1)
-
-          ## Tests Run
-          - ✅ Image format verification
-          - ✅ Image integrity check
-          - ✅ Quick boot test
-          - ⚠️  Molecule tests (pending)
-
-          ## Status
-          All basic tests passed! Image is ready for use.
-
-          ## Next Steps
-          - Apply Ansible provisioning
-          - Run full integration tests locally
-          - Deploy to target environment
-          EOF
+          {
+            printf '## Image test results\n\nBuild run: %s\n\nArtifact: %s\n' "$RUN_ID" "$ARTIFACT_NAME"
+            printf '\nIntegrity: %s\n\nMolecule: %s\n' "$INTEGRITY_RESULT" "$MOLECULE_RESULT"
+            printf '\nCleanup: %s\n\nRequested accelerator: %s\n' \
+              "$CLEANUP_RESULT" "${QEMU_ACCEL:-not selected}"
+          } >> "$GITHUB_STEP_SUMMARY"
