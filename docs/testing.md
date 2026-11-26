@@ -31,6 +31,7 @@ What it does:
 - Stop the owned guest, then remove the overlay and temporary credentials.
 
 Bound the completed-boot check to 240 seconds; a guest that remains activating fails verification.
+Gather only distribution facts through setup; gather packages and services separately.
 
 Converge checks readiness rather than installing missing packages or repairing the image.
 The source image remains unchanged; test credentials are never exported into it.

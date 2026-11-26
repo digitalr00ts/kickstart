@@ -10,7 +10,11 @@
         sleep: 3
 
     - name: Gather guest facts
-      ansible.builtin.setup: {}
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+          - '!min'
+          - distribution
 
     - name: Verify image contracts
       ansible.builtin.include_tasks: verify-common.yml

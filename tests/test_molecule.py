@@ -34,6 +34,13 @@ class MoleculeTests(unittest.TestCase):
                       for condition in task["ansible.builtin.assert"]["that"]]
         self.assertIn("boot_status.stdout | trim == 'running'", assertions)
 
+    def test_setup_collects_only_distribution_facts(self):
+        play, = yaml.safe_load((DEFAULT / "verify.yml").read_text())
+        self.assertFalse(play["gather_facts"])
+        setup_task, = [task for task in play["tasks"] if "ansible.builtin.setup" in task]
+        self.assertEqual(setup_task["ansible.builtin.setup"]["gather_subset"],
+                         ["!all", "!min", "distribution"])
+
     def test_installed_schema_and_default_driver(self):
         for path, config in self.scenarios():
             with self.subTest(scenario=path.parent.name):
