@@ -4,16 +4,19 @@ version = "0.1.0"
 description = "Build and validate minimal Fedora base images for Ansible-managed infrastructure"
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.14"
+requires-python = ">=3.15,<4"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
 ]
 
 [dependency-groups]
 dev = [ "poethepoet>=0.35" ]
 test = [ "molecule>=26.4" ]
 build = [ "kiwi[markup]; sys_platform=='linux'" ]
+
+[tool.ruff]
+extend = ".config/ruff.toml"
 
 [tool.poe]
 executor = "simple"
