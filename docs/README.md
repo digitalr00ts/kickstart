@@ -1,6 +1,8 @@
 # Documentation Hub
 
-Start here to choose the right path for your role.
+Start here to build and test Fedora images on native Linux or macOS hosts.
+Use these images for your own infrastructure, including laptops and servers; distinguish VM validation from
+unvalidated physical-hardware deployment.
 
 ## Operators
 
@@ -20,7 +22,7 @@ Use this path if you are changing code, scripts, or automation.
 
 ## Quick Navigation
 
-- Build and provision workflow: [Building Guide](building.md)
+- Build outputs, deployment prerequisites and platform rationale: [Building Guide](building.md)
 - Local quality checks: [Development Guide](development.md)
 - Scenario validation: [Testing Guide](testing.md)
 - CI pipeline layout: [CI and Automation](github-actions.md)

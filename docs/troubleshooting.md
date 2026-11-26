@@ -10,8 +10,11 @@ Symptom:
 
 Fix:
 
-- install missing tools first
-- re-run `uv run poe build`
+- Install [host dependencies](building.md#prerequisites); Python packages do not replace KIWI system dependencies.
+- On Fedora, install `kiwi-systemdeps uv` and the native QEMU, EFI firmware, `libguestfs-tools-c`, `openssh-clients` packages.
+- On macOS, install `lima qemu uv` with Homebrew; run `virt-customize` inside the builder, not on macOS.
+- Use `uv run poe test` or `uv run --group test --frozen molecule test -s qemu` to install the test dependencies.
+- Re-run the failed build or test command.
 
 ## macOS Build Cannot Start Virtualized Builder
 
@@ -28,14 +31,18 @@ limactl stop kiwi-builder || true
 limactl start kiwi-builder
 ```
 
-If needed, recreate the instance:
+If startup still fails, inspect Lima logs and local virtualization/network requirements.
+Only recreate the instance after preserving any needed builder-local files; deletion discards its VM disk:
 
 ```bash
 limactl delete kiwi-builder
 uv run poe build
 ```
 
-## Provisioning Fails to Connect Over SSH
+Use the configured `LIMA_INSTANCE` instead of `kiwi-builder` in these commands if overriding the default builder.
+Keep the same instance selection for builds and tests.
+
+## Test Guest Fails to Connect Over SSH
 
 Symptom:
 
@@ -43,12 +50,19 @@ Symptom:
 
 Fix:
 
-- confirm no process is already using the forwarded port
-- set a different port and retry:
+- Inspect `console.log` and `supervisor.log` in the reported private `~/.molecule-vm-*` directory.
+- Confirm the chosen port is available; the default is loopback port `2222`.
+- Destroy any retained guest, then choose another port:
 
 ```bash
-SSH_PORT=2223 uv run poe provision-image output/kiwi-x86_64/fedora-minimal.x86_64-44.1.7.qcow2
+uv run --group test --frozen molecule destroy -s qemu
+VM_SSH_PORT=2223 uv run poe test
 ```
+
+The base image deliberately has locked `admin`/`root` passwords and password SSH disabled.
+Booting it manually does not inject an SSH key. Molecule injects a transient key and sudo policy only into its overlay.
+For deployment, inject your real public key and provision access separately;
+no deployment provisioner or cloud-init is provided.
 
 ## Wrong Architecture Binary
 
@@ -58,12 +72,43 @@ Symptom:
 
 Fix:
 
-- run with explicit architecture argument:
+- Build and test only the native host architecture; do not switch architectures to work around a missing binary.
+- Install `qemu-system-x86_64` on x86 hosts or `qemu-system-aarch64` on ARM hosts.
+- Let `uv run poe build` detect the host; `arm64`/`amd64` are normalized to `aarch64`/`x86_64`.
+- Select an image and EFI firmware matching that native architecture; cross-builds are rejected.
+
+## Image or EFI Firmware Not Found
+
+Keep exactly one standalone QCOW2 in `output/<nativearch>/`, or set `IMAGE_PATH` to the absolute path of the intended image.
+Custom `OUTPUT_DIR` builds require explicit `IMAGE_PATH` for tests. On macOS, keep that image under the shared home directory.
+
+Install matching EFI firmware. If autodetection fails, set both `QEMU_EFI_CODE` and `QEMU_EFI_VARS` to existing,
+matching firmware files; setting only one is rejected.
+
+## macOS Overlay Customization Fails
+
+Keep `kiwi-builder` running and ensure it can access the image and private test state through the writable home mount:
 
 ```bash
-uv run poe build 44 aarch64
-uv run poe build 44 x86_64
+limactl start kiwi-builder
+limactl shell kiwi-builder sudo dnf install -y libguestfs-tools-c
 ```
+
+Store the checkout and images under your home directory. Check that `sudo virt-customize` can run in the Fedora builder;
+Homebrew QEMU alone does not supply Linux libguestfs customization.
+New builder provisioning installs libguestfs, but existing VMs need the explicit package update above.
+Replace `kiwi-builder` with the configured `LIMA_INSTANCE` when using a non-default builder.
+
+## QEMU Acceleration Unavailable
+
+On Linux, enable virtualization and grant the testing user read/write access to `/dev/kvm`.
+On macOS, check HVF availability. If hardware acceleration is unavailable, explicitly request software emulation:
+
+```bash
+QEMU_ACCEL=tcg uv run poe test
+```
+
+Expect slower boot and possible readiness timeouts; local tests do not silently fall back to TCG.
 
 ## Molecule Validation Fails
 
@@ -73,10 +118,28 @@ Symptom:
 
 Fix:
 
-- ensure nested virtualization support on host
-- re-run with clean state:
+- Inspect the failing phase and guest logs before removing state.
+- Confirm packages and services are supplied by the image; converge does not repair missing packages.
+- Destroy test resources, then retry without deleting the source image:
 
 ```bash
-uv run poe clean
-uv run poe test qemu
+uv run --group test --frozen molecule destroy -s qemu
+uv run poe test
 ```
+
+If destruction cannot confirm shutdown, preserve the retained state and investigate the supervisor.
+Do not delete a live overlay or its backing image. `uv run poe clean` removes default build outputs and is not VM cleanup.
+
+## Helper Checks Fail to Import Molecule
+
+Run `uv run poe check`, or explicitly use
+`uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
+The stdlib test runner still needs the test dependency group for Molecule schema validation;
+plain `uv run python` can omit it in a fresh environment.
+
+## CI Build Fails on Loop Devices or Mounts
+
+The Build workflow uses a privileged Fedora 44 container on an Ubuntu runner, sharing the runner kernel.
+Hosted-runner loop-device and mount compatibility is unverified. Inspect `losetup --find` and KIWI errors;
+reproduce on a Fedora Linux host or the macOS Fedora Lima builder rather than assuming container privilege is sufficient.
+Do not detach unrelated host loop devices to force a build to proceed.
