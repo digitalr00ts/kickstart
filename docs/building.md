@@ -42,19 +42,24 @@ Run that command only after the builder exists and is running; replace `kiwi-bui
 New builders install this dependency during provisioning; existing VMs need the explicit update.
 See the [Testing Guide](testing.md) for runtime requirements.
 
+Inspect host prerequisites with `uv run --frozen poe doctor --scope build` before building.
+Use `--scope test` for test prerequisites or omit `--scope` for the default `all` scope.
+Doctor is read-only: it does not install tools or create, start or launch guests, including the Lima builder.
+A successful diagnostic is not evidence of a successful build or VM boot.
+
 ## Build Image
 
 ```bash
-uv run poe build
+uv run --frozen poe build
 ```
 
 Build with explicit version and architecture, choosing only the command that matches the host CPU:
 
 ```bash
 # On an x86_64 host:
-uv run poe build 44 x86_64
+uv run --frozen poe build 44 x86_64
 # On an aarch64/Apple Silicon host:
-uv run poe build 44 aarch64
+uv run --frozen poe build 44 aarch64
 ```
 
 The wrapper normalizes `amd64` to `x86_64` and `arm64` to `aarch64`, and rejects cross-architecture requests.
@@ -78,7 +83,7 @@ Inspect the output directory directly. Remove default local build artifacts only
 
 ```bash
 uv run --group test --frozen molecule destroy -s qemu
-uv run poe clean
+uv run --frozen poe clean
 ```
 
 `clean` deletes default `output/`, `build/`, `.kiwi-*` and top-level QCOW2 files; it does not clean a custom output root.
@@ -90,9 +95,28 @@ Useful environment variables:
 - `OUTPUT_DIR`: override the host output root using a relative or absolute path; the wrapper appends `<arch>/`
 - `LIMA_INSTANCE`: select the macOS builder name, default `kiwi-builder`; use the same value for builds and tests
 
-For example, run `OUTPUT_DIR=images uv run poe build` to export to `images/<arch>/`.
-Quote paths containing spaces, such as `OUTPUT_DIR="images for testing" uv run poe build`.
+For example, run `OUTPUT_DIR=images uv run --frozen poe build` to export to `images/<arch>/`.
+Quote paths containing spaces, such as `OUTPUT_DIR="images for testing" uv run --frozen poe build`.
 Set an absolute `IMAGE_PATH` when testing images outside default `output/<arch>/`.
+
+## Handoff to drts.casc
+
+Build only the minimal Fedora base: boot, networking and Ansible prerequisites plus a secure baseline.
+Keep EFI/Btrfs layout, Python, SSH, sudo and base security policy in this repository; justify package and service
+additions against those responsibilities. Keep applications, machine roles and site-specific configuration in
+[`drts.casc`](https://github.com/drts01/ansible-collection).
+
+Treat the handoff as a contract, not an implemented deployment workflow:
+
+1. Build and verify the unchanged base through disposable-overlay tests; fail on missing base prerequisites without repair.
+2. Arrange deployment identity, public-key access and intended privilege policy through a separately controlled process.
+   This repository does not implement that provisioning; test-overlay access is not deployment access.
+3. Apply collection-owned customization only after access is available. Collection integration is not implemented here;
+   use the [proposed compatibility acceptance criteria](testing.md#proposed-collection-compatibility-stage-not-implemented)
+   when adding a separate compatibility stage.
+
+Do not publish or deploy test overlays. Publish only the original base artifact, without transient keys or test-only sudo.
+No cloud-init or physical installer is provided; the boundaries below still apply.
 
 ## Platform and Deployment Boundaries
 

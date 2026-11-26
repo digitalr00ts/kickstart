@@ -23,12 +23,11 @@ Use `prek run --all-files` if already installed. Install Java/Jing for KIWI desc
 Run lightweight helper regressions with:
 
 ```bash
-uv run poe check
-node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs
-uv run --group test --frozen python -m unittest discover -s .github/workflows -p 'test_*.py'
+uv run --frozen poe check-all
 ```
 
-Prefer `poe check` for the Python suite; it installs the test dependency group with the frozen lockfile.
+Use `poe check-all` for Python, Node artifact and workflow regressions without hooks; install Node.js.
+Retain `poe check` for the Python-only suite; it installs the test dependency group with the frozen lockfile.
 For direct execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 CI runs helper regressions on `ubuntu-24.04` and `macos-latest`; these mocked/schema checks do not validate
 image assembly, KVM/HVF boot or physical hardware. The pre-commit job runs separately on Linux.

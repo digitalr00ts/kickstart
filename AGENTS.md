@@ -12,6 +12,16 @@ Read `docs/testing.md` before changing guest startup, authentication, firmware, 
 Read `docs/github-actions.md` before changing artifact selection, uploads, retention, or workflow behavior.
 Read `docs/troubleshooting.md` when recovering a failed builder, guest, or export.
 
+## Ownership
+
+Keep this image minimal: boot, networking and Ansible prerequisites plus a secure baseline.
+Route applications, machine roles and site-specific configuration to
+[`drts.casc`](https://github.com/drts01/ansible-collection).
+Require a base-purpose justification for every package or service addition.
+Keep base verification non-repairing; fail on missing prerequisites instead of installing or configuring them.
+Keep collection compatibility in a separate stage; follow the proposed acceptance criteria in `docs/testing.md`.
+Treat deployment access provisioning, cloud-init and physical installation as unimplemented here.
+
 ## Change Map
 
 - Change image packages, Btrfs/EFI layout, and architecture profiles in `kiwi/fedora-44.kiwi` (YAML, despite the suffix).
@@ -38,14 +48,15 @@ Reject cross-architecture build requests; treat explicit QEMU TCG as a slower ru
 Run from the repository root:
 
 ```sh
-uv run --frozen poe check
-node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs
-uv run --group test --frozen python -m unittest discover -s .github/workflows -p 'test_*.py'
+uv run --frozen poe check-all
 pre-commit run --all-files
 ```
 
 Use `prek run --all-files` instead when that runner is installed; both consume `.pre-commit-config.yaml`.
-Follow `docs/development.md` for setup, Java/Jing prerequisites, and hook side effects.
+Use `check-all` for Python, Node artifact and workflow tests without hooks; retain `check` for Python-only tests.
+Follow `docs/development.md` for aggregate checks, setup, Java/Jing prerequisites, and hook side effects.
+Use `uv run --frozen poe doctor [--scope build|test|all]` (default `all`) for read-only host prerequisite diagnostics.
+Keep diagnostics separate from runtime proof; doctor does not install tools or launch/start guests.
 Write Python regressions with stdlib `unittest` in `tests/test_*.py`; use Node's native test runner for `tests/test_*.cjs`.
 Exercise error paths with mocks/shims before running privileged builds or guests.
 When runtime validation is required, run `uv run --frozen poe build`, then `uv run --frozen poe test`.

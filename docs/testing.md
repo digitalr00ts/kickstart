@@ -2,14 +2,17 @@
 
 Validate a built Fedora QCOW2 image with Molecule and native QEMU on Linux or macOS.
 Install the [host dependencies](building.md#prerequisites) first. These checks validate a VM, not physical hardware.
+Run `uv run --frozen poe doctor --scope test` for read-only host prerequisite diagnostics; use `--scope build`
+for build prerequisites or omit `--scope` for the default `all` scope. Doctor does not install tools or
+create, start or launch guests, including the Lima builder. Diagnostics are not runtime proof.
 
 ## Image Validation Scenario
 
 Build an image, then run the Molecule scenario:
 
 ```bash
-uv run poe build
-uv run poe test
+uv run --frozen poe build
+uv run --frozen poe test
 ```
 
 Run the equivalent explicit command when controlling Molecule directly:
@@ -45,7 +48,7 @@ Set `QEMU_ACCEL=tcg` explicitly to use slower software emulation when native acc
 there is no silent local fallback:
 
 ```bash
-QEMU_ACCEL=tcg uv run poe test
+QEMU_ACCEL=tcg uv run --frozen poe test
 ```
 
 Configure runtime inputs as needed:
@@ -79,17 +82,46 @@ Do not delete overlays or source images while a guest is running. If cleanup can
 retains private state rather than risk deleting a live disk; preserve that state while investigating.
 Never deploy a test overlay: it contains temporary access credentials and test-only sudo policy.
 
+## Proposed Collection Compatibility Stage (Not Implemented)
+
+Keep base image validation independent of application and machine-role customization in
+[`drts.casc`](https://github.com/drts01/ansible-collection).
+The current scenario disables Galaxy dependency installation and only checks base readiness and image assertions;
+it does not apply the collection, test its idempotence or verify effective SSH policy.
+Deployment access provisioning is also not implemented; no deployment commands are provided here.
+
+Require these acceptance criteria before treating a future, separate compatibility stage as implemented:
+
+1. Pin the collection to an immutable revision or exact release version and record the resolved version and dependencies
+   with the base artifact identity, Fedora release and native architecture. Do not test a floating branch as a release gate.
+2. Create a fresh disposable overlay from the unchanged base artifact for every compatibility run. Inject only transient
+   test identity and test-only privilege policy; keep deployment credentials and site secrets outside published artifacts.
+3. Run non-repairing base verification before any collection converge. Fail immediately on missing base prerequisites;
+   never let collection tasks install or repair them to hide an invalid base.
+4. Converge an explicitly selected collection role set with documented test inputs, verify the intended result, then
+   converge again and require zero unexpected changes as the idempotence gate. Report compatibility separately from
+   base validation; a collection failure must not be reported as a successful base-plus-collection result.
+5. Verify effective SSH policy before and after collection converge, including connection-specific `Match` behavior:
+   disable password and keyboard-interactive authentication and root login; retain public-key authentication and working
+   unprivileged key access with the intended sudo policy. Inspect effective daemon configuration, not only drop-in text.
+6. Confirm the source artifact remains unchanged. Stop the guest with supervisor-confirmed shutdown before cleanup;
+   retain private state if shutdown cannot be confirmed. Never publish, export or deploy the customized test overlay,
+   its transient keys or test-only sudo policy.
+
+Keep application, machine-role and site-specific assertions with the collection compatibility stage, not base verification.
+VM compatibility evidence does not establish deployment provisioning or physical-hardware support.
+
 ## Helper Regression Tests
 
 Run checks that do not require a built image or a running guest:
 
 ```bash
-uv run poe check
-node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs
-uv run --group test --frozen python -m unittest discover -s .github/workflows -p 'test_*.py'
+uv run --frozen poe check-all
 ```
 
-Prefer `poe check` to install the required Molecule test dependencies even for no-VM schema checks.
+`check-all` aggregates the existing Python, Node artifact and workflow suites without running hooks; install Node.js.
+Use `uv run --frozen poe check` for Python-only regressions with the required Molecule test dependencies,
+even for no-VM schema checks. See the [Development Guide](development.md) for aggregate checks and hooks.
 For direct execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 CI runs these helper regressions on native Linux and macOS hosts; those jobs do not build or boot images.
 Use the [CI and Automation guide](github-actions.md) to retrieve and test a Build artifact.

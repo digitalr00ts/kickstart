@@ -2,21 +2,53 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-Build minimal Fedora images with KIWI NG for your own infrastructure, including laptops and servers.
+Build a minimal Fedora base with KIWI NG for personal infrastructure, including laptops and servers.
+Define minimum as boot, networking and Ansible prerequisites plus a secure baseline, not a complete machine role.
+Keep applications, machine roles and site-specific configuration in
+[`drts.casc`](https://github.com/drts01/ansible-collection).
 Build and test natively on Linux or macOS; use QEMU to validate QCOW2 images before deployment.
 
-## Quick Start
+## Build and Test Quickstart
 
 On macOS, run:
 
 ```bash
 brew install lima qemu uv
-uv run poe build
-uv run poe test
+uv run --frozen poe doctor
+uv run --frozen poe build
+uv run --frozen poe test
 ```
 
 On Fedora Linux, install the [build and test dependencies](docs/building.md#prerequisites), then run the same
 build and test commands. Fedora 44 is the current image description.
+
+## No-VM Contributor Quickstart
+
+Install `uv` and Node.js, then run helper regressions without building an image or launching a guest:
+
+```bash
+uv sync --group test --frozen
+uv run --frozen poe check-all
+```
+
+`check-all` aggregates the existing Python, Node artifact and workflow test suites; it does not run hooks.
+Keep `uv run --frozen poe check` for Python-only regressions.
+See the [Development Guide](docs/development.md) for aggregate checks, hook setup, Java/Jing prerequisites
+and hook-applied formatting changes.
+
+## Ownership
+
+| Concern | Owner |
+| --- | --- |
+| Boot, EFI/Btrfs layout, networking and Ansible prerequisites | This repository |
+| Secure base policy: locked passwords, SSH restrictions, SELinux and firewall | This repository |
+| Image assembly, QCOW2 export and non-repairing base verification | This repository |
+| Applications, machine roles and site-specific configuration | [`drts.casc`](https://github.com/drts01/ansible-collection) |
+| Deployment identity and access provisioning | Operator-owned prerequisite; not implemented here |
+| Collection compatibility validation | Proposed separate stage; not implemented here |
+
+Justify base package and service additions against boot, networking, Ansible prerequisites or the secure baseline.
+Route role-specific additions to the collection instead.
 
 ## Requirements
 
@@ -28,20 +60,26 @@ build and test commands. Fedora 44 is the current image description.
 ## Commands
 
 ```bash
-uv run poe build [version] [arch]
-uv run poe test
-uv run poe check
-uv run poe clean
+uv run --frozen poe build [version] [arch]
+uv run --frozen poe test
+uv run --frozen poe check
+uv run --frozen poe check-all
+uv run --frozen poe doctor
+uv run --frozen poe clean
 ```
 
-## Notes
+Use `uv run --frozen poe doctor [--scope build|test|all]` for read-only host prerequisite diagnostics
+(default: `all`). It does not install tools or launch/start guests; diagnostics are not build or runtime proof.
+
+## Handoff and Limits
 
 - Build only the host architecture: `x86_64` or `aarch64` (`amd64`/`arm64` aliases are normalized).
 - Find images in host `output/<arch>/`; set `OUTPUT_DIR` to change the output root.
   macOS exports only the QCOW2 image and optional package manifests from the builder.
 - Test with Linux KVM or macOS HVF; explicitly set `QEMU_ACCEL=tcg` for slower software emulation.
 - Keep deployment credentials separate: shipped `admin` and `root` passwords are locked and password SSH is disabled.
-  Inject your actual deployment public key and provision access before deploying; no cloud-init is configured.
+  Deployment access provisioning is not implemented; arrange a controlled access-provisioning process before applying
+  `drts.casc`. No cloud-init is configured. See the [handoff contract](docs/building.md#handoff-to-drtscasc).
 - Treat QCOW2 as the VM artifact. Physical-hardware deployment needs a future raw/installer workflow and hardware validation;
   no install-to-physical implementation is provided.
 - Select architecture by CPU, not GUI requirements. Desktop composition is a separate image decision.
