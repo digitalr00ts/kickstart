@@ -65,6 +65,10 @@ run         = [ { task = "check" }, { task = "check-artifacts" }, { task = "chec
 description = "Run active hooks on all tracked files"
 run         = "prek run --all-files"
 
+[tasks.lint-ansible]
+description = "Lint Ansible content without fixes (pass --fix to apply changes)"
+run         = "uv run --group lint --frozen ansible-lint"
+
 [tasks.docs-build]
 description = "Build the Zensical documentation site, failing on warnings"
 run         = "uv run --group docs --frozen zensical build --strict"

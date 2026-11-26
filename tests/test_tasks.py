@@ -287,6 +287,19 @@ class MiseDispatchTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(calls, [sync])
 
+    def test_ansible_lint_forwards_options_and_propagates_failure(self):
+        command = ["uv", "run", "--group", "lint", "--frozen", "ansible-lint"]
+        result, calls = self.dispatch("lint-ansible")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(calls, [command])
+        options = ["-v", "--force-color", "--fix"]
+        result, calls = self.dispatch("lint-ansible", *options)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(calls, [command + options])
+        result, calls = self.dispatch("lint-ansible", fail_call=command)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(calls, [command])
+
     def test_lint_only_runs_hooks(self):
         result, calls = self.dispatch("lint")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

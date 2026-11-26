@@ -24,8 +24,8 @@ mise run lint
 
 Install mise first; use `mise run lint` for `prek run --all-files`.
 Install system Java/Jing for KIWI description validation.
-Share tool pins from `mise.toml` and `mise.lock` between local checks and CI through `mise exec` system hooks;
-retain the isolated Ansible hook environment.
+Share tool pins from `mise.toml` and `mise.lock` between local checks and CI through `mise exec` system hooks.
+Run the manual Ansible lint hook through `mise run lint-ansible` using the frozen uv lint dependency group.
 Run the KIWI hook through `mise run check-kiwi` using the frozen uv build dependency group.
 See [Development](development.md#local-validation-commands) for manual-stage checks and hook side effects.
 Run lightweight helper regressions with:

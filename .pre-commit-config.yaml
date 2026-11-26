@@ -102,12 +102,13 @@ repos:
         language: system
         files: kiwi/.*\.kiwi$
         pass_filenames: false
-
-  - repo: https://github.com/ansible/ansible-lint
-    rev: v26.6.0
-    hooks:
       - id: ansible-lint
-        args: [--fix]
+        name: ansible-lint
+        entry: mise run lint-ansible
+        language: system
+        args: [-v, --force-color, --fix]
+        pass_filenames: false
+        always_run: true
         stages: [manual]
 
 default_language_version:

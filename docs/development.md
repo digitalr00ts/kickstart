@@ -56,7 +56,10 @@ Run mise-managed tool hooks as system hooks through `mise exec` to share `mise.t
 hook-local tool installs.
 Run the KIWI system hook through `mise run check-kiwi` to share the `uv.lock`-pinned build dependency group.
 This task validates both architecture profiles and may synchronize `.venv`; Java/Jing remains a host prerequisite.
-Retain the isolated environment for the Ansible hook.
+Run Ansible lint through `mise run lint-ansible` using the frozen uv `lint` dependency group.
+Keep this task check-only by default; pass `--fix` to apply changes.
+The manual `ansible-lint` hook retains `--fix` and scans the whole repository, even when no files match.
+Both invocations use the same `uv.lock`-pinned version and may synchronize `.venv`.
 Keep the current stages explicit:
 
 | Source             | Active commit checks                               | Manual checks and promotion condition                                                        |
@@ -68,7 +71,7 @@ Keep the current stages explicit:
 | YAML and KIWI YAML | YAML parsing; uv-managed KIWI validation           | `ryl`, `ryl-format`: reconcile document markers, indentation, merge overrides and formatting |
 | Markdown           | Generic whitespace and smartquote hooks            | `rumdl`: reconcile tables and semantic line breaks                                           |
 | Python             | Generic integrity hooks                            | `ruff`, `ruff-format`: resolve strict-rule and formatting debt                               |
-| Ansible            | Shared YAML checks                                 | Existing `ansible-lint` manual hook                                                          |
+| Ansible            | Shared YAML checks                                 | uv-managed `ansible-lint` manual hook                                                        |
 | JavaScript         | Node artifact regression tests                     | No dedicated linter/formatter in this migration                                              |
 
 Run a quarantined check with `mise exec -- prek run <hook-id> --all-files --hook-stage manual`.
@@ -99,6 +102,7 @@ Use these tasks for narrower feedback:
 | `mise run check-artifacts` | Node artifact-cleanup and artifact-selection regressions |
 | `mise run check-workflows` | Python workflow helper regressions                       |
 | `mise run check-kiwi`      | KIWI descriptions for both architecture profiles         |
+| `mise run lint-ansible`    | Repository-wide Ansible lint without fixes               |
 
 For direct Python execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 The runner is stdlib `unittest`, but schema checks require Molecule from the test group even without a VM.

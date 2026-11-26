@@ -56,7 +56,8 @@ mise run lint
 ```
 
 Use `mise run setup` for frozen test dependency sync and `prek install`; use `mise run lint` for `prek run --all-files`.
-Share mise tool pins through system hooks using `mise exec`; retain the isolated Ansible hook environment.
+Share mise tool pins through system hooks using `mise exec`.
+Run the manual Ansible lint hook through `mise run lint-ansible` using the frozen uv lint dependency group.
 Run KIWI validation through `mise run check-kiwi` using the frozen uv build dependency group.
 Use `check-all` for Python, Node artifact and workflow tests without hooks; retain `check` for Python-only tests.
 Follow `docs/development.md` for aggregate checks, setup, Java/Jing prerequisites, and hook side effects.
