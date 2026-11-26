@@ -4,14 +4,19 @@ Build Fedora images with KIWI NG on native Linux or through the Fedora `kiwi-bui
 
 ## Prerequisites
 
-Use an `x86_64` or `aarch64` host. Prefer Fedora Linux for native builds; other Linux distributions need equivalent
-KIWI system dependencies and are not validated by these instructions. `uv` manages Python 3.14+ and the Python KIWI package;
-it does not install host disk, mount or virtualization tools. Allow `sudo` for privileged KIWI operations.
+Use an `x86_64` or `aarch64` Linux host, or an Apple Silicon macOS host.
+Prefer Fedora Linux for native builds; other Linux distributions need equivalent
+KIWI system dependencies and are not validated by these instructions. Install
+[mise](https://mise.jdx.dev/getting-started.html) for pinned tools, including `uv`; retain `.python-version` and `uv.lock`
+for Python management. `uv` manages Python and the Python KIWI package, not host disk, mount or virtualization tools.
+Allow `sudo` for privileged KIWI operations.
 
 On Fedora, install build dependencies:
 
 ```bash
-sudo dnf install kiwi-systemdeps uv
+sudo dnf install kiwi-systemdeps
+mise install
+mise run setup
 ```
 
 For local VM tests, also install QEMU, matching EFI firmware, libguestfs and SSH clients. For example:
@@ -24,25 +29,28 @@ On `aarch64`, use `qemu-system-aarch64-core` and `edk2-aarch64` instead of the x
 Confirm package availability for your Fedora release and enabled repositories; names can vary.
 Enable read/write access to `/dev/kvm` for the testing user, or explicitly request `QEMU_ACCEL=tcg`.
 
-On macOS, install host tools:
+On Apple Silicon macOS, install host tools:
 
 ```bash
-brew install lima qemu uv
+brew install mise qemu
+mise install
+mise run setup
 ```
 
+Let `mise install` install Lima on macOS; keep QEMU and EFI firmware as system prerequisites.
 Keep the checkout and test images under your home directory, which the builder shares writable.
 The build wrapper creates or starts `kiwi-builder` using `lima/kiwi-builder.yaml`.
 KIWI runs inside Fedora, not on the macOS host. Existing builders may need the test customization dependency:
 
 ```bash
-limactl shell kiwi-builder sudo dnf install -y libguestfs-tools-c
+mise exec -- limactl shell kiwi-builder sudo dnf install -y libguestfs-tools-c
 ```
 
 Run that command only after the builder exists and is running; replace `kiwi-builder` if using another `LIMA_INSTANCE`.
 New builders install this dependency during provisioning; existing VMs need the explicit update.
 See the [Testing Guide](testing.md) for runtime requirements.
 
-Inspect host prerequisites with `uv run --frozen poe doctor --scope build` before building.
+Inspect host prerequisites with `mise run doctor --scope build` before building.
 Use `--scope test` for test prerequisites or omit `--scope` for the default `all` scope.
 Doctor is read-only: it does not install tools or create, start or launch guests, including the Lima builder.
 A successful diagnostic is not evidence of a successful build or VM boot.
@@ -50,16 +58,16 @@ A successful diagnostic is not evidence of a successful build or VM boot.
 ## Build Image
 
 ```bash
-uv run --frozen poe build
+mise run build
 ```
 
 Build with explicit version and architecture, choosing only the command that matches the host CPU:
 
 ```bash
 # On an x86_64 host:
-uv run --frozen poe build 44 x86_64
+mise run build 44 x86_64
 # On an aarch64/Apple Silicon host:
-uv run --frozen poe build 44 aarch64
+mise run build 44 aarch64
 ```
 
 The wrapper normalizes `amd64` to `x86_64` and `arm64` to `aarch64`, and rejects cross-architecture requests.
@@ -83,7 +91,7 @@ Inspect the output directory directly. Remove default local build artifacts only
 
 ```bash
 uv run --group test --frozen molecule destroy -s qemu
-uv run --frozen poe clean
+mise run clean
 ```
 
 `clean` deletes default `output/`, `build/`, `.kiwi-*` and top-level QCOW2 files; it does not clean a custom output root.
@@ -95,8 +103,8 @@ Useful environment variables:
 - `OUTPUT_DIR`: override the host output root using a relative or absolute path; the wrapper appends `<arch>/`
 - `LIMA_INSTANCE`: select the macOS builder name, default `kiwi-builder`; use the same value for builds and tests
 
-For example, run `OUTPUT_DIR=images uv run --frozen poe build` to export to `images/<arch>/`.
-Quote paths containing spaces, such as `OUTPUT_DIR="images for testing" uv run --frozen poe build`.
+For example, run `OUTPUT_DIR=images mise run build` to export to `images/<arch>/`.
+Quote paths containing spaces, such as `OUTPUT_DIR="images for testing" mise run build`.
 Set an absolute `IMAGE_PATH` when testing images outside default `output/<arch>/`.
 
 ## Handoff to drts.casc
@@ -121,8 +129,8 @@ No cloud-init or physical installer is provided; the boundaries below still appl
 ## Platform and Deployment Boundaries
 
 Retain KIWI for image assembly, Lima for the Linux build environment on macOS, QEMU for guest validation,
-and `uv`/Poe/Molecule for dependency and task orchestration. Build and test natively to avoid cross-architecture
-emulation costs and mismatched platform assumptions. This supports both Linux and macOS infrastructure workflows;
+mise for pinned tools and task orchestration, `uv` for Python dependencies, and Molecule for test orchestration.
+Build and test natively to avoid cross-architecture emulation costs and mismatched platform assumptions. This supports both Linux and macOS infrastructure workflows;
 it does not select a desktop environment. Choose the CPU architecture independently of GUI package composition.
 
 Ship locked `admin` and `root` passwords with password SSH disabled. Before deploying an image, inject your actual

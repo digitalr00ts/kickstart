@@ -11,9 +11,10 @@ Symptom:
 Fix:
 
 - Install [host dependencies](building.md#prerequisites); Python packages do not replace KIWI system dependencies.
-- On Fedora, install `kiwi-systemdeps uv` and the native QEMU, EFI firmware, `libguestfs-tools-c`, `openssh-clients` packages.
-- On macOS, install `lima qemu uv` with Homebrew; run `virt-customize` inside the builder, not on macOS.
-- Use `uv run poe test` or `uv run --group test --frozen molecule test -s qemu` to install the test dependencies.
+- Run `mise install` for pinned tools and `mise run setup` for frozen Python test dependencies and hook installation.
+- On Fedora, install `kiwi-systemdeps` and the native QEMU, EFI firmware, `libguestfs-tools-c`, `openssh-clients` packages.
+- On macOS, run `brew install mise qemu`, then `mise install` for Lima; run `virt-customize` inside the builder, not on macOS.
+- Install system Java/Jing if KIWI description validation fails in hooks.
 - Re-run the failed build or test command.
 
 ## macOS Build Cannot Start Virtualized Builder
@@ -26,17 +27,17 @@ Symptom:
 Fix:
 
 ```bash
-limactl list
-limactl stop kiwi-builder || true
-limactl start kiwi-builder
+mise exec -- limactl list
+mise run lima-cmd stop kiwi-builder
+mise run lima-cmd start kiwi-builder
 ```
 
 If startup still fails, inspect Lima logs and local virtualization/network requirements.
 Only recreate the instance after preserving any needed builder-local files; deletion discards its VM disk:
 
 ```bash
-limactl delete kiwi-builder
-uv run poe build
+mise run lima-cmd delete kiwi-builder
+mise run build
 ```
 
 Use the configured `LIMA_INSTANCE` instead of `kiwi-builder` in these commands if overriding the default builder.
@@ -56,7 +57,7 @@ Fix:
 
 ```bash
 uv run --group test --frozen molecule destroy -s qemu
-VM_SSH_PORT=2223 uv run poe test
+VM_SSH_PORT=2223 mise run test
 ```
 
 The base image deliberately has locked `admin`/`root` passwords and password SSH disabled.
@@ -74,7 +75,7 @@ Fix:
 
 - Build and test only the native host architecture; do not switch architectures to work around a missing binary.
 - Install `qemu-system-x86_64` on x86 hosts or `qemu-system-aarch64` on ARM hosts.
-- Let `uv run poe build` detect the host; `arm64`/`amd64` are normalized to `aarch64`/`x86_64`.
+- Let `mise run build` detect the host; `arm64`/`amd64` are normalized to `aarch64`/`x86_64`.
 - Select an image and EFI firmware matching that native architecture; cross-builds are rejected.
 
 ## Image or EFI Firmware Not Found
@@ -90,8 +91,8 @@ matching firmware files; setting only one is rejected.
 Keep `kiwi-builder` running and ensure it can access the image and private test state through the writable home mount:
 
 ```bash
-limactl start kiwi-builder
-limactl shell kiwi-builder sudo dnf install -y libguestfs-tools-c
+mise run lima-cmd start kiwi-builder
+mise exec -- limactl shell kiwi-builder sudo dnf install -y libguestfs-tools-c
 ```
 
 Store the checkout and images under your home directory. Check that `sudo virt-customize` can run in the Fedora builder;
@@ -105,7 +106,7 @@ On Linux, enable virtualization and grant the testing user read/write access to 
 On macOS, check HVF availability. If hardware acceleration is unavailable, explicitly request software emulation:
 
 ```bash
-QEMU_ACCEL=tcg uv run poe test
+QEMU_ACCEL=tcg mise run test
 ```
 
 Expect slower boot and possible readiness timeouts; local tests do not silently fall back to TCG.
@@ -124,15 +125,15 @@ Fix:
 
 ```bash
 uv run --group test --frozen molecule destroy -s qemu
-uv run poe test
+mise run test
 ```
 
 If destruction cannot confirm shutdown, preserve the retained state and investigate the supervisor.
-Do not delete a live overlay or its backing image. `uv run poe clean` removes default build outputs and is not VM cleanup.
+Do not delete a live overlay or its backing image. `mise run clean` removes default build outputs and is not VM cleanup.
 
 ## Helper Checks Fail to Import Molecule
 
-Run `uv run poe check`, or explicitly use
+Run `mise run check`, or explicitly use
 `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 The stdlib test runner still needs the test dependency group for Molecule schema validation;
 plain `uv run python` can omit it in a fresh environment.

@@ -13,10 +13,12 @@ Build and test natively on Linux or macOS; use QEMU to validate QCOW2 images bef
 On macOS, run:
 
 ```bash
-brew install lima qemu uv
-uv run --frozen poe doctor
-uv run --frozen poe build
-uv run --frozen poe test
+brew install mise qemu
+mise install
+mise run setup
+mise run doctor
+mise run build
+mise run test
 ```
 
 On Fedora Linux, install the [build and test dependencies](docs/building.md#prerequisites), then run the same
@@ -24,15 +26,17 @@ build and test commands. Fedora 44 is the current image description.
 
 ## No-VM Contributor Quickstart
 
-Install `uv` and Node.js, then run helper regressions without building an image or launching a guest:
+Install [mise](https://mise.jdx.dev/getting-started.html), then run helper regressions without building an image
+or launching a guest:
 
 ```bash
-uv sync --group test --frozen
-uv run --frozen poe check-all
+mise install
+mise run setup
+mise run check-all
 ```
 
 `check-all` aggregates the existing Python, Node artifact and workflow test suites; it does not run hooks.
-Keep `uv run --frozen poe check` for Python-only regressions.
+Keep `mise run check` for Python-only regressions.
 See the [Development Guide](docs/development.md) for aggregate checks, hook setup, Java/Jing prerequisites
 and hook-applied formatting changes.
 
@@ -52,23 +56,34 @@ Route role-specific additions to the collection instead.
 
 ## Requirements
 
-- Native `x86_64` or `aarch64` host; cross-architecture builds are rejected
-- Linux: KIWI system dependencies and `uv`; QEMU, EFI firmware, libguestfs and OpenSSH for testing
-- macOS: Lima with the Fedora `kiwi-builder` VM, QEMU and `uv`
-- Python 3.14 or newer, managed through `uv`
+- Native Linux `x86_64`/`aarch64` or Apple Silicon macOS host; cross-architecture builds are rejected
+- mise: pinned development tools; Lima is installed only on macOS
+- Linux: KIWI system dependencies; QEMU, EFI firmware, libguestfs and OpenSSH for testing
+- Apple Silicon macOS: Lima with the Fedora `kiwi-builder` VM and system QEMU
+- Python: managed through `uv` using `.python-version`; Python dependencies locked in `uv.lock`
+- Java/Jing: required for KIWI description validation in hooks
 
 ## Commands
 
 ```bash
-uv run --frozen poe build [version] [arch]
-uv run --frozen poe test
-uv run --frozen poe check
-uv run --frozen poe check-all
-uv run --frozen poe doctor
-uv run --frozen poe clean
+mise run build [version] [arch]
+mise run test
+mise run check
+mise run check-all
+mise run check-artifacts
+mise run check-workflows
+mise run lint
+mise run doctor
+mise run clean
+mise run lima-create
+mise run lima-cmd [command] [instance]
 ```
 
-Use `uv run --frozen poe doctor [--scope build|test|all]` for read-only host prerequisite diagnostics
+Use `mise run lint` for `prek run --all-files`; review hook-applied changes.
+Use `lima-create` and `lima-cmd` only on macOS.
+See [toolchain setup](docs/development.md#setup) for tool pins and hook environments.
+
+Use `mise run doctor [--scope build|test|all]` for read-only host prerequisite diagnostics
 (default: `all`). It does not install tools or launch/start guests; diagnostics are not build or runtime proof.
 
 ## Handoff and Limits

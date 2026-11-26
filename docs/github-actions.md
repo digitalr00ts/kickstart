@@ -15,19 +15,23 @@ Workflow definitions are not evidence of a successful end-to-end image build or 
 ## Source Checks
 
 ```bash
-uv tool install pre-commit
-pre-commit run --all-files
+mise install
+mise run setup
+mise run lint
 ```
 
-Use `prek run --all-files` if already installed. Install Java/Jing for KIWI description validation.
+Install mise first; use `mise run lint` for `prek run --all-files`. Install system Java/Jing for KIWI description validation.
+Share tool pins from `mise.toml` and `mise.lock` between local checks and CI through `mise exec` system hooks;
+retain isolated KIWI and Ansible hook environments. See [Development](development.md#local-validation-commands)
+for manual-stage checks and hook side effects.
 Run lightweight helper regressions with:
 
 ```bash
-uv run --frozen poe check-all
+mise run check-all
 ```
 
-Use `poe check-all` for Python, Node artifact and workflow regressions without hooks; install Node.js.
-Retain `poe check` for the Python-only suite; it installs the test dependency group with the frozen lockfile.
+Use `mise run check-all` for Python, Node artifact and workflow regressions without hooks; `mise install` supplies Node.js.
+Retain `mise run check` for the Python-only suite; it installs the test dependency group with the frozen lockfile.
 For direct execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 CI runs helper regressions on `ubuntu-24.04` and `macos-latest`; these mocked/schema checks do not validate
 image assembly, KVM/HVF boot or physical hardware. The pre-commit job runs separately on Linux.
@@ -61,7 +65,7 @@ Use KVM when accessible; the workflow explicitly requests TCG otherwise. TCG can
 Run the same scenario locally with:
 
 ```bash
-uv run --group test --frozen molecule test -s qemu
+mise run test
 ```
 
 The workflow attempts Molecule destruction after tests and reports actual integrity, test and cleanup outcomes.

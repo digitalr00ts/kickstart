@@ -3,10 +3,11 @@
 ## Objective and Sources
 
 Build minimal Fedora images for personal infrastructure, including laptops and servers.
-Support native `x86_64` and `aarch64` development and testing on Linux and macOS.
+Support native `x86_64` and `aarch64` development and testing on Linux, and `aarch64` on macOS.
 Treat QCOW2 as the current VM artifact; physical installation remains outside the implemented workflow.
 
-Read `pyproject.toml` before changing tasks or dependency groups; use `uv.lock` for resolved versions.
+Read `mise.toml` and `mise.lock` before changing tasks or tool pins.
+Read `pyproject.toml` before changing Python dependency groups; retain `uv`, `.python-version` and `uv.lock` for Python management.
 Read `docs/building.md` before changing image assembly, architecture selection, output paths, or deployment access.
 Read `docs/testing.md` before changing guest startup, authentication, firmware, verification, or teardown.
 Read `docs/github-actions.md` before changing artifact selection, uploads, retention, or workflow behavior.
@@ -48,18 +49,21 @@ Reject cross-architecture build requests; treat explicit QEMU TCG as a slower ru
 Run from the repository root:
 
 ```sh
-uv run --frozen poe check-all
-pre-commit run --all-files
+mise install
+mise run setup
+mise run check-all
+mise run lint
 ```
 
-Use `prek run --all-files` instead when that runner is installed; both consume `.pre-commit-config.yaml`.
+Use `mise run setup` for frozen test dependency sync and `prek install`; use `mise run lint` for `prek run --all-files`.
+Share mise tool pins through system hooks using `mise exec`; retain isolated KIWI and Ansible hook environments.
 Use `check-all` for Python, Node artifact and workflow tests without hooks; retain `check` for Python-only tests.
 Follow `docs/development.md` for aggregate checks, setup, Java/Jing prerequisites, and hook side effects.
-Use `uv run --frozen poe doctor [--scope build|test|all]` (default `all`) for read-only host prerequisite diagnostics.
+Use `mise run doctor [--scope build|test|all]` (default `all`) for read-only host prerequisite diagnostics.
 Keep diagnostics separate from runtime proof; doctor does not install tools or launch/start guests.
 Write Python regressions with stdlib `unittest` in `tests/test_*.py`; use Node's native test runner for `tests/test_*.cjs`.
 Exercise error paths with mocks/shims before running privileged builds or guests.
-When runtime validation is required, run `uv run --frozen poe build`, then `uv run --frozen poe test`.
+When runtime validation is required, run `mise run build`, then `mise run test`.
 Report helper tests, real image builds, VM boots, and physical-hardware validation as separate evidence.
 
 ## Implementation Conventions

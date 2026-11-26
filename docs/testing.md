@@ -2,7 +2,7 @@
 
 Validate a built Fedora QCOW2 image with Molecule and native QEMU on Linux or macOS.
 Install the [host dependencies](building.md#prerequisites) first. These checks validate a VM, not physical hardware.
-Run `uv run --frozen poe doctor --scope test` for read-only host prerequisite diagnostics; use `--scope build`
+Run `mise run doctor --scope test` for read-only host prerequisite diagnostics; use `--scope build`
 for build prerequisites or omit `--scope` for the default `all` scope. Doctor does not install tools or
 create, start or launch guests, including the Lima builder. Diagnostics are not runtime proof.
 
@@ -11,8 +11,8 @@ create, start or launch guests, including the Lima builder. Diagnostics are not 
 Build an image, then run the Molecule scenario:
 
 ```bash
-uv run --frozen poe build
-uv run --frozen poe test
+mise run build
+mise run test
 ```
 
 Run the equivalent explicit command when controlling Molecule directly:
@@ -48,7 +48,7 @@ Set `QEMU_ACCEL=tcg` explicitly to use slower software emulation when native acc
 there is no silent local fallback:
 
 ```bash
-QEMU_ACCEL=tcg uv run --frozen poe test
+QEMU_ACCEL=tcg mise run test
 ```
 
 Configure runtime inputs as needed:
@@ -116,11 +116,12 @@ VM compatibility evidence does not establish deployment provisioning or physical
 Run checks that do not require a built image or a running guest:
 
 ```bash
-uv run --frozen poe check-all
+mise run check-all
 ```
 
-`check-all` aggregates the existing Python, Node artifact and workflow suites without running hooks; install Node.js.
-Use `uv run --frozen poe check` for Python-only regressions with the required Molecule test dependencies,
+`check-all` aggregates the existing Python, Node artifact and workflow suites without running hooks;
+run `mise install` and `mise run setup` first to install pinned tools and Python test dependencies.
+Use `mise run check` for Python-only regressions with the required Molecule test dependencies,
 even for no-VM schema checks. See the [Development Guide](development.md) for aggregate checks and hooks.
 For direct execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 CI runs these helper regressions on native Linux and macOS hosts; those jobs do not build or boot images.
