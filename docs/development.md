@@ -1,7 +1,7 @@
 # Development Guide
 
 Change the minimal Fedora base here; keep applications, machine roles and site-specific configuration in
-[`drts.casc`](https://github.com/drts01/ansible-collection). Read the [ownership boundary](../README.md#ownership)
+[`drts.casc`](https://github.com/drts01/ansible-collection). Read the [ownership boundary](https://github.com/digitalr00ts/kickstart/blob/main/README.md#ownership)
 before adding packages or services.
 
 ## Setup
@@ -95,6 +95,25 @@ Use these tasks for narrower feedback:
 For direct Python execution, run `uv run --group test --frozen python -m unittest discover -s tests -p 'test_*.py'`.
 The runner is stdlib `unittest`, but schema checks require Molecule from the test group even without a VM.
 These helper checks do not build or boot an image.
+
+## Documentation Site
+
+Use [Zensical](https://zensical.org/) to render the existing `docs/` Markdown without maintaining separate site content.
+Keep documentation dependencies in the `docs` group, separate from image-build and test dependencies.
+Run from the repository root:
+
+```bash
+mise run docs-build
+mise run docs-serve
+```
+
+Build with the frozen `uv.lock` into ignored `site/`; `docs-build` fails on Zensical warnings.
+Preview at <http://127.0.0.1:8000>; stop the preview with Ctrl+C.
+Both tasks sync the docs dependency group automatically; `mise run setup` remains unchanged.
+Configure site metadata and navigation in `zensical.toml`; retain `docs/README.md` as the homepage.
+Keep relative links between documentation pages and use GitHub URLs for files outside `docs/`.
+CI checks the site separately from image workflows; hosting and publishing are not configured.
+Set `project.site_url` when selecting a hosting destination.
 
 ## Host Prerequisite Diagnostics
 

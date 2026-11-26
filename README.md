@@ -101,6 +101,9 @@ Use `mise run doctor [--scope build|test|all]` for read-only host prerequisite d
 
 ## Documentation
 
+Build the documentation site with `mise run docs-build`, or preview at <http://127.0.0.1:8000> with
+`mise run docs-serve`. See [Documentation Site](docs/development.md#documentation-site) for configuration and dependency details.
+
 - [Docs Start Here](docs/README.md)
 - [Building Guide](docs/building.md)
 - [Testing Guide](docs/testing.md)

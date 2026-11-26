@@ -1,0 +1,14 @@
+[project]
+site_name        = "Fedora Image Builder"
+site_description = "Build and validate minimal Fedora base images for Ansible-managed infrastructure."
+repo_url         = "https://github.com/digitalr00ts/kickstart"
+docs_dir         = "docs"
+site_dir         = "site"
+nav              = [
+  { "Home" = "README.md" },
+  { "Building" = "building.md" },
+  { "Testing" = "testing.md" },
+  { "Troubleshooting" = "troubleshooting.md" },
+  { "Development" = "development.md" },
+  { "CI and Automation" = "github-actions.md" },
+]

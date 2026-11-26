@@ -33,7 +33,7 @@ Use `mise run lint` for hooks. `check-all` runs Python, Node artifact and workfl
 
 ## Quick Navigation
 
-- Base ownership and contributor/operator quickstarts: [Project README](../README.md)
+- Base ownership and contributor/operator quickstarts: [Project README](https://github.com/digitalr00ts/kickstart/blob/main/README.md)
 - Build outputs and collection handoff: [Building Guide](building.md#handoff-to-drtscasc)
 - Proposed collection compatibility acceptance criteria (not implemented):
   [Testing Guide](testing.md#proposed-collection-compatibility-stage-not-implemented)

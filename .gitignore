@@ -40,6 +40,9 @@ __pycache__/
 # Molecule
 .molecule/
 
+# Documentation output
+/site/
+
 # Tool caches
 .*cache/
 

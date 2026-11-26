@@ -58,6 +58,14 @@ run         = [ { task = "check" }, { task = "check-artifacts" }, { task = "chec
 description = "Run active hooks on all tracked files"
 run         = "prek run --all-files"
 
+[tasks.docs-build]
+description = "Build the Zensical documentation site, failing on warnings"
+run         = "uv run --group docs --frozen zensical build --strict"
+
+[tasks.docs-serve]
+description = "Preview the Zensical documentation site on loopback"
+run         = "uv run --group docs --frozen zensical serve --dev-addr 127.0.0.1:8000"
+
 [tasks.doctor]
 description = "Check host prerequisites without project dependency sync or launching guests"
 run         = "uv run --no-project python scripts/doctor.py"
