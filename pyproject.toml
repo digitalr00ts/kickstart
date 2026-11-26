@@ -12,6 +12,7 @@ classifiers     = [
 
 [dependency-groups]
 build = [ "kiwi[markup]; sys_platform=='linux'" ]
+docs  = [ "zensical>=0.1.3" ]
 test  = [ "molecule>=26.4" ]
 
 [tool.ruff]
