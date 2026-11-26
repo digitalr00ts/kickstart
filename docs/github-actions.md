@@ -9,7 +9,7 @@ Workflow definitions are not evidence of a successful end-to-end image build or 
 | --- | --- | --- |
 | `ci.yaml` | Push and pull request | Native Linux/macOS no-VM regressions; separate Linux pre-commit hooks through `prek` |
 | `build.yml` | Selected source changes; manual dispatch | Native Fedora 44 image build and artifact upload |
-| `test-image.yml` | Manual dispatch | Artifact retrieval, integrity checks and real Molecule VM validation |
+| `test-image.yml` | Successful trusted `main` push build; manual dispatch | Artifact retrieval, integrity checks and real Molecule VM validation |
 | `cleanup-artifacts.yml` | Weekly schedule; manual dispatch | Expiry-aware artifact cleanup or preview |
 
 ## Source Checks
@@ -52,7 +52,13 @@ Build metadata is uploaded separately with 90-day retention.
 
 ## Artifact Retrieval and VM Validation
 
-Dispatch **Test Kiwi NG Image** with the native image architecture. Optionally provide a successful Build `run_id`
+Run image tests automatically after a successful **Build** triggered by a same-repository push to `main`.
+Exclude pull-request builds, fork builds, unsuccessful builds and other branches. Automatic runs test the default `x86_64`
+artifact from that exact completed build run and check out its source commit. This adds a VM-test job per qualifying build;
+it is a post-build check, not a prerequisite for uploading the build artifact. Keep token permissions read-only.
+The workflow must exist on the default branch for GitHub to deliver completion events.
+
+Dispatch **Test Kiwi NG Image** manually with the native image architecture. Optionally provide a successful Build `run_id`
 and exact `artifact_name` for reproducible selection. Without a run ID, search successful same-repository Build runs
 for the latest matching unexpired image artifact. Reject ambiguous matches and expired or wrong-architecture artifacts.
 Download from the selected run using its run ID, not from the current Test workflow run.
@@ -70,6 +76,10 @@ mise run test
 ```
 
 The workflow attempts Molecule destruction after tests and reports actual integrity, test and cleanup outcomes.
+On failure, upload only `console.log` and `supervisor.log` after the cleanup attempt, with seven-day retention.
+The runtime snapshots these logs outside private state before deleting it, including on startup failure; missing logs are ignored.
+Never upload overlays, keys or the full runtime directory. Logs are not redacted; treat them as diagnostic artifacts subject to
+repository artifact access controls.
 Artifact integrity alone does not establish guest boot success. See [Testing](testing.md) for overlay isolation and logs.
 
 ## Artifact Cleanup

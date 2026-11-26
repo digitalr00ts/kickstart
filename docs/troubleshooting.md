@@ -119,7 +119,7 @@ Symptom:
 
 Fix:
 
-- Inspect the failing phase and guest logs before removing state.
+- Inspect the failing phase and guest logs before removing state; retrieve the seven-day failure-log artifact in CI.
 - Inspect `VM_LOG_DIR` when configured; teardown snapshots only console and supervisor logs there.
 - For a completed-boot timeout, inspect the console for units that remain activating; do not repair the base during verification.
 - Confirm packages and services are supplied by the image; converge does not repair missing packages.

@@ -68,7 +68,7 @@ Configure runtime inputs as needed:
 | `LIMA_INSTANCE` | macOS builder used for offline customization, default `kiwi-builder`; use the same value for builds and tests |
 | `VM_SSH_PORT` | Loopback SSH forwarding port, default `2222`; allowed range `1024`–`65535` |
 | `QEMU_ACCEL` | Linux `kvm` or macOS `hvf`; explicitly choose `tcg` for software emulation |
-| `VM_LOG_DIR` | Optional directory for teardown snapshots of only `console.log` and `supervisor.log` |
+| `VM_LOG_DIR` | Optional directory for teardown snapshots of only `console.log` and `supervisor.log`; CI sets this outside private runtime state |
 | `QEMU_EFI_CODE` | EFI code firmware file; set together with `QEMU_EFI_VARS` |
 | `QEMU_EFI_VARS` | Matching EFI variables template; copied into private state before boot |
 

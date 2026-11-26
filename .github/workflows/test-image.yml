@@ -2,6 +2,10 @@
 name: Test Kiwi NG Image
 
 on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       arch:
@@ -28,6 +32,13 @@ env:
 
 jobs:
   test:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 90
     env:
@@ -36,12 +47,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Configure VM diagnostic snapshots
+        env:
+          VM_LOG_DIR: ${{ runner.temp }}/vm-test-logs
+        run: printf 'VM_LOG_DIR=%s\n' "$VM_LOG_DIR" >> "$GITHUB_ENV"
 
       - name: Select image from a successful Build run in this repository
         id: artifact
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
-          REQUESTED_RUN: ${{ inputs.run_id }}
+          REQUESTED_RUN: ${{ inputs.run_id || github.event.workflow_run.id }}
           REQUESTED_ARTIFACT: ${{ inputs.artifact_name }}
         with:
           github-token: ${{ github.token }}
@@ -112,6 +130,17 @@ jobs:
         id: cleanup
         if: always() && steps.molecule.outcome != 'skipped'
         run: uv run --group test --frozen molecule destroy -s qemu
+
+      - name: Upload failed VM diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: vm-test-logs-${{ env.IMAGE_ARCH }}-${{ github.run_id }}
+          path: |
+            ${{ env.VM_LOG_DIR }}/console.log
+            ${{ env.VM_LOG_DIR }}/supervisor.log
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Report actual test outcomes
         if: always()
