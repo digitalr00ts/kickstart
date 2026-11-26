@@ -1,22 +1,44 @@
 ---
 name: CI
 
-on: push
+on: [push, pull_request]
 
-env:
-  MOLECULE_POLICY_MODE: strict
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name || github.sha }}
   cancel-in-progress: true
 
 jobs:
+  regression:
+    name: Host regression (${{ matrix.os }}, no VM)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - name: Test host mocks and schema (no image build or VM)
+        run: uv run --group test --frozen poe check
+      - name: Test workflow helpers (no image build or VM)
+        run: |
+          node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs
+          uv run --group test --frozen python -B -m unittest discover -s .github/workflows -p 'test_*.py'
+
   prek:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Install Jing  # RELAX NG validator for KIWI image descriptions
-        run: sudo apt install jing
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jing
       - name: Run pre-commit
         uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2
