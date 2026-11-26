@@ -46,12 +46,12 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     timeout-minutes: 120
     # Unverified on hosted runners: privileged mode shares the host kernel and
     # still requires usable loop devices/mounts. This is not Fedora VM isolation.
     container:
-      image: fedora:44
+      image: library/fedora@sha256:15da97ed9aa94dd3d92c3925eb89520f6c80e07ea7ee24cba848d1f8b6912b3e  # 44
       options: --privileged
     defaults:
       run:
@@ -65,10 +65,10 @@ jobs:
         run: dnf install -y git sudo tar zstd findutils kiwi-systemdeps jing python3
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@v7.0.1
 
       - name: Install build tools
-        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78  # v5.3.0
+        uses: jdx/mise-action@v5.3.0
         with:
           version: 2026.11.14
           install_args: uv
@@ -126,7 +126,7 @@ jobs:
           PY
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ${{ steps.package.outputs.artifact }}
           path: ${{ steps.package.outputs.artifact }}.tar.zst
@@ -135,7 +135,7 @@ jobs:
           compression-level: 0
 
       - name: Upload build metadata
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: build-metadata-${{ env.BUILD_ARCH }}-${{ github.sha }}
           path: build-metadata.json

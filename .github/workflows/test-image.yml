@@ -39,14 +39,14 @@ jobs:
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'main' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
-    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     timeout-minutes: 90
     env:
       IMAGE_ARCH: ${{ inputs.arch || 'x86_64' }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
@@ -57,7 +57,7 @@ jobs:
 
       - name: Select image from a successful Build run in this repository
         id: artifact
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9
+        uses: actions/github-script@v9.0.0
         env:
           REQUESTED_RUN: ${{ inputs.run_id || github.event.workflow_run.id }}
           REQUESTED_ARTIFACT: ${{ inputs.artifact_name }}
@@ -68,7 +68,7 @@ jobs:
             await selectArtifact({ github, context, core });
 
       - name: Download selected artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+        uses: actions/download-artifact@v8.0.2
         with:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
@@ -82,7 +82,7 @@ jobs:
           sudo apt-get install -y ovmf qemu-efi-aarch64 libguestfs-tools zstd openssh-client
 
       - name: Install test tools
-        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78  # v5.3.0
+        uses: jdx/mise-action@v5.3.0
         with:
           version: 2026.11.14
           install_args: uv qemu
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload failed VM diagnostics
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: vm-test-logs-${{ env.IMAGE_ARCH }}-${{ github.run_id }}
           path: |
