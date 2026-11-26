@@ -1,7 +1,16 @@
 #!/bin/bash
 set -euxo pipefail
 
-passwd -l root || true
+passwd -l root
+passwd -l admin
+
+install -d -m 0755 /etc/ssh/sshd_config.d
+cat > /etc/ssh/sshd_config.d/00-image.conf <<'EOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes
+EOF
 
 cat >> /etc/dnf/dnf.conf <<'EOF'
 install_weak_deps=False

@@ -24,6 +24,11 @@ image:
     - '@name': glibc-langpack-en
     - '@name': kernel
     - '@name': efibootmgr
+    - '@name': openssh-server
+    - '@name': NetworkManager
+    - '@name': firewalld
+    - '@name': sudo
+    - '@name': python3
     - '@name': dracut-kiwi-oem-repart  # required for oem-resize
   - '@type': image
     '@profiles': x86_64
@@ -89,5 +94,5 @@ image:
       '@groups': wheel
       '@home': /home/admin
       '@name': admin
-      '@password': $6$adminsalt$/RCXK82SD7SIBMNJCijpnuFll5F8Dic6XahiA0Vkm55Ro6w/voHWISiSMm5YcIxS6AA6BFHfYHrUmpHgBZFDp1
+      '@password': '!'
       '@pwdformat': encrypted
