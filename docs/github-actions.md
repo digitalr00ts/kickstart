@@ -7,7 +7,8 @@ Workflow definitions are not evidence of a successful end-to-end image build or 
 
 | Workflow | Trigger | Responsibility |
 | --- | --- | --- |
-| `ci.yaml` | Push and pull request | Native Linux/macOS no-VM regressions; separate Linux docs build and pre-commit hooks through `prek` |
+| `ci.yaml` | Push and pull request | Native Linux/macOS no-VM regressions; separate Linux pre-commit hooks through `prek` |
+| `docs.yml` | Push to `trunk`, pull request; manual dispatch | Strict documentation build; publish trusted `trunk` builds to GitHub Pages |
 | `build.yml` | Selected source changes; manual dispatch | Native Fedora 44 image build and artifact upload |
 | `test-image.yml` | Successful trusted `main` push build; manual dispatch | Artifact retrieval, integrity checks and real Molecule VM validation |
 | `cleanup-artifacts.yml` | Weekly schedule; manual dispatch | Expiry-aware artifact cleanup or preview |
@@ -36,11 +37,21 @@ For direct execution, run `uv run --group test --frozen python -m unittest disco
 CI runs helper regressions on `ubuntu-24.04` and `macos-latest`; these mocked/schema checks do not validate
 image assembly, KVM/HVF boot or physical hardware. The pre-commit job runs separately on Linux.
 
-## Documentation Checks
+## Documentation Publishing
 
 Run `mise run docs-build` to build the Zensical site with frozen docs dependencies and fail on warnings.
-The separate Linux docs job in `ci.yaml` runs on pushes and pull requests, without building images or launching VMs.
-Keep generated `site/` output untracked; this job does not upload or publish the site.
+Use `docs.yml` to check pull requests and publish successful builds from `trunk`, without building images or launching VMs.
+Manual dispatch also publishes only when the selected ref is `trunk`; pull requests never upload or deploy Pages artifacts.
+Upload only generated `site/` output as the Pages artifact with one-day retention; keep it untracked.
+Grant `pages: write` and `id-token: write` only to the deploy job, after the read-only build succeeds.
+Serialize deployments in the `github-pages` concurrency group without cancelling an active deployment.
+
+Enable the site once under **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+Configure the `github-pages` environment to permit deployments only from `trunk`.
+Push the workflow to `trunk`, or dispatch **Documentation** from `trunk`, then check the deployment URL:
+<https://digitalr00ts.github.io/kickstart/>. The URL becomes available only after a successful deployment.
+Treat published documentation as public; do not include credentials or private operational data in `docs/`.
+To roll back, revert the documentation change on `trunk` and let the workflow redeploy.
 See [Documentation Site](development.md#documentation-site) for local preview and configuration.
 
 ## Native Image Builds

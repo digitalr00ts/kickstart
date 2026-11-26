@@ -1,7 +1,7 @@
 # Development Guide
 
 Change the minimal Fedora base here; keep applications, machine roles and site-specific configuration in
-[`drts.casc`](https://github.com/drts01/ansible-collection). Read the [ownership boundary](https://github.com/digitalr00ts/kickstart/blob/main/README.md#ownership)
+[`drts.casc`](https://github.com/drts01/ansible-collection). Read the [ownership boundary](https://github.com/digitalr00ts/kickstart/blob/trunk/README.md#ownership)
 before adding packages or services.
 
 ## Setup
@@ -112,8 +112,9 @@ Preview at <http://127.0.0.1:8000>; stop the preview with Ctrl+C.
 Both tasks sync the docs dependency group automatically; `mise run setup` remains unchanged.
 Configure site metadata and navigation in `zensical.toml`; retain `docs/README.md` as the homepage.
 Keep relative links between documentation pages and use GitHub URLs for files outside `docs/`.
-CI checks the site separately from image workflows; hosting and publishing are not configured.
-Set `project.site_url` when selecting a hosting destination.
+Use the separate [documentation workflow](github-actions.md#documentation-publishing) to check pull requests and publish
+`trunk` to GitHub Pages. Set `project.site_url` to `https://digitalr00ts.github.io/kickstart/` for the project-site base path.
+Enable GitHub Actions as the Pages source before the first deployment.
 
 ## Host Prerequisite Diagnostics
 
