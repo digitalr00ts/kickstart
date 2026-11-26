@@ -222,11 +222,25 @@ def checked_state(pointer):
     return state
 
 
+def archive_logs(state):
+    destination = os.environ.get("VM_LOG_DIR")
+    if destination:
+        directory = Path(destination)
+        directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+        for name in ("console.log", "supervisor.log"):
+            source = state / name
+            if source.is_file() and not source.is_symlink():
+                shutil.copyfile(source, directory / name)
+
+
 def destroy(pointer, config):
     if pointer.exists():
         state = checked_state(pointer)
         # Never signal a saved PID or delete a disk until its owning supervisor acknowledges exit.
-        rpc(state, "stop")
+        try:
+            rpc(state, "stop")
+        finally:
+            archive_logs(state)
         shutil.rmtree(state)
         pointer.unlink()
     config.write_text("[]\n")

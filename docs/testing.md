@@ -68,6 +68,7 @@ Configure runtime inputs as needed:
 | `LIMA_INSTANCE` | macOS builder used for offline customization, default `kiwi-builder`; use the same value for builds and tests |
 | `VM_SSH_PORT` | Loopback SSH forwarding port, default `2222`; allowed range `1024`–`65535` |
 | `QEMU_ACCEL` | Linux `kvm` or macOS `hvf`; explicitly choose `tcg` for software emulation |
+| `VM_LOG_DIR` | Optional directory for teardown snapshots of only `console.log` and `supervisor.log` |
 | `QEMU_EFI_CODE` | EFI code firmware file; set together with `QEMU_EFI_VARS` |
 | `QEMU_EFI_VARS` | Matching EFI variables template; copied into private state before boot |
 
@@ -90,6 +91,10 @@ Inspect `console.log` and `supervisor.log` in the private state directory report
 Do not delete overlays or source images while a guest is running. If cleanup cannot confirm shutdown, the runtime
 retains private state rather than risk deleting a live disk; preserve that state while investigating.
 Never deploy a test overlay: it contains temporary access credentials and test-only sudo policy.
+Set `VM_LOG_DIR` before creation and destruction to preserve logs even when startup failure triggers cleanup.
+Snapshot logs after attempting supervisor-confirmed shutdown, including when shutdown fails; retain live state on unconfirmed
+shutdown. Do not upload the private state directory, overlays or keys. Log snapshots are not redacted; review their contents
+before sharing outside the repository's normal artifact access boundary.
 
 ## Proposed Collection Compatibility Stage (Not Implemented)
 

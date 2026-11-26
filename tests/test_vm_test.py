@@ -178,6 +178,43 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(json.loads(self.config.read_text()), [])
         vm.destroy(self.pointer, self.config)
 
+    def test_destroy_archives_only_logs_after_shutdown(self):
+        destination = self.home / "logs"
+        os.environ["VM_LOG_DIR"] = str(destination)
+        self.pointer.write_text(str(self.state))
+        for name in ("console.log", "supervisor.log", "id_ed25519", "disk.qcow2"):
+            (self.state / name).write_text(name)
+        with patch.object(vm, "rpc") as rpc:
+            rpc.side_effect = lambda *_: (self.state / "console.log").write_text("final console")
+            vm.destroy(self.pointer, self.config)
+        self.assertEqual(sorted(path.name for path in destination.iterdir()), ["console.log", "supervisor.log"])
+        self.assertEqual((destination / "console.log").read_text(), "final console")
+        self.assertFalse(self.state.exists())
+
+    def test_unconfirmed_shutdown_still_archives_logs_and_retains_state(self):
+        destination = self.home / "logs"
+        os.environ["VM_LOG_DIR"] = str(destination)
+        self.pointer.write_text(str(self.state))
+        (self.state / "console.log").write_text("boot failure")
+        (self.state / "supervisor.log").symlink_to(self.home / "secret")
+        (self.home / "secret").write_text("not a log")
+        with patch.object(vm, "rpc", side_effect=ConnectionRefusedError), self.assertRaises(ConnectionRefusedError):
+            vm.destroy(self.pointer, self.config)
+        self.assertEqual((destination / "console.log").read_text(), "boot failure")
+        self.assertFalse((destination / "supervisor.log").exists())
+        self.assertTrue(self.state.exists())
+        self.assertTrue(self.pointer.exists())
+
+    def test_log_archive_failure_preserves_state_after_stopping(self):
+        os.environ["VM_LOG_DIR"] = str(self.home / "logs")
+        self.pointer.write_text(str(self.state))
+        (self.state / "console.log").touch()
+        with patch.object(vm, "rpc") as rpc, patch.object(vm.shutil, "copyfile", side_effect=OSError), self.assertRaises(OSError):
+            vm.destroy(self.pointer, self.config)
+        rpc.assert_called_once_with(self.state, "stop")
+        self.assertTrue(self.state.exists())
+        self.assertTrue(self.pointer.exists())
+
     def test_unconfirmed_shutdown_keeps_overlay_keys_and_pointer(self):
         self.pointer.write_text(str(self.state))
         (self.state / "disk.qcow2").touch()
