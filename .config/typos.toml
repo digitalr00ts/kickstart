@@ -1,2 +1,2 @@
 [files]
-extend-exclude = ["*.lock", "output/**", "build/**", "*.qcow2", "*.iso", "*.box"]
+extend-exclude = [ "*.lock", "output/**", "build/**", "*.qcow2", "*.iso", "*.box" ]
