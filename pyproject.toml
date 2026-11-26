@@ -11,42 +11,8 @@ classifiers = [
 ]
 
 [dependency-groups]
-dev = [ "poethepoet>=0.35" ]
 test = [ "molecule>=26.4" ]
 build = [ "kiwi[markup]; sys_platform=='linux'" ]
 
 [tool.ruff]
 extend = ".config/ruff.toml"
-
-[tool.poe]
-executor = "simple"
-env.LIMA_INSTANCE.default = "kiwi-builder"
-shell_interpreter = "bash"
-tasks.build.args = [
-  { name = "version", positional = true, default = "44", help = "Target Fedora version" },
-  { name = "arch", positional = true, default = "", help = "Target architecture (x86_64, aarch64) [default: auto-detect]" },
-]
-tasks.build.cmd = "scripts/build.sh ${version} ${arch}"
-tasks.build.help = "Build Fedora image with Kiwi NG (Lima on macOS, native on Linux)"
-tasks.clean.cmd = "rm -rf output/ build/ .kiwi-* ./*.qcow2"
-tasks.clean.help = "Remove all build artifacts"
-tasks.lima-create.cmd = 'limactl start --tty=false "lima/${LIMA_INSTANCE}.yaml"'
-tasks.lima-create.help = "Create and start Lima instance for building (macOS only)"
-tasks.lima-cmd.args = [
-  { name = "command", positional = true, default = "stop", help = "Lima command to run (start, delete, stop)" },
-  { name = "instance", positional = true, default = "${LIMA_INSTANCE}", help = "Lima VM name" },
-]
-tasks.lima-cmd.cmd = "limactl ${command} ${instance}"
-tasks.lima-cmd.help = "Control Lima instance (macOS only)"
-tasks.test.cmd = "uv run --group test --frozen molecule test -s qemu"
-tasks.test.help = "Test a disposable image with native QEMU (Linux and macOS)"
-tasks.check.cmd = "uv run --group test --frozen python -m unittest discover -s tests -p test_*.py"
-tasks.check.help = "Run Python regression tests without creating VMs"
-tasks.check-artifacts.cmd = "node --test tests/test_artifact_cleanup.cjs tests/test_select_artifact.cjs"
-tasks.check-artifacts.help = "Run Node artifact helper regressions without creating VMs"
-tasks.check-workflows.cmd = "uv run --group test --frozen python -m unittest discover -s .github/workflows -p test_*.py"
-tasks.check-workflows.help = "Run workflow helper regressions without creating VMs"
-tasks.check-all.sequence = [ "check", "check-artifacts", "check-workflows" ]
-tasks.check-all.help = "Run all Python, Node artifact and workflow regressions without hooks or VMs"
-tasks.doctor.cmd = "python scripts/doctor.py"
-tasks.doctor.help = "Check host prerequisites without installing tools or starting guests (--scope build|test|all)"
