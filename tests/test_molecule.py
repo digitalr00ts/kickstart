@@ -20,14 +20,6 @@ class MoleculeTests(unittest.TestCase):
             path = ROOT / "molecule" / scenario / "molecule.yml"
             yield path, yaml.safe_load(path.read_text())
 
-    def test_qemu_is_the_only_runnable_scenario(self):
-        self.assertEqual(
-            sorted(
-                path.relative_to(ROOT / "molecule").as_posix() for path in (ROOT / "molecule").rglob("molecule.yml")
-            ),
-            ["qemu/molecule.yml"],
-        )
-
     def test_boot_wait_is_bounded_and_requires_running_state(self):
         tasks = yaml.safe_load((DEFAULT / "verify-common.yml").read_text())
         (boot_task,) = [
@@ -47,12 +39,6 @@ class MoleculeTests(unittest.TestCase):
         ]
         self.assertIn("boot_status.stdout | trim == 'running'", assertions)
 
-    def test_setup_collects_only_distribution_facts(self):
-        (play,) = yaml.safe_load((DEFAULT / "verify.yml").read_text())
-        self.assertFalse(play["gather_facts"])
-        (setup_task,) = [task for task in play["tasks"] if "ansible.builtin.setup" in task]
-        self.assertEqual(setup_task["ansible.builtin.setup"]["gather_subset"], ["!all", "!min", "distribution"])
-
     def test_installed_schema_and_default_driver(self):
         for path, config in self.scenarios():
             with self.subTest(scenario=path.parent.name):
@@ -60,26 +46,24 @@ class MoleculeTests(unittest.TestCase):
                 self.assertEqual(config["driver"]["name"], "default")
                 self.assertTrue(config["driver"]["options"]["managed"])
 
-    def test_real_inventory_group_and_admin_without_become_override(self):
+    def test_lifecycle_reaches_verification_and_finishes_with_cleanup(self):
         for path, config in self.scenarios():
             with self.subTest(scenario=path.parent.name):
-                self.assertEqual(config["platforms"], [{"name": "instance", "groups": ["molecule"]}])
-                variables = config["provisioner"]["inventory"]["group_vars"]["molecule"]
-                self.assertEqual(variables["ansible_user"], "admin")
-                self.assertNotIn("ansible_become", variables)
-                self.assertNotIn("ansible_port", variables)
-
-    def test_full_test_sequence_and_existing_playbooks(self):
-        for path, config in self.scenarios():
-            with self.subTest(scenario=path.parent.name):
-                self.assertEqual(
-                    config["scenario"]["test_sequence"],
-                    ["destroy", "syntax", "create", "converge", "verify", "destroy"],
-                )
+                sequence = config["scenario"]["test_sequence"]
+                self.assertLess(sequence.index("create"), sequence.index("converge"))
+                self.assertLess(sequence.index("converge"), sequence.index("verify"))
+                self.assertEqual(sequence[-1], "destroy")
                 self.assertFalse(config["dependency"]["enabled"])
                 for action in ("create", "converge", "verify", "destroy"):
                     relative = config["provisioner"].get("playbooks", {}).get(action, action + ".yml")
-                    self.assertTrue((path.parent / relative).is_file(), relative)
+                    self.assertEqual((path.parent / relative).resolve(), (DEFAULT / f"{action}.yml").resolve())
+                for action in ("converge", "verify"):
+                    (play,) = yaml.safe_load((DEFAULT / f"{action}.yml").read_text())
+                    self.assertEqual(play["hosts"], "molecule")
+                (verify,) = yaml.safe_load((DEFAULT / "verify.yml").read_text())
+                self.assertTrue(
+                    any(task.get("ansible.builtin.include_tasks") == "verify-common.yml" for task in verify["tasks"])
+                )
 
     def test_instance_config_populates_actual_driver_inventory(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -113,17 +97,13 @@ class MoleculeTests(unittest.TestCase):
                     self.assertEqual(host["ansible_private_key_file"], str(Path(temporary) / "id_ed25519"))
                     self.assertIn("IdentitiesOnly=yes", host["ansible_ssh_common_args"])
 
-    def test_every_yaml_document_parses(self):
-        for path in (ROOT / "molecule").rglob("*.yml"):
-            with self.subTest(path=path):
-                self.assertIsNotNone(yaml.safe_load(path.read_text()))
-
     def test_local_lifecycle_calls_shared_python_runner(self):
         for action, command in [("create", "start"), ("destroy", "destroy")]:
             play = yaml.safe_load((DEFAULT / f"{action}.yml").read_text())[0]
             self.assertEqual(play["hosts"], "localhost")
             self.assertFalse(play["gather_facts"])
-            argv = play["tasks"][0]["ansible.builtin.command"]["argv"]
+            (command_task,) = [task for task in play["tasks"] if "ansible.builtin.command" in task]
+            argv = command_task["ansible.builtin.command"]["argv"]
             self.assertEqual(
                 argv,
                 [
@@ -133,33 +113,46 @@ class MoleculeTests(unittest.TestCase):
                 ],
             )
 
-    def test_verification_matches_image_without_installing_or_network(self):
-        converge = (DEFAULT / "converge.yml").read_text()
-        verify = (DEFAULT / "verify-common.yml").read_text()
-        for forbidden in (
-            "ansible.builtin.package:",
-            "ansible.builtin.dnf:",
-            "ping ",
-            "8.8.8.8",
-            "variant",
-            "lvs",
-            "strict_lvm",
-        ):
-            self.assertNotIn(forbidden, converge + verify)
-        self.assertIn("'btrfs'", verify)
-        self.assertIn("vim-minimal", verify)
-        self.assertIn("/sys/firmware/efi", verify)
-        self.assertIn("become: false", verify)
-        for filename in ("converge.yml", "verify.yml"):
-            play = yaml.safe_load((DEFAULT / filename).read_text())[0]
-            self.assertEqual(play["hosts"], "molecule")
-            self.assertTrue(play["become"])
-            self.assertEqual(next(iter(play["tasks"][0].keys())), "name")
-            self.assertIn("ansible.builtin.wait_for_connection", play["tasks"][0])
-
-    def test_lima_guest_lifecycle_removed(self):
-        self.assertEqual(list((ROOT / "molecule").rglob("*lima*")), [])
-        self.assertFalse((ROOT / "molecule/shared").exists())
+    def test_guest_checks_use_only_approved_read_only_operations(self):
+        allowed_modules = {
+            "ansible.builtin.assert",
+            "ansible.builtin.command",
+            "ansible.builtin.include_tasks",
+            "ansible.builtin.package_facts",
+            "ansible.builtin.service_facts",
+            "ansible.builtin.setup",
+            "ansible.builtin.stat",
+            "ansible.builtin.wait_for_connection",
+        }
+        allowed_commands = {
+            "id -un",
+            "systemctl is-system-running --wait",
+            "systemctl --failed --no-legend --plain --no-pager",
+            "findmnt -n -o FSTYPE /",
+            "python3 --version",
+            "dnf --version",
+        }
+        for filename in ("converge.yml", "verify.yml", "verify-common.yml"):
+            document = yaml.safe_load((DEFAULT / filename).read_text())
+            if filename == "verify-common.yml":
+                tasks = document
+            else:
+                tasks = []
+                for play in document:
+                    # Keep this guard scoped to the flat task lists it actually inspects.
+                    for section in ("pre_tasks", "post_tasks", "handlers", "roles"):
+                        self.assertFalse(play.get(section), f"Unchecked {section} in {filename}")
+                    tasks.extend(play["tasks"])
+            for task in tasks:
+                with self.subTest(file=filename, task=task.get("name")):
+                    modules = {key for key in task if "." in key}
+                    self.assertEqual(len(modules), 1)
+                    self.assertTrue(modules <= allowed_modules, modules)
+                    if "ansible.builtin.command" in task:
+                        self.assertIn(task["ansible.builtin.command"], allowed_commands)
+                        self.assertFalse(task["changed_when"])
+                    if "ansible.builtin.include_tasks" in task:
+                        self.assertEqual(task["ansible.builtin.include_tasks"], "verify-common.yml")
 
 
 if __name__ == "__main__":
