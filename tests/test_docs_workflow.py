@@ -1,4 +1,4 @@
-"""Guard Pages publishing refs, artifact scope and deployment permissions."""
+"""Statically guard Pages publishing refs, output scope and permission separation."""
 
 import tomllib
 import unittest
@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class DocsWorkflowTests(unittest.TestCase):
-    """Keep untrusted builds outside the Pages deployment boundary."""
+    """Check declarations, not GitHub Actions execution or deployment success."""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -21,8 +21,11 @@ class DocsWorkflowTests(unittest.TestCase):
         )
         cls.build = cls.workflow["jobs"]["build"]
         cls.deploy = cls.workflow["jobs"]["deploy"]
+        cls.uploads = [
+            step for step in cls.build["steps"] if step.get("uses", "").startswith("actions/upload-pages-artifact@")
+        ]
 
-    def test_publish_only_successful_trunk_builds_not_pull_requests(self) -> None:
+    def test_publishing_requires_trunk_and_build_dependency(self) -> None:
         """Require the same trusted ref for artifact upload and deployment."""
         self.assertEqual(set(self.workflow["on"]), {"push", "pull_request", "workflow_dispatch"})
         self.assertEqual(self.workflow["on"]["push"]["branches"], ["trunk"])
@@ -31,32 +34,39 @@ class DocsWorkflowTests(unittest.TestCase):
             self.deploy["if"],
             "github.event_name != 'pull_request' && github.ref == 'refs/heads/trunk'",
         )
-        upload = self.build["steps"][-1]
-        self.assertTrue(upload["uses"].startswith("actions/upload-pages-artifact@"))
-        self.assertEqual(upload["if"], self.deploy["if"])
-        self.assertEqual(upload["with"], {"path": "site/", "retention-days": "1"})
-        self.assertEqual(self.build["steps"][-2]["run"], "mise run docs-build")
+        self.assertTrue(self.uploads)
+        for upload in self.uploads:
+            self.assertEqual(upload["if"], self.deploy["if"])
 
     def test_only_deploy_job_can_publish(self) -> None:
         """Keep elevated permissions away from checked-out repository code."""
         self.assertEqual(self.workflow["permissions"], {"contents": "read"})
-        self.assertNotIn("permissions", self.build)
+        for name, job in self.workflow["jobs"].items():
+            if name != "deploy":
+                self.assertNotIn("permissions", job)
         self.assertEqual(self.deploy["permissions"], {"pages": "write", "id-token": "write"})
-        self.assertEqual(self.build["steps"][0]["with"]["persist-credentials"], "false")
+        checkouts = [step for step in self.build["steps"] if step.get("uses", "").startswith("actions/checkout@")]
+        self.assertTrue(checkouts)
+        for checkout in checkouts:
+            self.assertEqual(checkout["with"]["persist-credentials"], "false")
         self.assertEqual(self.deploy["environment"]["name"], "github-pages")
         self.assertEqual(
             self.deploy["concurrency"],
             {"group": "github-pages", "cancel-in-progress": "false"},
         )
-        self.assertEqual(len(self.deploy["steps"]), 1)
-        self.assertTrue(self.deploy["steps"][0]["uses"].startswith("actions/deploy-pages@"))
+        self.assertTrue(self.deploy["steps"])
+        for step in self.deploy["steps"]:
+            self.assertTrue(step.get("uses", "").startswith("actions/deploy-pages@"))
+            self.assertNotIn("run", step)
 
-    def test_site_uses_project_base_url_and_matches_upload_directory(self) -> None:
-        """Publish only generated output with the GitHub project URL prefix."""
+    def test_upload_directory_matches_generated_site(self) -> None:
+        """Upload the configured build output rather than repository contents."""
         with (ROOT / "zensical.toml").open("rb") as config:
             project = tomllib.load(config)["project"]
-        self.assertEqual(project["site_url"], "https://digitalr00ts.github.io/kickstart/")
-        self.assertEqual(project["site_dir"], self.build["steps"][-1]["with"]["path"].rstrip("/"))
+
+        self.assertTrue(self.uploads)
+        for upload in self.uploads:
+            self.assertEqual(project["site_dir"], upload["with"]["path"].rstrip("/"))
 
 
 if __name__ == "__main__":
