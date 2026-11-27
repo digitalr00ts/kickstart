@@ -8,11 +8,17 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import ModuleType
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def load_helpers():
+def load_helpers() -> ModuleType:
+    """Load repository VM helpers without writing bytecode; restore the import flag on failure."""
     # Importing normally can create __pycache__, violating the read-only contract.
     previous = sys.dont_write_bytecode
     sys.dont_write_bytecode = True
@@ -25,13 +31,18 @@ def load_helpers():
         sys.dont_write_bytecode = previous
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:  # noqa: PLR0912, PLR0915 - Keep diagnostics in reporting order.
+    """Report scoped prerequisites in sequence; return 1 if any check fails, otherwise 0.
+
+    Args:
+        argv: CLI arguments, or None to parse the process arguments.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scope", choices=("build", "test", "all"), default="all")
     args = parser.parse_args(argv)
     results = []
 
-    def check(ok, message):
+    def check(ok: bool | str | None, message: str) -> None:
         results.append(bool(ok))
         print(f"{'PASS' if ok else 'FAIL'}: {message}")
 
@@ -124,7 +135,7 @@ def main(argv=None):
                 )
             if system == "Darwin" and accel == "hvf":
                 try:
-                    result = subprocess.run(
+                    result = subprocess.run(  # noqa: S603 - Trusted PATH-resolved QEMU; fixed read-only probe arguments.
                         [binary, "-accel", "help"],
                         check=True,
                         timeout=5,
