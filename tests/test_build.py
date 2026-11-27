@@ -12,8 +12,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class BuildTests(unittest.TestCase):
-    def invoke(self, system="Linux", arch="x86_64", args=(), fail="", output="out with spaces", status="Running",
-               occupied="", relative_output=False, siblings=False):
+    def invoke(
+        self,
+        system="Linux",
+        arch="x86_64",
+        args=(),
+        fail="",
+        output="out with spaces",
+        status="Running",
+        occupied="",
+        relative_output=False,
+        siblings=False,
+    ):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp)
             log = directory / "commands"
@@ -42,15 +52,17 @@ class BuildTests(unittest.TestCase):
                 (output_root / "x86_64/keep").write_text("user data")
             archive = directory / "export.tar"
             with tarfile.open(archive, "w") as stream:
-                for name, data in (("image with spaces.qcow2", b"disk" * 1024),
-                                   ("image with spaces.packages", b"kernel")):
+                for name, data in (
+                    ("image with spaces.qcow2", b"disk" * 1024),
+                    ("image with spaces.packages", b"kernel"),
+                ):
                     info = tarfile.TarInfo(name)
                     info.size = len(data)
                     stream.addfile(info, io.BytesIO(data))
             if fail == "truncated":
                 archive.write_bytes(archive.read_bytes()[:700])
             shim = directory / "shim"
-            shim.write_text('''#!/bin/bash
+            shim.write_text("""#!/bin/bash
 name=${0##*/}
 printf '%s' "$name" >> "$COMMAND_LOG"
 printf ' <%s>' "$@" >> "$COMMAND_LOG"
@@ -82,22 +94,38 @@ case "$name" in
       *'sudo rm'*) [[ $FAIL_COMMAND != cleanup ]] ;;
     esac ;;
 esac
-''')
+""")
             shim.chmod(0o755)
             for name in ("uname", "uv", "sudo", "limactl", "mv"):
                 (directory / name).symlink_to(shim)
             (directory / "environment/bin").mkdir(parents=True)
             (directory / "environment/bin/kiwi-ng").symlink_to(shim)
-            env = {**os.environ, "PATH": f"{directory}:{os.environ['PATH']}",
-                   "COMMAND_LOG": str(log), "TEST_SYSTEM": system, "TEST_ARCH": arch,
-                   "FAIL_COMMAND": fail, "LIMA_STATUS": status,
-                   "OUTPUT_DIR": output if relative_output else str(output_root),
-                   "EXPORT_ARCHIVE": str(archive), "REAL_MV": "/bin/mv",
-                   "UV_PROJECT_ENVIRONMENT": str(directory / "environment")}
-            result = subprocess.run(["bash", str(ROOT / "scripts/build.sh"), *args],
-                                    cwd=directory, env=env, text=True, capture_output=True, timeout=10)
-            result.output_files = {str(path.relative_to(output_root)): path.read_bytes()
-                                   for path in output_root.rglob("*") if path.is_file()}
+            env = {
+                **os.environ,
+                "PATH": f"{directory}:{os.environ['PATH']}",
+                "COMMAND_LOG": str(log),
+                "TEST_SYSTEM": system,
+                "TEST_ARCH": arch,
+                "FAIL_COMMAND": fail,
+                "LIMA_STATUS": status,
+                "OUTPUT_DIR": output if relative_output else str(output_root),
+                "EXPORT_ARCHIVE": str(archive),
+                "REAL_MV": "/bin/mv",
+                "UV_PROJECT_ENVIRONMENT": str(directory / "environment"),
+            }
+            result = subprocess.run(
+                ["bash", str(ROOT / "scripts/build.sh"), *args],
+                cwd=directory,
+                env=env,
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            result.output_files = {
+                str(path.relative_to(output_root)): path.read_bytes()
+                for path in output_root.rglob("*")
+                if path.is_file()
+            }
             result.output_entries = sorted(path.name for path in output_root.iterdir()) if output_root.exists() else []
             result.output_symlink = final.is_symlink()
             return result, log.read_text() if log.exists() else ""
@@ -131,8 +159,10 @@ esac
         self.assertIn("<UV_PROJECT_ENVIRONMENT=/opt/kiwi-build/.venv>", commands)
         self.assertIn("/scripts/export-image.sh> </opt/kiwi-build/output/build.test/aarch64>", commands)
         self.assertIn("out with spaces/aarch64", result.stdout)
-        self.assertEqual(result.output_files, {"aarch64/image with spaces.qcow2": b"disk" * 1024,
-                                               "aarch64/image with spaces.packages": b"kernel"})
+        self.assertEqual(
+            result.output_files,
+            {"aarch64/image with spaces.qcow2": b"disk" * 1024, "aarch64/image with spaces.packages": b"kernel"},
+        )
         self.assertEqual(result.output_entries, ["aarch64"])
         self.assertIn("<sudo> <rm> <-rf> <--> </opt/kiwi-build/output/build.test>", commands)
 
@@ -179,8 +209,7 @@ esac
     def test_macos_failure_preserves_unowned_siblings(self):
         result, _ = self.invoke(system="Darwin", arch="arm64", fail="truncated", siblings=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(result.output_files, {".aarch64.user-owned/keep": b"user data",
-                                               "x86_64/keep": b"user data"})
+        self.assertEqual(result.output_files, {".aarch64.user-owned/keep": b"user data", "x86_64/keep": b"user data"})
         self.assertEqual(result.output_entries, [".aarch64.user-owned", "x86_64"])
 
     def test_macos_preserves_relative_custom_output_with_spaces(self):
@@ -214,8 +243,9 @@ esac
             (directory / "image with spaces.packages").write_text("kernel")
             (directory / "build/image-root").mkdir(parents=True)
             (directory / "build/image-root/secret").write_text("not a deliverable")
-            result = subprocess.run(["bash", str(ROOT / "scripts/export-image.sh"), tmp],
-                                    capture_output=True, check=True, timeout=10)
+            result = subprocess.run(
+                ["bash", str(ROOT / "scripts/export-image.sh"), tmp], capture_output=True, check=True, timeout=10
+            )
             with tarfile.open(fileobj=io.BytesIO(result.stdout)) as archive:
                 self.assertEqual(set(archive.getnames()), {"image with spaces.qcow2", "image with spaces.packages"})
 
@@ -225,8 +255,9 @@ esac
             for count in (0, 2):
                 for index in range(count):
                     (directory / f"image{index}.qcow2").touch()
-                result = subprocess.run(["bash", str(ROOT / "scripts/export-image.sh"), tmp],
-                                        capture_output=True, timeout=10)
+                result = subprocess.run(
+                    ["bash", str(ROOT / "scripts/export-image.sh"), tmp], capture_output=True, timeout=10
+                )
                 self.assertNotEqual(result.returncode, 0)
 
     def test_lima_error_is_not_treated_as_absent(self):

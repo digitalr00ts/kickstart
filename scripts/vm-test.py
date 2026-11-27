@@ -52,8 +52,12 @@ def image_path(arch):
     if not image.is_file():
         raise ValueError("IMAGE_PATH must be a file")
     info = json.loads(run(["qemu-img", "info", "--output=json", image], capture_output=True).stdout)
-    if (info.get("format") != "qcow2" or info.get("backing-filename") or info.get("data-file")
-            or info.get("format-specific", {}).get("data", {}).get("data-file")):
+    if (
+        info.get("format") != "qcow2"
+        or info.get("backing-filename")
+        or info.get("data-file")
+        or info.get("format-specific", {}).get("data", {}).get("data-file")
+    ):
         raise ValueError("Use a standalone QCOW2 source image")
     return image
 
@@ -67,17 +71,24 @@ def firmware(arch, binary):
     elif arch == "x86_64":
         share = Path(binary).resolve().parent.parent / "share" / "qemu"
         pairs = [(share / "edk2-x86_64-code.fd", share / "edk2-i386-vars.fd")]
-        pairs += [(Path(p) / c, Path(p) / v) for p, c, v in [
-            ("/usr/share/edk2/ovmf", "OVMF_CODE.fd", "OVMF_VARS.fd"),
-            ("/usr/share/OVMF", "OVMF_CODE_4M.fd", "OVMF_VARS_4M.fd"),
-            ("/usr/share/OVMF", "OVMF_CODE.fd", "OVMF_VARS.fd"),
-        ]]
+        pairs += [
+            (Path(p) / c, Path(p) / v)
+            for p, c, v in [
+                ("/usr/share/edk2/ovmf", "OVMF_CODE.fd", "OVMF_VARS.fd"),
+                ("/usr/share/OVMF", "OVMF_CODE_4M.fd", "OVMF_VARS_4M.fd"),
+                ("/usr/share/OVMF", "OVMF_CODE.fd", "OVMF_VARS.fd"),
+            ]
+        ]
     else:
         share = Path(binary).resolve().parent.parent / "share" / "qemu"
-        pairs = [(share / "edk2-aarch64-code.fd", share / "edk2-arm-vars.fd"),
-                 (Path("/usr/share/edk2/aarch64/QEMU_EFI-pflash.raw"),
-                  Path("/usr/share/edk2/aarch64/vars-template-pflash.raw")),
-                 (Path("/usr/share/AAVMF/AAVMF_CODE.fd"), Path("/usr/share/AAVMF/AAVMF_VARS.fd"))]
+        pairs = [
+            (share / "edk2-aarch64-code.fd", share / "edk2-arm-vars.fd"),
+            (
+                Path("/usr/share/edk2/aarch64/QEMU_EFI-pflash.raw"),
+                Path("/usr/share/edk2/aarch64/vars-template-pflash.raw"),
+            ),
+            (Path("/usr/share/AAVMF/AAVMF_CODE.fd"), Path("/usr/share/AAVMF/AAVMF_VARS.fd")),
+        ]
     for code, variables in pairs:
         if code.is_file() and variables.is_file():
             return code.resolve(), variables.resolve()
@@ -95,17 +106,40 @@ def qemu_command(state, arch, system):
         raise ValueError("KVM unavailable; enable /dev/kvm access or explicitly set QEMU_ACCEL=tcg")
     code, variables = firmware(arch, binary)
     shutil.copyfile(variables, state / "efi-vars.fd")
-    args = [binary, "-machine", f"{'q35' if arch == 'x86_64' else 'virt'},accel={accel}",
-            "-cpu", "max" if accel == "tcg" else "host", "-m", "2048", "-smp", "2",
-            "-display", "none", "-monitor", "none", "-serial", "stdio"]
+    args = [
+        binary,
+        "-machine",
+        f"{'q35' if arch == 'x86_64' else 'virt'},accel={accel}",
+        "-cpu",
+        "max" if accel == "tcg" else "host",
+        "-m",
+        "2048",
+        "-smp",
+        "2",
+        "-display",
+        "none",
+        "-monitor",
+        "none",
+        "-serial",
+        "stdio",
+    ]
     for unit, path, readonly in [(0, code, "on"), (1, state / "efi-vars.fd", "off")]:
         escaped = str(path).replace(",", ",,")
         args += ["-drive", f"if=pflash,unit={unit},format=raw,readonly={readonly},file={escaped}"]
-    args += ["-blockdev", json.dumps({"driver": "qcow2", "node-name": "disk",
-                                      "file": {"driver": "file", "filename": str(state / "disk.qcow2")}})]
-    return args + ["-device", "virtio-blk-pci,drive=disk",
-                   "-netdev", f"user,id=net0,restrict=on,hostfwd=tcp:127.0.0.1:{ssh_port()}-:22",
-                   "-device", "virtio-net-pci,netdev=net0"]
+    args += [
+        "-blockdev",
+        json.dumps(
+            {"driver": "qcow2", "node-name": "disk", "file": {"driver": "file", "filename": str(state / "disk.qcow2")}}
+        ),
+    ]
+    return args + [
+        "-device",
+        "virtio-blk-pci,drive=disk",
+        "-netdev",
+        f"user,id=net0,restrict=on,hostfwd=tcp:127.0.0.1:{ssh_port()}-:22",
+        "-device",
+        "virtio-net-pci,netdev=net0",
+    ]
 
 
 def customize(state, image, system):
@@ -113,24 +147,48 @@ def customize(state, image, system):
     run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", state / "id_ed25519"])
     (state / "sudoers").write_text("admin ALL=(ALL) NOPASSWD: ALL\n")
     # Replace build-time authentication only in the disposable overlay, offline.
-    (state / "sshd.conf").write_text("PasswordAuthentication no\nKbdInteractiveAuthentication no\n"
-                                     "PermitRootLogin no\nPubkeyAuthentication yes\n")
-    args = ["virt-customize", "--format", "qcow2", "-a", str(state / "disk.qcow2"), "--no-network",
-            "--run-command", ("passwd -l admin && "
-                              "rm -f /root/.ssh/authorized_keys /home/admin/.ssh/authorized_keys && "
-                              "install -d -m 0755 /etc/sudoers.d /etc/ssh/sshd_config.d"),
-            "--ssh-inject", f"admin:file:{state / 'id_ed25519.pub'}",
-            "--upload", f"{state / 'sudoers'}:/etc/sudoers.d/99-molecule",
-            "--chmod", "0440:/etc/sudoers.d/99-molecule",
-            "--chown", "0:0:/etc/sudoers.d/99-molecule",
-            "--upload", f"{state / 'sshd.conf'}:/etc/ssh/sshd_config.d/00-molecule.conf",
-            "--chown", "0:0:/etc/ssh/sshd_config.d/00-molecule.conf",
-            "--selinux-relabel"]
+    (state / "sshd.conf").write_text(
+        "PasswordAuthentication no\nKbdInteractiveAuthentication no\nPermitRootLogin no\nPubkeyAuthentication yes\n"
+    )
+    args = [
+        "virt-customize",
+        "--format",
+        "qcow2",
+        "-a",
+        str(state / "disk.qcow2"),
+        "--no-network",
+        "--run-command",
+        (
+            "passwd -l admin && "
+            "rm -f /root/.ssh/authorized_keys /home/admin/.ssh/authorized_keys && "
+            "install -d -m 0755 /etc/sudoers.d /etc/ssh/sshd_config.d"
+        ),
+        "--ssh-inject",
+        f"admin:file:{state / 'id_ed25519.pub'}",
+        "--upload",
+        f"{state / 'sudoers'}:/etc/sudoers.d/99-molecule",
+        "--chmod",
+        "0440:/etc/sudoers.d/99-molecule",
+        "--chown",
+        "0:0:/etc/sudoers.d/99-molecule",
+        "--upload",
+        f"{state / 'sshd.conf'}:/etc/ssh/sshd_config.d/00-molecule.conf",
+        "--chown",
+        "0:0:/etc/ssh/sshd_config.d/00-molecule.conf",
+        "--selinux-relabel",
+    ]
     if system == "Darwin":
         if not image.is_relative_to(Path.home().resolve()):
             raise ValueError("macOS IMAGE_PATH must be under home, shared with kiwi-builder")
-        args = ["limactl", "shell", os.environ.get("LIMA_INSTANCE", "kiwi-builder"),
-                "sudo", "env", "LIBGUESTFS_BACKEND=direct", *args]
+        args = [
+            "limactl",
+            "shell",
+            os.environ.get("LIMA_INSTANCE", "kiwi-builder"),
+            "sudo",
+            "env",
+            "LIBGUESTFS_BACKEND=direct",
+            *args,
+        ]
     run(args, env={**os.environ, "LIBGUESTFS_BACKEND": "direct"})
 
 
@@ -164,8 +222,10 @@ def stop_child(child):
 
 def supervise(state):
     child = None
+
     def interrupted(signum, frame):
         raise SystemExit(128 + signum)
+
     signal.signal(signal.SIGTERM, interrupted)
     signal.signal(signal.SIGINT, interrupted)
     try:
@@ -191,20 +251,46 @@ def supervise(state):
 
 
 def connection_config(state, port):
-    return [{"instance": "instance", "address": "127.0.0.1", "user": "admin", "port": port,
-             "identity_file": str(state / "id_ed25519")}]
+    return [
+        {
+            "instance": "instance",
+            "address": "127.0.0.1",
+            "user": "admin",
+            "port": port,
+            "identity_file": str(state / "id_ed25519"),
+        }
+    ]
 
 
 def wait_for_ssh(state, port):
-    command = ["ssh", "-F", "/dev/null", "-p", str(port), "-i", str(state / "id_ed25519"),
-               "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=no",
-               "-o", "UserKnownHostsFile=/dev/null", "-o", "ConnectTimeout=3",
-               "admin@127.0.0.1", "test \"$(id -un)\" = admin && sudo -n true"]
+    command = [
+        "ssh",
+        "-F",
+        "/dev/null",
+        "-p",
+        str(port),
+        "-i",
+        str(state / "id_ed25519"),
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "IdentitiesOnly=yes",
+        "-o",
+        "StrictHostKeyChecking=no",
+        "-o",
+        "UserKnownHostsFile=/dev/null",
+        "-o",
+        "ConnectTimeout=3",
+        "admin@127.0.0.1",
+        'test "$(id -un)" = admin && sudo -n true',
+    ]
     deadline = time.monotonic() + 240
     while time.monotonic() < deadline:
         rpc(state, "status")
         try:
-            result = subprocess.run(command, check=False, timeout=8, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            result = subprocess.run(
+                command, check=False, timeout=8, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
             if result.returncode == 0:
                 return
         except subprocess.TimeoutExpired:
@@ -216,8 +302,13 @@ def wait_for_ssh(state, port):
 def checked_state(pointer):
     state = Path(pointer.read_text().strip())
     info = state.lstat()
-    if (state.parent != Path.home().resolve() or not state.name.startswith(".molecule-vm-")
-            or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077):
+    if (
+        state.parent != Path.home().resolve()
+        or not state.name.startswith(".molecule-vm-")
+        or not stat.S_ISDIR(info.st_mode)
+        or info.st_uid != os.getuid()
+        or info.st_mode & 0o077
+    ):
         raise ValueError("Refusing unsafe VM state directory")
     return state
 
@@ -271,15 +362,20 @@ def start(pointer, config):
         pointer.write_text(str(state))
         with (state / "supervisor.log").open("ab") as log:
             launch_attempted = True
-            worker = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "_supervise", str(state)],
-                                      stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+            worker = subprocess.Popen(
+                [sys.executable, str(Path(__file__).resolve()), "_supervise", str(state)],
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=log,
+                start_new_session=True,
+            )
         for _ in range(100):
             if worker.poll() is not None:
                 raise RuntimeError(f"Supervisor failed; inspect {state / 'supervisor.log'}")
             try:
                 rpc(state, "status")
                 break
-            except (FileNotFoundError, ConnectionRefusedError):
+            except FileNotFoundError, ConnectionRefusedError:
                 time.sleep(0.1)
         else:
             raise RuntimeError("Supervisor startup timed out")
@@ -297,7 +393,7 @@ def start(pointer, config):
             # Failed cleanup intentionally retains state; do not risk deleting a live overlay.
             try:
                 destroy(pointer, config)
-            except (OSError, RuntimeError):
+            except OSError, RuntimeError:
                 print(f"Cleanup unconfirmed; retained private state: {state}", file=sys.stderr)
         raise
 

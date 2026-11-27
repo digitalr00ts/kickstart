@@ -7,9 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-spec = importlib.util.spec_from_file_location(
-    "extract_image", Path(__file__).with_name("extract-image.py")
-)
+spec = importlib.util.spec_from_file_location("extract_image", Path(__file__).with_name("extract-image.py"))
 extract_image = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(extract_image)
 

@@ -22,31 +22,36 @@ class MoleculeTests(unittest.TestCase):
 
     def test_qemu_is_the_only_runnable_scenario(self):
         self.assertEqual(
-            sorted(path.relative_to(ROOT / "molecule").as_posix()
-                   for path in (ROOT / "molecule").rglob("molecule.yml")),
+            sorted(
+                path.relative_to(ROOT / "molecule").as_posix() for path in (ROOT / "molecule").rglob("molecule.yml")
+            ),
             ["qemu/molecule.yml"],
         )
 
     def test_boot_wait_is_bounded_and_requires_running_state(self):
         tasks = yaml.safe_load((DEFAULT / "verify-common.yml").read_text())
-        boot_task, = [task for task in tasks
-                      if task.get("ansible.builtin.command") == "systemctl is-system-running --wait"]
+        (boot_task,) = [
+            task for task in tasks if task.get("ansible.builtin.command") == "systemctl is-system-running --wait"
+        ]
         self.assertIsInstance(boot_task["timeout"], int)
         self.assertGreater(boot_task["timeout"], 0)
         self.assertLessEqual(boot_task["timeout"], 240)
         self.assertEqual(boot_task["register"], "boot_status")
         self.assertFalse(boot_task["changed_when"])
         self.assertEqual(boot_task["failed_when"], "boot_status.rc not in [0, 1]")
-        assertions = [condition for task in tasks if "ansible.builtin.assert" in task
-                      for condition in task["ansible.builtin.assert"]["that"]]
+        assertions = [
+            condition
+            for task in tasks
+            if "ansible.builtin.assert" in task
+            for condition in task["ansible.builtin.assert"]["that"]
+        ]
         self.assertIn("boot_status.stdout | trim == 'running'", assertions)
 
     def test_setup_collects_only_distribution_facts(self):
-        play, = yaml.safe_load((DEFAULT / "verify.yml").read_text())
+        (play,) = yaml.safe_load((DEFAULT / "verify.yml").read_text())
         self.assertFalse(play["gather_facts"])
-        setup_task, = [task for task in play["tasks"] if "ansible.builtin.setup" in task]
-        self.assertEqual(setup_task["ansible.builtin.setup"]["gather_subset"],
-                         ["!all", "!min", "distribution"])
+        (setup_task,) = [task for task in play["tasks"] if "ansible.builtin.setup" in task]
+        self.assertEqual(setup_task["ansible.builtin.setup"]["gather_subset"], ["!all", "!min", "distribution"])
 
     def test_installed_schema_and_default_driver(self):
         for path, config in self.scenarios():
@@ -67,8 +72,10 @@ class MoleculeTests(unittest.TestCase):
     def test_full_test_sequence_and_existing_playbooks(self):
         for path, config in self.scenarios():
             with self.subTest(scenario=path.parent.name):
-                self.assertEqual(config["scenario"]["test_sequence"],
-                                 ["destroy", "syntax", "create", "converge", "verify", "destroy"])
+                self.assertEqual(
+                    config["scenario"]["test_sequence"],
+                    ["destroy", "syntax", "create", "converge", "verify", "destroy"],
+                )
                 self.assertFalse(config["dependency"]["enabled"])
                 for action in ("create", "converge", "verify", "destroy"):
                     relative = config["provisioner"].get("playbooks", {}).get(action, action + ".yml")
@@ -77,15 +84,28 @@ class MoleculeTests(unittest.TestCase):
     def test_instance_config_populates_actual_driver_inventory(self):
         with tempfile.TemporaryDirectory() as temporary:
             instance_config = Path(temporary) / "instance_config.yml"
-            instance_config.write_text(json.dumps([{
-                "instance": "instance", "address": "127.0.0.1", "port": 2345,
-                "user": "admin", "identity_file": str(Path(temporary) / "id_ed25519"),
-            }]))
+            instance_config.write_text(
+                json.dumps(
+                    [
+                        {
+                            "instance": "instance",
+                            "address": "127.0.0.1",
+                            "port": 2345,
+                            "user": "admin",
+                            "identity_file": str(Path(temporary) / "id_ed25519"),
+                        }
+                    ]
+                )
+            )
             for path, _ in self.scenarios():
                 with self.subTest(scenario=path.parent.name):
                     config = Config(str(path))
-                    with patch.object(type(config.driver), "instance_config", new_callable=PropertyMock,
-                                      return_value=str(instance_config)):
+                    with patch.object(
+                        type(config.driver),
+                        "instance_config",
+                        new_callable=PropertyMock,
+                        return_value=str(instance_config),
+                    ):
                         host = config.provisioner.inventory["molecule"]["hosts"]["instance"]
                     self.assertEqual(host["ansible_host"], "127.0.0.1")
                     self.assertEqual(host["ansible_port"], 2345)
@@ -104,14 +124,27 @@ class MoleculeTests(unittest.TestCase):
             self.assertEqual(play["hosts"], "localhost")
             self.assertFalse(play["gather_facts"])
             argv = play["tasks"][0]["ansible.builtin.command"]["argv"]
-            self.assertEqual(argv, ["{{ ansible_playbook_python }}",
-                                    "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/scripts/vm-test.py", command])
+            self.assertEqual(
+                argv,
+                [
+                    "{{ ansible_playbook_python }}",
+                    "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/scripts/vm-test.py",
+                    command,
+                ],
+            )
 
     def test_verification_matches_image_without_installing_or_network(self):
         converge = (DEFAULT / "converge.yml").read_text()
         verify = (DEFAULT / "verify-common.yml").read_text()
-        for forbidden in ("ansible.builtin.package:", "ansible.builtin.dnf:", "ping ",
-                          "8.8.8.8", "variant", "lvs", "strict_lvm"):
+        for forbidden in (
+            "ansible.builtin.package:",
+            "ansible.builtin.dnf:",
+            "ping ",
+            "8.8.8.8",
+            "variant",
+            "lvs",
+            "strict_lvm",
+        ):
             self.assertNotIn(forbidden, converge + verify)
         self.assertIn("'btrfs'", verify)
         self.assertIn("vim-minimal", verify)

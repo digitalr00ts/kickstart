@@ -91,9 +91,7 @@ class TaskTests(unittest.TestCase):
 
     def test_toolchain_targets_linux_and_apple_silicon_without_source_fallbacks(self):
         tools = self.config["tools"]
-        self.assertEqual(
-            self.config["settings"]["lockfile_platforms"], ["linux-x64", "linux-arm64", "macos-arm64"]
-        )
+        self.assertEqual(self.config["settings"]["lockfile_platforms"], ["linux-x64", "linux-arm64", "macos-arm64"])
         for binary in ("ryl", "shuck"):
             with self.subTest(tool=binary):
                 self.assertEqual(tools[binary]["os"], ["linux", "macos/arm64"])
@@ -111,9 +109,7 @@ class TaskTests(unittest.TestCase):
         self.assertEqual(locked[0]["version"], tool["version"])
         self.assertEqual(locked[0]["backend"], self.config["tool_alias"]["qemu"])
         platforms = {
-            key.removeprefix("platforms."): value
-            for key, value in locked[0].items()
-            if key.startswith("platforms.")
+            key.removeprefix("platforms."): value for key, value in locked[0].items() if key.startswith("platforms.")
         }
         self.assertEqual(set(platforms), {"linux-x64", "linux-arm64"})
         for platform, metadata in platforms.items():

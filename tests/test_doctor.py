@@ -36,15 +36,27 @@ class DoctorTests(unittest.TestCase):
             "access": patch.object(doctor.os, "access", return_value=True),
             "which": patch.object(doctor.shutil, "which", side_effect=lambda name: f"/bin/{name}"),
             "firmware": patch.object(vm, "firmware", return_value=(Path("/efi/code"), Path("/efi/vars"))),
-            "run": patch.object(doctor.subprocess, "run", return_value=subprocess.CompletedProcess(
-                [], 0, stdout="Accelerators supported in QEMU binary:\nhvf\ntcg\n", stderr="")),
+            "run": patch.object(
+                doctor.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess(
+                    [], 0, stdout="Accelerators supported in QEMU binary:\nhvf\ntcg\n", stderr=""
+                ),
+            ),
         }
         for name, patcher in patches.items():
             setattr(self, name, patcher.start())
             self.addCleanup(patcher.stop)
         # Fail immediately if a future doctor starts a process outside the allowlisted probe or writes state.
-        for target, name in [(subprocess, "Popen"), (Path, "write_text"), (Path, "write_bytes"),
-                             (Path, "mkdir"), (Path, "touch"), (Path, "unlink"), (Path, "open")]:
+        for target, name in [
+            (subprocess, "Popen"),
+            (Path, "write_text"),
+            (Path, "write_bytes"),
+            (Path, "mkdir"),
+            (Path, "touch"),
+            (Path, "unlink"),
+            (Path, "open"),
+        ]:
             patcher = patch.object(target, name, side_effect=AssertionError(f"Forbidden: {name}"))
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -63,15 +75,41 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(status, 0, output)
         self.assertIn("Summary:", output)
         self.assertIn("0 failed (all)", output)
-        self.assertTrue({"uv", "sudo", "dnf5", "rpm", "mount", "umount", "chroot", "losetup",
-                         "lsblk", "parted", "sgdisk", "mkfs.btrfs", "btrfs", "mkfs.vfat",
-                         "qemu-img", "qemu-system-x86_64", "ssh", "ssh-keygen", "virt-customize"}
-                        <= self.checked_tools())
+        self.assertTrue(
+            {
+                "uv",
+                "sudo",
+                "dnf5",
+                "rpm",
+                "mount",
+                "umount",
+                "chroot",
+                "losetup",
+                "lsblk",
+                "parted",
+                "sgdisk",
+                "mkfs.btrfs",
+                "btrfs",
+                "mkfs.vfat",
+                "qemu-img",
+                "qemu-system-x86_64",
+                "ssh",
+                "ssh-keygen",
+                "virt-customize",
+            }
+            <= self.checked_tools()
+        )
         self.access.assert_called_once_with("/dev/kvm", os.R_OK | os.W_OK)
         self.firmware.assert_called_once_with("x86_64", "/bin/qemu-system-x86_64")
         self.run.assert_not_called()
-        for text in ("no proof KIWI systemdeps", "Lima guest readiness", "actual acceleration/boot",
-                     "docs/building.md", "docs/testing.md", "No built image is required"):
+        for text in (
+            "no proof KIWI systemdeps",
+            "Lima guest readiness",
+            "actual acceleration/boot",
+            "docs/building.md",
+            "docs/testing.md",
+            "No built image is required",
+        ):
             self.assertIn(text, output)
 
     def test_build_scope_root_needs_no_sudo_or_test_tools(self):
@@ -109,11 +147,17 @@ class DoctorTests(unittest.TestCase):
                 self.run.reset_mock()
                 status, output = self.invoke()
                 self.assertEqual(status, 0, output)
-                self.assertEqual(self.checked_tools(), {
-                    "uv", "limactl", "qemu-img", f"qemu-system-{arch}", "ssh", "ssh-keygen"})
+                self.assertEqual(
+                    self.checked_tools(), {"uv", "limactl", "qemu-img", f"qemu-system-{arch}", "ssh", "ssh-keygen"}
+                )
                 self.run.assert_called_once_with(
-                    [f"/bin/qemu-system-{arch}", "-accel", "help"], check=True, timeout=5,
-                    stdin=subprocess.DEVNULL, capture_output=True, text=True)
+                    [f"/bin/qemu-system-{arch}", "-accel", "help"],
+                    check=True,
+                    timeout=5,
+                    stdin=subprocess.DEVNULL,
+                    capture_output=True,
+                    text=True,
+                )
                 self.assertIn("not proof it is usable", output)
         self.access.assert_not_called()
 
@@ -128,17 +172,20 @@ class DoctorTests(unittest.TestCase):
 
     def test_macos_image_path_absolute_under_home_without_existence_check(self):
         self.system.return_value = "Darwin"
-        for path, expected in (("/doctor-home/nonexistent.qcow2", 0), ("relative.qcow2", 1),
-                               ("/outside/image.qcow2", 1), ("", 1),
-                               ("/doctor-home/../outside/image.qcow2", 1)):
+        for path, expected in (
+            ("/doctor-home/nonexistent.qcow2", 0),
+            ("relative.qcow2", 1),
+            ("/outside/image.qcow2", 1),
+            ("", 1),
+            ("/doctor-home/../outside/image.qcow2", 1),
+        ):
             with self.subTest(path=path), patch.dict(os.environ, {"IMAGE_PATH": path}):
                 status, output = self.invoke("--scope", "test")
                 self.assertEqual(status, expected, output)
                 self.assertIn("IMAGE_PATH must be absolute and under home", output)
 
     def test_invalid_acceleration_and_explicit_tcg(self):
-        for system, invalid in (("Linux", "hvf"), ("Darwin", "kvm"), ("Linux", ""),
-                                ("Darwin", "hvf:tcg")):
+        for system, invalid in (("Linux", "hvf"), ("Darwin", "kvm"), ("Linux", ""), ("Darwin", "hvf:tcg")):
             with self.subTest(system=system, accel=invalid), patch.dict(os.environ, {"QEMU_ACCEL": invalid}):
                 self.system.return_value = system
                 status, output = self.invoke("--scope", "test")
@@ -176,10 +223,15 @@ class DoctorTests(unittest.TestCase):
 
     def test_real_firmware_helper_rejects_partial_or_missing_overrides(self):
         self.firmware.side_effect = firmware
-        for overrides in ({"QEMU_EFI_CODE": "/missing/code"},
-                          {"QEMU_EFI_CODE": "/missing/code", "QEMU_EFI_VARS": "/missing/vars"}):
-            with self.subTest(overrides=overrides), patch.dict(os.environ, overrides), \
-                    patch.object(Path, "is_file", return_value=False):
+        for overrides in (
+            {"QEMU_EFI_CODE": "/missing/code"},
+            {"QEMU_EFI_CODE": "/missing/code", "QEMU_EFI_VARS": "/missing/vars"},
+        ):
+            with (
+                self.subTest(overrides=overrides),
+                patch.dict(os.environ, overrides),
+                patch.object(Path, "is_file", return_value=False),
+            ):
                 status, output = self.invoke("--scope", "test")
                 self.assertEqual(status, 1)
                 self.assertIn("FAIL: EFI:", output)
@@ -195,8 +247,11 @@ class DoctorTests(unittest.TestCase):
 
     def test_macos_accelerator_query_timeout_failure_and_no_hvf(self):
         self.system.return_value = "Darwin"
-        for error in (subprocess.TimeoutExpired("qemu", 5), subprocess.CalledProcessError(1, "qemu"),
-                      OSError("cannot execute")):
+        for error in (
+            subprocess.TimeoutExpired("qemu", 5),
+            subprocess.CalledProcessError(1, "qemu"),
+            OSError("cannot execute"),
+        ):
             with self.subTest(error=error):
                 self.run.side_effect = error
                 status, output = self.invoke("--scope", "test")
@@ -229,8 +284,10 @@ class DoctorTests(unittest.TestCase):
         observed = []
         spec.loader.exec_module.side_effect = lambda module: observed.append(sys.dont_write_bytecode)
         before = sys.dont_write_bytecode
-        with patch.object(doctor.importlib.util, "spec_from_file_location", return_value=spec), \
-                patch.object(doctor.importlib.util, "module_from_spec", return_value=MagicMock()):
+        with (
+            patch.object(doctor.importlib.util, "spec_from_file_location", return_value=spec),
+            patch.object(doctor.importlib.util, "module_from_spec", return_value=MagicMock()),
+        ):
             load_helpers()
             self.assertEqual(observed, [True])
             self.assertEqual(sys.dont_write_bytecode, before)
@@ -238,7 +295,6 @@ class DoctorTests(unittest.TestCase):
             with self.assertRaises(ImportError):
                 load_helpers()
             self.assertEqual(sys.dont_write_bytecode, before)
-
 
 
 if __name__ == "__main__":

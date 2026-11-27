@@ -32,8 +32,7 @@ class RunnerTests(unittest.TestCase):
         self.config = self.home / "instance-config.yml"
 
     def test_native_architecture_aliases_and_rejection(self):
-        for raw, expected in [("arm64", "aarch64"), ("aarch64", "aarch64"),
-                              ("amd64", "x86_64"), ("x86_64", "x86_64")]:
+        for raw, expected in [("arm64", "aarch64"), ("aarch64", "aarch64"), ("amd64", "x86_64"), ("x86_64", "x86_64")]:
             with self.subTest(raw=raw), patch.object(vm.platform, "machine", return_value=raw):
                 self.assertEqual(vm.architecture(), expected)
         with patch.object(vm.platform, "machine", return_value="riscv64"), self.assertRaises(ValueError):
@@ -42,8 +41,11 @@ class RunnerTests(unittest.TestCase):
     def test_default_port_and_validation(self):
         self.assertEqual(vm.ssh_port(), 2222)
         for value in ["", "0", "22", "65536", "abc", "22.5", "２２２２", "-1"]:
-            with (self.subTest(value=value), patch.dict(os.environ, {"VM_SSH_PORT": value}),
-                  self.assertRaises(ValueError)):
+            with (
+                self.subTest(value=value),
+                patch.dict(os.environ, {"VM_SSH_PORT": value}),
+                self.assertRaises(ValueError),
+            ):
                 vm.ssh_port()
         with patch.dict(os.environ, {"VM_SSH_PORT": "65535"}):
             self.assertEqual(vm.ssh_port(), 65535)
@@ -70,9 +72,12 @@ class RunnerTests(unittest.TestCase):
         with patch.dict(os.environ, {"IMAGE_PATH": str(image)}), patch.object(vm, "run") as run:
             run.return_value.stdout = b'{"format":"qcow2"}'
             self.assertEqual(vm.image_path("aarch64"), image)
-            for info in [{"format": "raw"}, {"format": "qcow2", "backing-filename": "base"},
-                         {"format": "qcow2", "data-file": "external"},
-                         {"format": "qcow2", "format-specific": {"data": {"data-file": "external"}}}]:
+            for info in [
+                {"format": "raw"},
+                {"format": "qcow2", "backing-filename": "base"},
+                {"format": "qcow2", "data-file": "external"},
+                {"format": "qcow2", "format-specific": {"data": {"data-file": "external"}}},
+            ]:
                 run.return_value.stdout = json.dumps(info)
                 with self.assertRaises(ValueError):
                     vm.image_path("aarch64")
@@ -92,8 +97,12 @@ class RunnerTests(unittest.TestCase):
         variables.write_bytes(b"nvram")
         for system, accel in [("Linux", "kvm"), ("Darwin", "hvf")]:
             for arch, machine in [("x86_64", "q35"), ("aarch64", "virt")]:
-                with self.subTest(system=system, arch=arch), patch.object(vm.shutil, "which", return_value="/bin/qemu"), \
-                        patch.object(vm, "firmware", return_value=(code, variables)), patch.object(vm.os, "access", return_value=True):
+                with (
+                    self.subTest(system=system, arch=arch),
+                    patch.object(vm.shutil, "which", return_value="/bin/qemu"),
+                    patch.object(vm, "firmware", return_value=(code, variables)),
+                    patch.object(vm.os, "access", return_value=True),
+                ):
                     args = vm.qemu_command(self.state, arch, system)
                     self.assertIn(f"{machine},accel={accel}", args)
                     self.assertIn(f"if=pflash,unit=0,format=raw,readonly=on,file={code}", args)
@@ -106,16 +115,20 @@ class RunnerTests(unittest.TestCase):
                     self.assertNotIn("-pidfile", args)
 
     def test_kvm_requires_access_and_tcg_is_explicit(self):
-        with patch.object(vm.shutil, "which", return_value="/bin/qemu"), \
-                patch.object(vm.os, "access", return_value=False):
+        with (
+            patch.object(vm.shutil, "which", return_value="/bin/qemu"),
+            patch.object(vm.os, "access", return_value=False),
+        ):
             with self.assertRaisesRegex(ValueError, "KVM unavailable"):
                 vm.qemu_command(self.state, "aarch64", "Linux")
             with patch.dict(os.environ, {"QEMU_ACCEL": "hvf"}), self.assertRaises(ValueError):
                 vm.qemu_command(self.state, "aarch64", "Linux")
             variables = self.home / "vars.fd"
             variables.touch()
-            with patch.dict(os.environ, {"QEMU_ACCEL": "tcg"}), \
-                    patch.object(vm, "firmware", return_value=(variables, variables)):
+            with (
+                patch.dict(os.environ, {"QEMU_ACCEL": "tcg"}),
+                patch.object(vm, "firmware", return_value=(variables, variables)),
+            ):
                 args = vm.qemu_command(self.state, "aarch64", "Linux")
                 self.assertIn("virt,accel=tcg", args)
                 self.assertIn("max", args)
@@ -126,8 +139,9 @@ class RunnerTests(unittest.TestCase):
         with patch.object(vm, "run") as run:
             vm.customize(self.state, image, "Linux")
         commands = [call.args[0] for call in run.call_args_list]
-        self.assertEqual(commands[0], ["qemu-img", "create", "-f", "qcow2", "-F", "qcow2",
-                                       "-b", image, self.state / "disk.qcow2"])
+        self.assertEqual(
+            commands[0], ["qemu-img", "create", "-f", "qcow2", "-F", "qcow2", "-b", image, self.state / "disk.qcow2"]
+        )
         self.assertIn("ed25519", commands[1])
         custom = commands[2]
         self.assertEqual(custom[custom.index("-a") + 1], str(self.state / "disk.qcow2"))
@@ -146,8 +160,10 @@ class RunnerTests(unittest.TestCase):
         with patch.object(vm, "run") as run:
             vm.customize(self.state, self.home / "source.qcow2", "Darwin")
             args = run.call_args.args[0]
-            self.assertEqual(args[:7], ["limactl", "shell", "kiwi-builder", "sudo", "env",
-                                        "LIBGUESTFS_BACKEND=direct", "virt-customize"])
+            self.assertEqual(
+                args[:7],
+                ["limactl", "shell", "kiwi-builder", "sudo", "env", "LIBGUESTFS_BACKEND=direct", "virt-customize"],
+            )
             self.assertNotIn("start", args)
             self.assertNotIn("create", args)
             with self.assertRaisesRegex(ValueError, "under home"):
@@ -209,7 +225,11 @@ class RunnerTests(unittest.TestCase):
         os.environ["VM_LOG_DIR"] = str(self.home / "logs")
         self.pointer.write_text(str(self.state))
         (self.state / "console.log").touch()
-        with patch.object(vm, "rpc") as rpc, patch.object(vm.shutil, "copyfile", side_effect=OSError), self.assertRaises(OSError):
+        with (
+            patch.object(vm, "rpc") as rpc,
+            patch.object(vm.shutil, "copyfile", side_effect=OSError),
+            self.assertRaises(OSError),
+        ):
             vm.destroy(self.pointer, self.config)
         rpc.assert_called_once_with(self.state, "stop")
         self.assertTrue(self.state.exists())
@@ -259,8 +279,11 @@ class RunnerTests(unittest.TestCase):
         connection.recv.return_value = b"stop\n"
         child.poll.return_value = None
         connection.sendall.side_effect = lambda data: child.wait.assert_called()
-        with patch.object(vm.signal, "signal"), patch.object(vm.socket, "socket") as sock, \
-                patch.object(vm.subprocess, "Popen", return_value=child) as popen:
+        with (
+            patch.object(vm.signal, "signal"),
+            patch.object(vm.socket, "socket") as sock,
+            patch.object(vm.subprocess, "Popen", return_value=child) as popen,
+        ):
             sock.return_value.__enter__.return_value = server
             vm.supervise(self.state)
         self.assertEqual(popen.call_args.args[0], ["qemu", "overlay-only"])
@@ -268,8 +291,7 @@ class RunnerTests(unittest.TestCase):
         connection.sendall.assert_called_once_with(b'{"ok":true}\n')
 
     def test_ssh_retries_and_checks_admin_sudo(self):
-        with patch.object(vm, "rpc"), patch.object(vm.time, "sleep"), \
-                patch.object(vm.subprocess, "run") as run:
+        with patch.object(vm, "rpc"), patch.object(vm.time, "sleep"), patch.object(vm.subprocess, "run") as run:
             run.side_effect = [subprocess.TimeoutExpired("ssh", 8), MagicMock(returncode=1), MagicMock(returncode=0)]
             vm.wait_for_ssh(self.state, 2222)
             self.assertEqual(run.call_count, 3)
@@ -279,37 +301,47 @@ class RunnerTests(unittest.TestCase):
             self.assertIn("IdentitiesOnly=yes", args)
 
     def test_ssh_timeout_is_actionable(self):
-        with patch.object(vm.time, "monotonic", side_effect=[0, 241]), \
-                self.assertRaisesRegex(RuntimeError, "console.log"):
+        with (
+            patch.object(vm.time, "monotonic", side_effect=[0, 241]),
+            self.assertRaisesRegex(RuntimeError, "console.log"),
+        ):
             vm.wait_for_ssh(self.state, 2222)
 
     def test_start_reuses_live_scenario_not_second_guest(self):
         self.pointer.write_text(str(self.state))
         data = json.dumps(vm.connection_config(self.state, 3333))
         (self.state / "instance.json").write_text(data)
-        with patch.object(vm, "rpc"), patch.object(vm, "wait_for_ssh") as wait, \
-                patch.object(vm.subprocess, "Popen") as popen:
+        with (
+            patch.object(vm, "rpc"),
+            patch.object(vm, "wait_for_ssh") as wait,
+            patch.object(vm.subprocess, "Popen") as popen,
+        ):
             vm.start(self.pointer, self.config)
         popen.assert_not_called()
         wait.assert_called_once_with(self.state, 3333)
         self.assertEqual(self.config.read_text(), data)
 
     def test_start_failure_before_launch_removes_private_state(self):
-        with patch.object(vm.platform, "system", return_value="Linux"), \
-                patch.object(vm, "architecture", return_value="aarch64"), \
-                patch.object(vm, "image_path", return_value=self.home / "image.qcow2"), \
-                patch.object(vm.socket, "socket"), patch.object(vm, "qemu_command", return_value=["qemu"]), \
-                patch.object(vm, "customize", side_effect=RuntimeError("customize failed")), \
-                self.assertRaisesRegex(RuntimeError, "customize failed"):
+        with (
+            patch.object(vm.platform, "system", return_value="Linux"),
+            patch.object(vm, "architecture", return_value="aarch64"),
+            patch.object(vm, "image_path", return_value=self.home / "image.qcow2"),
+            patch.object(vm.socket, "socket"),
+            patch.object(vm, "qemu_command", return_value=["qemu"]),
+            patch.object(vm, "customize", side_effect=RuntimeError("customize failed")),
+            self.assertRaisesRegex(RuntimeError, "customize failed"),
+        ):
             vm.start(self.pointer, self.config)
         self.assertEqual(list(self.home.glob(".molecule-vm-*")), [self.state])
         self.assertFalse(self.pointer.exists())
 
     def prepare_start(self):
-        for target, name, value in [(vm.platform, "system", "Linux"),
-                                    (vm, "architecture", "aarch64"),
-                                    (vm, "image_path", self.home / "source.qcow2"),
-                                    (vm, "qemu_command", ["qemu", "private-overlay"])]:
+        for target, name, value in [
+            (vm.platform, "system", "Linux"),
+            (vm, "architecture", "aarch64"),
+            (vm, "image_path", self.home / "source.qcow2"),
+            (vm, "qemu_command", ["qemu", "private-overlay"]),
+        ]:
             self.enterContext(patch.object(target, name, return_value=value))
         self.enterContext(patch.object(vm.socket, "socket"))
         self.enterContext(patch.object(vm, "customize"))
