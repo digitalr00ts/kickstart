@@ -15,29 +15,46 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from types import FrameType
+    from typing import Any, NoReturn
 
 ROOT = Path(__file__).resolve().parents[1]
+MIN_SSH_PORT = 1024
+MAX_SSH_PORT = 65535
 
 
-def run(argv, **kwargs):
-    return subprocess.run([str(x) for x in argv], check=True, timeout=300, **kwargs)
+def run(
+    argv: Iterable[str | Path],
+    **kwargs: Any,  # noqa: ANN401 -- Forward heterogeneous subprocess.run options unchanged.
+) -> subprocess.CompletedProcess[bytes | str]:
+    """Run caller-built argument lists with checked status and a five-minute timeout."""
+    return subprocess.run(  # noqa: S603 -- Internal callers build argv; host tools and environment are trusted.
+        [str(x) for x in argv], check=True, timeout=300, **kwargs
+    )
 
 
-def architecture():
+def architecture() -> str:
+    """Return the supported native architecture using QEMU's naming convention."""
     arch = {"arm64": "aarch64", "amd64": "x86_64"}.get(platform.machine(), platform.machine())
     if arch not in ("x86_64", "aarch64"):
         raise ValueError(f"Unsupported native architecture: {arch}")
     return arch
 
 
-def ssh_port():
+def ssh_port() -> int:
+    """Read the loopback SSH port, rejecting privileged or out-of-range values."""
     value = os.environ.get("VM_SSH_PORT", "2222")
-    if not value.isascii() or not value.isdecimal() or not 1024 <= int(value) <= 65535:
+    if not value.isascii() or not value.isdecimal() or not MIN_SSH_PORT <= int(value) <= MAX_SSH_PORT:
         raise ValueError("VM_SSH_PORT must be an integer from 1024 to 65535")
     return int(value)
 
 
-def image_path(arch):
+def image_path(arch: str) -> Path:
+    """Resolve one source image and require standalone QCOW2 storage."""
     explicit = os.environ.get("IMAGE_PATH")
     if explicit:
         image = Path(explicit)
@@ -62,7 +79,8 @@ def image_path(arch):
     return image
 
 
-def firmware(arch, binary):
+def firmware(arch: str, binary: str) -> tuple[Path, Path]:
+    """Locate an existing EFI code and variables pair for the native QEMU binary."""
     code, variables = os.environ.get("QEMU_EFI_CODE"), os.environ.get("QEMU_EFI_VARS")
     if code or variables:
         if not code or not variables:
@@ -95,7 +113,8 @@ def firmware(arch, binary):
     raise ValueError("EFI firmware pair not found; set QEMU_EFI_CODE and QEMU_EFI_VARS")
 
 
-def qemu_command(state, arch, system):
+def qemu_command(state: Path, arch: str, system: str) -> list[str]:
+    """Copy writable EFI variables and build argv for the disposable native guest."""
     binary = shutil.which(f"qemu-system-{arch}")
     if not binary:
         raise ValueError(f"Missing qemu-system-{arch}")
@@ -132,7 +151,8 @@ def qemu_command(state, arch, system):
             {"driver": "qcow2", "node-name": "disk", "file": {"driver": "file", "filename": str(state / "disk.qcow2")}}
         ),
     ]
-    return args + [
+    return [
+        *args,
         "-device",
         "virtio-blk-pci,drive=disk",
         "-netdev",
@@ -142,7 +162,8 @@ def qemu_command(state, arch, system):
     ]
 
 
-def customize(state, image, system):
+def customize(state: Path, image: Path, system: str) -> None:
+    """Create an overlay and inject test-only access without modifying the source."""
     run(["qemu-img", "create", "-f", "qcow2", "-F", "qcow2", "-b", image, state / "disk.qcow2"])
     run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", state / "id_ed25519"])
     (state / "sudoers").write_text("admin ALL=(ALL) NOPASSWD: ALL\n")
@@ -192,7 +213,8 @@ def customize(state, image, system):
     run(args, env={**os.environ, "LIBGUESTFS_BACKEND": "direct"})
 
 
-def rpc(state, action):
+def rpc(state: Path, action: str) -> dict[str, bool | str]:
+    """Send a supervisor action over its private socket and require an OK reply."""
     with socket.socket(socket.AF_UNIX) as client:
         client.settimeout(20)
         client.connect(str(state / "control.sock"))
@@ -209,7 +231,8 @@ def rpc(state, action):
         return reply
 
 
-def stop_child(child):
+def stop_child(child: subprocess.Popen[bytes]) -> None:
+    """Terminate and reap the owned child, escalating to kill after ten seconds."""
     # A retained Popen child cannot have its PID reused before wait/reaping.
     if child.poll() is None:
         child.terminate()
@@ -220,10 +243,12 @@ def stop_child(child):
             child.wait(timeout=10)
 
 
-def supervise(state):
+def supervise(state: Path) -> None:
+    """Own the QEMU child and acknowledge stop only after it has been reaped."""
     child = None
 
-    def interrupted(signum, frame):
+    def interrupted(signum: int, _frame: FrameType | None) -> NoReturn:
+        """Exit through the supervisor's child-cleanup boundary on a signal."""
         raise SystemExit(128 + signum)
 
     signal.signal(signal.SIGTERM, interrupted)
@@ -233,7 +258,9 @@ def supervise(state):
             server.bind(str(state / "control.sock"))
             server.listen(2)
             command = json.loads((state / "command.json").read_text())
-            child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=log)
+            child = subprocess.Popen(  # noqa: S603 -- Parent-generated argv is stored in owner-only runtime state.
+                command, stdin=subprocess.DEVNULL, stdout=log, stderr=log
+            )
             while True:
                 connection, _ = server.accept()
                 with connection:
@@ -250,7 +277,8 @@ def supervise(state):
             stop_child(child)
 
 
-def connection_config(state, port):
+def connection_config(state: Path, port: int) -> list[dict[str, str | int]]:
+    """Build Molecule connection data for loopback SSH with the transient key."""
     return [
         {
             "instance": "instance",
@@ -262,7 +290,8 @@ def connection_config(state, port):
     ]
 
 
-def wait_for_ssh(state, port):
+def wait_for_ssh(state: Path, port: int) -> None:
+    """Require a live supervisor and SSH admin/sudo readiness within 240 seconds."""
     command = [
         "ssh",
         "-F",
@@ -288,7 +317,7 @@ def wait_for_ssh(state, port):
     while time.monotonic() < deadline:
         rpc(state, "status")
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603 -- Fixed SSH probe targets loopback using the private test key.
                 command, check=False, timeout=8, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
             if result.returncode == 0:
@@ -299,7 +328,8 @@ def wait_for_ssh(state, port):
     raise RuntimeError(f"Guest SSH/admin/sudo readiness timed out; inspect {state / 'console.log'}")
 
 
-def checked_state(pointer):
+def checked_state(pointer: Path) -> Path:
+    """Require the pointer to name an owner-only runtime directory under home."""
     state = Path(pointer.read_text().strip())
     info = state.lstat()
     if (
@@ -313,7 +343,8 @@ def checked_state(pointer):
     return state
 
 
-def archive_logs(state):
+def archive_logs(state: Path) -> None:
+    """Copy only regular, non-symlink guest logs to VM_LOG_DIR when configured."""
     destination = os.environ.get("VM_LOG_DIR")
     if destination:
         directory = Path(destination)
@@ -324,7 +355,8 @@ def archive_logs(state):
                 shutil.copyfile(source, directory / name)
 
 
-def destroy(pointer, config):
+def destroy(pointer: Path, config: Path) -> None:
+    """Archive logs and remove private state only after supervisor-confirmed stop."""
     if pointer.exists():
         state = checked_state(pointer)
         # Never signal a saved PID or delete a disk until its owning supervisor acknowledges exit.
@@ -337,7 +369,8 @@ def destroy(pointer, config):
     config.write_text("[]\n")
 
 
-def start(pointer, config):
+def start(pointer: Path, config: Path) -> None:
+    """Reuse a ready guest or launch one, retaining state if shutdown is unconfirmed."""
     if pointer.exists():
         state = checked_state(pointer)
         rpc(state, "status")
@@ -362,7 +395,7 @@ def start(pointer, config):
         pointer.write_text(str(state))
         with (state / "supervisor.log").open("ab") as log:
             launch_attempted = True
-            worker = subprocess.Popen(
+            worker = subprocess.Popen(  # noqa: S603 -- Relaunch this script with the current interpreter and private state.
                 [sys.executable, str(Path(__file__).resolve()), "_supervise", str(state)],
                 stdin=subprocess.DEVNULL,
                 stdout=log,
@@ -371,14 +404,16 @@ def start(pointer, config):
             )
         for _ in range(100):
             if worker.poll() is not None:
-                raise RuntimeError(f"Supervisor failed; inspect {state / 'supervisor.log'}")
+                # Keep startup failure inside the boundary that stops the guest or retains its state.
+                raise RuntimeError(f"Supervisor failed; inspect {state / 'supervisor.log'}")  # noqa: TRY301
             try:
                 rpc(state, "status")
                 break
             except FileNotFoundError, ConnectionRefusedError:
                 time.sleep(0.1)
         else:
-            raise RuntimeError("Supervisor startup timed out")
+            # Keep timeout inside the boundary that stops the guest or retains its state.
+            raise RuntimeError("Supervisor startup timed out")  # noqa: TRY301
         wait_for_ssh(state, port)
         config.write_text((state / "instance.json").read_text())
     except BaseException:
@@ -398,7 +433,8 @@ def start(pointer, config):
         raise
 
 
-def main():
+def main() -> None:
+    """Dispatch lifecycle actions, locking Molecule state for start and destroy."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["start", "destroy", "_supervise"])
     parser.add_argument("state", nargs="?")
