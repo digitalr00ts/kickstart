@@ -1,6 +1,6 @@
 target-version = "py315"
 line-length    = 120
-src            = [ "tests" ]
+src            = [ "../tests" ]
 
 [format]
 indent-style = "space"
@@ -61,12 +61,20 @@ ignore                 = [
 ]
 
 [lint.per-file-ignores]
-"tests/*" = [
-  "ANN",       # flake8-annotations — test signatures use minimal types
-  "D",         # pydocstyle — tests don't need comprehensive docstrings
-  "PLR2004",   # Pylint magic-value-comparison — asserting literal expected values is normal in tests
-  "S101",      # flake8-bandit assert_used — assertions in tests expected
+"../tests/**"                    = [
+  "ANN",                                                                                # flake8-annotations — test signatures use minimal types
+  "D",                                                                                  # pydocstyle — tests don't need comprehensive docstrings
+  "PLR2004",                                                                            # Pylint magic-value-comparison — asserting literal expected values is normal in tests
+  "PT009",                                                                              # Project regressions use stdlib unittest assertions
+  "PT027",                                                                              # Keep stdlib unittest exception assertions
+  "S101",                                                                               # flake8-bandit assert_used — assertions in tests expected
 ]
+"../.github/workflows/test_*.py" = [ "ANN", "D", "PLR2004", "PT009", "PT027", "S101" ]
+
+# Keep actionable built-in exception messages in these standalone CLI helpers.
+"../scripts/doctor.py"                  = [ "EM101", "EM102", "TRY003" ]
+"../scripts/vm-test.py"                 = [ "EM101", "EM102", "TRY003" ]
+"../.github/workflows/extract-image.py" = [ "EM101", "EM102", "TRY003" ]
 
 [lint.pydocstyle]
 convention = "google"
