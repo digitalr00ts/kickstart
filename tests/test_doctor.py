@@ -282,7 +282,7 @@ class DoctorTests(unittest.TestCase):
     def test_helper_import_disables_bytecode_and_restores_flag_even_on_failure(self):
         spec = MagicMock()
         observed = []
-        spec.loader.exec_module.side_effect = lambda module: observed.append(sys.dont_write_bytecode)
+        spec.loader.exec_module.side_effect = lambda _module: observed.append(sys.dont_write_bytecode)
         before = sys.dont_write_bytecode
         with (
             patch.object(doctor.importlib.util, "spec_from_file_location", return_value=spec),

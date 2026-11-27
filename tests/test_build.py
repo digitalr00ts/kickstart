@@ -2,11 +2,11 @@
 
 import io
 import os
-from pathlib import Path
 import subprocess
 import tarfile
 import tempfile
 import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class BuildTests(unittest.TestCase):
     def invoke(
         self,
+        *,
         system="Linux",
         arch="x86_64",
         args=(),
@@ -113,13 +114,14 @@ esac
                 "REAL_MV": "/bin/mv",
                 "UV_PROJECT_ENVIRONMENT": str(directory / "environment"),
             }
-            result = subprocess.run(
-                ["bash", str(ROOT / "scripts/build.sh"), *args],
+            result = subprocess.run(  # noqa: S603 -- Run the repository build wrapper with controlled test shims.
+                ["bash", str(ROOT / "scripts/build.sh"), *args],  # noqa: S607 -- Use the host Bash from PATH.
                 cwd=directory,
                 env=env,
                 text=True,
                 capture_output=True,
                 timeout=10,
+                check=False,
             )
             result.output_files = {
                 str(path.relative_to(output_root)): path.read_bytes()
@@ -243,8 +245,11 @@ esac
             (directory / "image with spaces.packages").write_text("kernel")
             (directory / "build/image-root").mkdir(parents=True)
             (directory / "build/image-root/secret").write_text("not a deliverable")
-            result = subprocess.run(
-                ["bash", str(ROOT / "scripts/export-image.sh"), tmp], capture_output=True, check=True, timeout=10
+            result = subprocess.run(  # noqa: S603 -- Run the repository exporter against a disposable fixture.
+                ["bash", str(ROOT / "scripts/export-image.sh"), tmp],  # noqa: S607 -- Use the host Bash from PATH.
+                capture_output=True,
+                check=True,
+                timeout=10,
             )
             with tarfile.open(fileobj=io.BytesIO(result.stdout)) as archive:
                 self.assertEqual(set(archive.getnames()), {"image with spaces.qcow2", "image with spaces.packages"})
@@ -255,8 +260,11 @@ esac
             for count in (0, 2):
                 for index in range(count):
                     (directory / f"image{index}.qcow2").touch()
-                result = subprocess.run(
-                    ["bash", str(ROOT / "scripts/export-image.sh"), tmp], capture_output=True, timeout=10
+                result = subprocess.run(  # noqa: S603 -- Invalid local fixtures must produce a nonzero exit status.
+                    ["bash", str(ROOT / "scripts/export-image.sh"), tmp],  # noqa: S607 -- Use the host Bash from PATH.
+                    capture_output=True,
+                    timeout=10,
+                    check=False,
                 )
                 self.assertNotEqual(result.returncode, 0)
 

@@ -40,7 +40,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_default_port_and_validation(self):
         self.assertEqual(vm.ssh_port(), 2222)
-        for value in ["", "0", "22", "65536", "abc", "22.5", "２２２２", "-1"]:
+        for value in ["", "0", "22", "65536", "abc", "22.5", "２２２２", "-1"]:  # noqa: RUF001 -- Reject non-ASCII digits.
             with (
                 self.subTest(value=value),
                 patch.dict(os.environ, {"VM_SSH_PORT": value}),
@@ -186,7 +186,7 @@ class RunnerTests(unittest.TestCase):
     def test_destroy_waits_for_supervisor_before_deleting_and_is_idempotent(self):
         self.pointer.write_text(str(self.state))
         with patch.object(vm, "rpc") as rpc:
-            rpc.side_effect = lambda state, action: self.assertTrue(state.exists())
+            rpc.side_effect = lambda state, _action: self.assertTrue(state.exists())
             vm.destroy(self.pointer, self.config)
             rpc.assert_called_once_with(self.state, "stop")
         self.assertFalse(self.state.exists())
@@ -278,7 +278,7 @@ class RunnerTests(unittest.TestCase):
         connection.__enter__.return_value = connection
         connection.recv.return_value = b"stop\n"
         child.poll.return_value = None
-        connection.sendall.side_effect = lambda data: child.wait.assert_called()
+        connection.sendall.side_effect = lambda _data: child.wait.assert_called()
         with (
             patch.object(vm.signal, "signal"),
             patch.object(vm.socket, "socket") as sock,
@@ -354,7 +354,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_start_publishes_config_only_after_readiness(self):
         popen, rpc, wait = self.prepare_start()
-        wait.side_effect = lambda state, port: self.assertFalse(self.config.exists())
+        wait.side_effect = lambda _state, _port: self.assertFalse(self.config.exists())
         vm.start(self.pointer, self.config)
         state = vm.checked_state(self.pointer)
         self.assertEqual(state.stat().st_mode & 0o777, 0o700)

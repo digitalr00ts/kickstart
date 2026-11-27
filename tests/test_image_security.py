@@ -1,7 +1,7 @@
 """Assert security properties of the shipped image, not the customized test disk."""
 
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 import yaml
 

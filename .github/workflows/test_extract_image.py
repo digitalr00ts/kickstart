@@ -23,7 +23,7 @@ class ArchiveTests(unittest.TestCase):
                     member.size = 4
                     archive.addfile(member, io.BytesIO(b"test"))
                 else:
-                    member.linkname = "/tmp/target"
+                    member.linkname = "/tmp/target"  # noqa: S108 -- Malicious archive metadata, never a host file.
                     archive.addfile(member)
         stream.seek(0)
         with tempfile.TemporaryDirectory() as directory:

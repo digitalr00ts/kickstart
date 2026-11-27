@@ -1,7 +1,5 @@
 """Guard Pages publishing refs, artifact scope and deployment permissions."""
 
-# ruff: noqa: PT009 -- Project regressions use stdlib unittest assertions.
-
 import tomllib
 import unittest
 from pathlib import Path

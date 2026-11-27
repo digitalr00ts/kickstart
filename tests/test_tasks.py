@@ -198,7 +198,7 @@ class MiseDispatchTests(unittest.TestCase):
         env = self.env.copy()
         if fail_call is not None:
             env["FAIL_CALL"] = json.dumps(fail_call)
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603 -- Resolve installed mise; dispatch only controlled tasks and test shims.
             [shutil.which("mise"), "run", task, "--", *args],
             cwd=self.directory,
             env=env,
