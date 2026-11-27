@@ -92,10 +92,9 @@ repos:
         stages: [manual]  # target-stage: pre-commit; existing strict Ruff findings
       - id: ruff-format
         name: Check Python formatting (Ruff)
-        entry: mise exec -- ruff format --check
+        entry: mise exec -- ruff format
         language: system
         types: [python]
-        stages: [manual]  # target-stage: pre-commit; existing Python needs formatting
       - id: kiwi
         name: Validate KIWI image descriptions
         entry: mise run check-kiwi
